@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Logs and runtime artifacts
+*_logs/
+*-logs/
+**/logs/
+**/runs/
+**/run_*/
+**/run-*/
+**/DONE
+**/STARTED
+**/pid
+**/*.log
+**/*.log.gz
+**/*.ndjson
+
+# Export outputs
+*_exports/
+**/_exports/
+**/input.csv
+**/matched_done.csv
+**/unmatched_skipped.csv
+**/summary.json
+
+# Archives
+*.zip
