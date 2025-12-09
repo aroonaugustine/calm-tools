@@ -1,0 +1,175 @@
+🧭 WP ENV:
+  ABSPATH: /var/www/html/
+  site_url: http://portcalm.portcitybpo.lk
+  home_url: http://portcalm.portcitybpo.lk/en
+  DB_NAME: portcalmdb
+  table prefix: wp_
+  users table: wp_users
+  users count: 5576
+Resigned Processor v1.4.0 — DRY RUN
+    Policy: email only
+    Options: groups=on unenroll=on reset=on UM=on strip_roles=on
+🔎 melinda15218 | policy=email | NIC csv='' vs wp='' → NO | PP csv='E3915218' vs wp='E3915218' → MATCH
+👁️ PREVIEW melinda15218 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 marcelleo15237 | policy=email | NIC csv='' vs wp='' → NO | PP csv='E3915237' vs wp='E3915237' → MATCH
+👁️ PREVIEW marcelleo15237 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 tran15828 | policy=email | NIC csv='' vs wp='' → NO | PP csv='P02115828' vs wp='P02115828' → MATCH
+👁️ PREVIEW tran15828 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 zhao17017 | policy=email | NIC csv='' vs wp='' → NO | PP csv='EP4617017' vs wp='EP4617017' → MATCH
+👁️ PREVIEW zhao17017 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 zhao78811 | policy=email | NIC csv='' vs wp='' → NO | PP csv='EJ9878811' vs wp='EJ9878811' → MATCH
+👁️ PREVIEW zhao78811 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 eriska93615 | policy=email | NIC csv='' vs wp='' → NO | PP csv='E7093615' vs wp='E7093615' → MATCH
+👁️ PREVIEW eriska93615 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 afandi28830 | policy=email | NIC csv='' vs wp='' → NO | PP csv='E3928830' vs wp='E3928830' → MATCH
+👁️ PREVIEW afandi28830 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 junato58618 | policy=email | NIC csv='' vs wp='' → NO | PP csv='E4558618' vs wp='E4558618' → MATCH
+👁️ PREVIEW junato58618 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 sagala6344C | policy=email | NIC csv='' vs wp='' → NO | PP csv='P8736344C' vs wp='P8736344C' → MATCH
+👁️ PREVIEW sagala6344C — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 daniel7711C | policy=email | NIC csv='' vs wp='' → NO | PP csv='P9117711C' vs wp='P9117711C' → MATCH
+👁️ PREVIEW daniel7711C — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 alvianto31075 | policy=email | NIC csv='' vs wp='' → NO | PP csv='E6431075' vs wp='E6431075' → MATCH
+👁️ PREVIEW alvianto31075 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 sulaiman63968 | policy=email | NIC csv='' vs wp='' → NO | PP csv='E2363968' vs wp='E2363968' → MATCH
+👁️ PREVIEW sulaiman63968 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 sutan77942 | policy=email | NIC csv='' vs wp='' → NO | PP csv='E0477942' vs wp='E0477942' → MATCH
+👁️ PREVIEW sutan77942 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 marco95799 | policy=email | NIC csv='' vs wp='' → NO | PP csv='E7095799' vs wp='E7095799' → MATCH
+👁️ PREVIEW marco95799 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 lim86724 | policy=email | NIC csv='' vs wp='' → NO | PP csv='C9386724' vs wp='C9386724' → MATCH
+👁️ PREVIEW lim86724 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 lovelyn31118 | policy=email | NIC csv='' vs wp='' → NO | PP csv='E6431118' vs wp='E6431118' → MATCH
+👁️ PREVIEW lovelyn31118 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 eriko56875 | policy=email | NIC csv='' vs wp='' → NO | PP csv='X3756875' vs wp='X3756875' → MATCH
+👁️ PREVIEW eriko56875 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 putra77967 | policy=email | NIC csv='' vs wp='' → NO | PP csv='E4677967' vs wp='E4677967' → MATCH
+👁️ PREVIEW putra77967 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 suhernawati23462 | policy=email | NIC csv='' vs wp='' → NO | PP csv='E0723462' vs wp='E0723462' → MATCH
+👁️ PREVIEW suhernawati23462 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 maharani63935 | policy=email | NIC csv='' vs wp='' → NO | PP csv='E0063935' vs wp='E0063935' → MATCH
+👁️ PREVIEW maharani63935 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 susanto51813 | policy=email | NIC csv='' vs wp='' → NO | PP csv='E2551813' vs wp='E2551813' → MATCH
+👁️ PREVIEW susanto51813 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 jonathan09242 | policy=email | NIC csv='' vs wp='' → NO | PP csv='E2309242' vs wp='E2309242' → MATCH
+👁️ PREVIEW jonathan09242 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 sutjipto09774 | policy=email | NIC csv='' vs wp='' → NO | PP csv='E2309774' vs wp='E2309774' → MATCH
+👁️ PREVIEW sutjipto09774 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 silvio54046 | policy=email | NIC csv='' vs wp='' → NO | PP csv='E7454046' vs wp='E7454046' → MATCH
+👁️ PREVIEW silvio54046 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 veronica95160 | policy=email | NIC csv='' vs wp='' → NO | PP csv='X1895160' vs wp='X1895160' → MATCH
+👁️ PREVIEW veronica95160 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 ismail89862 | policy=email | NIC csv='' vs wp='' → NO | PP csv='E3189862' vs wp='E3189862' → MATCH
+👁️ PREVIEW ismail89862 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 kawsar72064 | policy=email | NIC csv='' vs wp='' → NO | PP csv='A15972064' vs wp='A15972064' → MATCH
+👁️ PREVIEW kawsar72064 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 li53198 | policy=email | NIC csv='' vs wp='' → NO | PP csv='EL6253198' vs wp='EL6253198' → MATCH
+👁️ PREVIEW li53198 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 hassan70567 | policy=email | NIC csv='' vs wp='' → NO | PP csv='A15970567' vs wp='A15970567' → MATCH
+👁️ PREVIEW hassan70567 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 hasan70706 | policy=email | NIC csv='' vs wp='' → NO | PP csv='A07770706' vs wp='A07770706' → MATCH
+👁️ PREVIEW hasan70706 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 pranto11472 | policy=email | NIC csv='' vs wp='' → NO | PP csv='A17511472' vs wp='A17511472' → MATCH
+👁️ PREVIEW pranto11472 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 khan90124 | policy=email | NIC csv='' vs wp='' → NO | PP csv='A08990124' vs wp='A08990124' → MATCH
+👁️ PREVIEW khan90124 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 hasan96755 | policy=email | NIC csv='' vs wp='' → NO | PP csv='A02396755' vs wp='A02396755' → MATCH
+👁️ PREVIEW hasan96755 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 linh21607 | policy=email | NIC csv='' vs wp='' → NO | PP csv='C4121607' vs wp='C4121607' → MATCH
+👁️ PREVIEW linh21607 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 apriliani82616 | policy=email | NIC csv='' vs wp='' → NO | PP csv='E0782616' vs wp='E0782616' → MATCH
+👁️ PREVIEW apriliani82616 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 wijaya97221 | policy=email | NIC csv='' vs wp='' → NO | PP csv='C8397221' vs wp='C8397221' → MATCH
+👁️ PREVIEW wijaya97221 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 sijie75061 | policy=email | NIC csv='' vs wp='' → NO | PP csv='EH6575061' vs wp='EH6575061' → MATCH
+👁️ PREVIEW sijie75061 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 uberita4586C | policy=email | NIC csv='' vs wp='' → NO | PP csv='P7854586C' vs wp='P7854586C' → MATCH
+👁️ PREVIEW uberita4586C — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 gaso0770C | policy=email | NIC csv='' vs wp='' → NO | PP csv='P7840770C' vs wp='P7840770C' → MATCH
+👁️ PREVIEW gaso0770C — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 pelito5514C | policy=email | NIC csv='' vs wp='' → NO | PP csv='P7855514C' vs wp='P7855514C' → MATCH
+👁️ PREVIEW pelito5514C — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 pagsiat6938C | policy=email | NIC csv='' vs wp='' → NO | PP csv='P3476938C' vs wp='P3476938C' → MATCH
+👁️ PREVIEW pagsiat6938C — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 pelito5514C | policy=email | NIC csv='' vs wp='' → NO | PP csv='P7855514C' vs wp='P7855514C' → MATCH
+👁️ PREVIEW pelito5514C — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 khan64581 | policy=email | NIC csv='' vs wp='' → NO | PP csv='QH4164581' vs wp='QH4164581' → MATCH
+👁️ PREVIEW khan64581 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 zahid71261 | policy=email | NIC csv='' vs wp='' → NO | PP csv='JD5171261' vs wp='JD5171261' → MATCH
+👁️ PREVIEW zahid71261 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 hang87551 | policy=email | NIC csv='' vs wp='' → NO | PP csv='C5987551' vs wp='C5987551' → MATCH
+👁️ PREVIEW hang87551 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 nurwahid73979 | policy=email | NIC csv='' vs wp='' → NO | PP csv='C8073979' vs wp='C8073979' → MATCH
+👁️ PREVIEW nurwahid73979 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 yuxuan77642 | policy=email | NIC csv='' vs wp='' → NO | PP csv='EQI777642' vs wp='EQI777642' → MATCH
+👁️ PREVIEW yuxuan77642 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 yuyang72771 | policy=email | NIC csv='' vs wp='' → NO | PP csv='EP2972771' vs wp='EP2972771' → MATCH
+👁️ PREVIEW yuyang72771 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 jianan54380 | policy=email | NIC csv='' vs wp='' → NO | PP csv='EP7754380' vs wp='EP7754380' → MATCH
+👁️ PREVIEW jianan54380 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 nam26616 | policy=email | NIC csv='' vs wp='' → NO | PP csv='P00226616' vs wp='P00226616' → MATCH
+👁️ PREVIEW nam26616 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 bui30252 | policy=email | NIC csv='' vs wp='' → NO | PP csv='E01430252' vs wp='E01430252' → MATCH
+👁️ PREVIEW bui30252 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 wei46718 | policy=email | NIC csv='' vs wp='' → NO | PP csv='A57146718' vs wp='A57146718' → MATCH
+👁️ PREVIEW wei46718 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 hidayat10390 | policy=email | NIC csv='' vs wp='' → NO | PP csv='C9010390' vs wp='C9010390' → MATCH
+👁️ PREVIEW hidayat10390 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 bachtiar84178 | policy=email | NIC csv='' vs wp='' → NO | PP csv='E1784178' vs wp='E1784178' → MATCH
+👁️ PREVIEW bachtiar84178 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 kit85524 | policy=email | NIC csv='' vs wp='' → NO | PP csv='A58985524' vs wp='A58985524' → MATCH
+👁️ PREVIEW kit85524 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 bao82426 | policy=email | NIC csv='' vs wp='' → NO | PP csv='E02782426' vs wp='E02782426' → MATCH
+👁️ PREVIEW bao82426 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 espia1069C | policy=email | NIC csv='' vs wp='' → NO | PP csv='P8621069C' vs wp='P8621069C' → MATCH
+👁️ PREVIEW espia1069C — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+❌ No WP user matched (email='-', NIC='', PP='P03088351')
+❌ No WP user matched (email='tina.nguyen@ezglobal.com', NIC='', PP='C8236031')
+🔎 an39022 | policy=email | NIC csv='' vs wp='' → NO | PP csv='P03039022' vs wp='P03039022' → MATCH
+👁️ PREVIEW an39022 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(0), ld:unenrolled(0), ld:progress-reset(0)
+❌ No WP user matched (email='benzama.ngo@ezglobal.com', NIC='', PP='E00205379')
+❌ No WP user matched (email='ozuna.nguyen@ezglobal.com', NIC='', PP='E00177396')
+🔎 hao93541 | policy=email | NIC csv='' vs wp='' → NO | PP csv='P00093541' vs wp='P00093541' → MATCH
+👁️ PREVIEW hao93541 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(0), ld:unenrolled(0), ld:progress-reset(0)
+❌ No WP user matched (email='kevinl.nguyen@ezglobal.com', NIC='', PP='E02442963')
+🔎 honghai87626 | policy=email | NIC csv='' vs wp='' → NO | PP csv='EJ7787626' vs wp='EJ7787626' → MATCH
+👁️ PREVIEW honghai87626 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 ramos9943A | policy=email | NIC csv='' vs wp='' → NO | PP csv='P8949943A' vs wp='P8949943A' → MATCH
+👁️ PREVIEW ramos9943A — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 na70318 | policy=email | NIC csv='' vs wp='' → NO | PP csv='EP6270318' vs wp='EP6270318' → MATCH
+👁️ PREVIEW na70318 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 huat12585 | policy=email | NIC csv='' vs wp='' → NO | PP csv='A55412585' vs wp='A55412585' → MATCH
+👁️ PREVIEW huat12585 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+❌ No WP user matched (email='gavi.ngo@ezglobal.com', NIC='', PP='P03145114')
+🔎 kai93775 | policy=email | NIC csv='' vs wp='' → NO | PP csv='EJ2693775' vs wp='EJ2693775' → MATCH
+👁️ PREVIEW kai93775 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 shesheir07237 | policy=email | NIC csv='' vs wp='' → NO | PP csv='A17207237' vs wp='A17207237' → MATCH
+👁️ PREVIEW shesheir07237 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 hoque55613 | policy=email | NIC csv='' vs wp='' → NO | PP csv='A12155613' vs wp='A12155613' → MATCH
+👁️ PREVIEW hoque55613 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 munna18835 | policy=email | NIC csv='' vs wp='' → NO | PP csv='A00418835' vs wp='A00418835' → MATCH
+👁️ PREVIEW munna18835 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 nguyen18870 | policy=email | NIC csv='' vs wp='' → NO | PP csv='P02872251' vs wp='E01418870' → NO
+👁️ PREVIEW nguyen18870 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(0), ld:unenrolled(0), ld:progress-reset(0)
+❌ No WP user matched (email='liu.nguyen@ezglobal.com', NIC='', PP='P02331281')
+🔎 imon56369 | policy=email | NIC csv='' vs wp='' → NO | PP csv='E7556369' vs wp='E7556369' → MATCH
+👁️ PREVIEW imon56369 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 jamshaid16281 | policy=email | NIC csv='' vs wp='' → NO | PP csv='AX8216281' vs wp='AX8216281' → MATCH
+👁️ PREVIEW jamshaid16281 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 kaleem50791 | policy=email | NIC csv='' vs wp='' → NO | PP csv='BB4750791' vs wp='BB4750791' → MATCH
+👁️ PREVIEW kaleem50791 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 thao61605 | policy=email | NIC csv='' vs wp='' → NO | PP csv='C9661605' vs wp='C9661605' → MATCH
+👁️ PREVIEW thao61605 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 jieyin44858 | policy=email | NIC csv='' vs wp='' → NO | PP csv='EH6044858' vs wp='EH6044858' → MATCH
+👁️ PREVIEW jieyin44858 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+🔎 huy08767 | policy=email | NIC csv='' vs wp='' → NO | PP csv='P00708767' vs wp='P00708767' → MATCH
+👁️ PREVIEW huy08767 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(0), ld:unenrolled(0), ld:progress-reset(0)
+🔎 hoa17115 | policy=email | NIC csv='' vs wp='' → NO | PP csv='C9317115' vs wp='C9317115' → MATCH
+👁️ PREVIEW hoa17115 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(6), ld:progress-reset(6)
+❌ No WP user matched (email='-', NIC='', PP='P02630853')
+🔎 hung70781 | policy=email | NIC csv='' vs wp='' → NO | PP csv='P00970781' vs wp='P00970781' → MATCH
+👁️ PREVIEW hung70781 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(0), ld:unenrolled(0), ld:progress-reset(0)
+❌ No WP user matched (email='tiki.nguyen@ezglobal.com', NIC='', PP='E01430146')
+🔎 linh21673 | policy=email | NIC csv='' vs wp='' → NO | PP csv='C9221673' vs wp='C9221673' → MATCH
+👁️ PREVIEW linh21673 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(0), ld:unenrolled(0), ld:progress-reset(0)
+📊 Summary: matched=77, unmatched=9, processed=86, mode=DRY

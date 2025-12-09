@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Resigned Processor — v1.1.0-web</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+  body{font-family:system-ui,Arial,sans-serif;margin:40px;max-width:980px}
+  fieldset{border:1px solid #ddd;border-radius:8px;padding:16px;margin-bottom:18px}
+  legend{font-weight:700}
+  label{display:block;margin:8px 0}
+  input[type=text],input[type=password]{width:520px;max-width:100%;padding:8px}
+  input[type=file]{padding:6px}
+  .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .muted{color:#666}
+  button{padding:10px 16px;border:1px solid #333;border-radius:8px;background:#fafafa;cursor:pointer}
+  .small{font-size:12px}
+</style>
+<script>
+function onModeChange(val){
+  const csvSection = document.getElementById('csvSection');
+  const removeGroupsRow = document.getElementById('removeGroupsRow');
+  if(val==='csv'){
+    csvSection.style.display='';
+    removeGroupsRow.style.display='';
+  }else{
+    csvSection.style.display='none';
+    removeGroupsRow.style.display='';
+  }
+}
+</script>
+</head>
+<body>
+  <h1>Resigned Processor <span class="muted">v1.1.0-web</span></h1>
+  <p class="muted">
+    Two modes:<br>
+    1) <b>Process CSV</b> — Deactivate + (optionally) remove from LearnDash groups + update mapped meta, by identifiers (<code>user_email</code> / <code>NIC #</code> / <code>Passport</code>).<br>
+    2) <b>Sweep already-inactive users</b> — Remove all LearnDash groups from users already inactive (role or meta).
+  </p>
+
+  <form method="post" action="launch.php" enctype="multipart/form-data">
+    <fieldset>
+      <legend>Auth</legend>
+      <label>Launcher Auth Token:
+        <input type="password" name="token" placeholder="paste AUTH_TOKEN (launcher)" required>
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Mode</legend>
+      <label class="row"><input type="radio" name="mode" value="csv" checked onclick="onModeChange('csv')"> Process CSV (deactivate + optional LD removal + meta updates)</label>
+      <label class="row"><input type="radio" name="mode" value="sweep" onclick="onModeChange('sweep')"> Sweep already-inactive users (remove LD groups only)</label>
+    </fieldset>
+
+    <fieldset id="csvSection">
+      <legend>CSV Source</legend>
+      <label class="row">
+        <input type="radio" name="csv_mode" value="upload" checked> Upload CSV now
+      </label>
+      <input type="file" name="csv_file" accept=".csv">
+
+      <div style="margin:10px 0"></div>
+      <label class="row">
+        <input type="radio" name="csv_mode" value="server"> Use server path
+      </label>
+      <input type="text" name="csv_path" placeholder="/home/bulk_update/June-Joiners/June-resigned.csv">
+      <div class="small muted">
+        Auto-detects delimiter (comma / tab / semicolon). Header labels matched case-insensitively.<br>
+        Identifiers: <code>user_email</code> / <code>email</code>, or <code>NIC #</code> / <code>nic</code>, or <code>Passport</code>.
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Options</legend>
+      <div id="removeGroupsRow" class="row">
+        <label><input type="checkbox" name="remove_groups" value="1" checked> Also remove from all LearnDash groups</label>
+      </div>
+      <label class="row"><input type="checkbox" name="live" value="1"> LIVE run (untick = Dry run/preview only)</label>
+      <div class="row">
+        <label>Limit (0 = all):
+          <input type="text" name="limit" value="0" class="small">
+        </label>
+      </div>
+    </fieldset>
+
+    <div class="row" style="margin-top:12px">
+      <button type="submit">Launch Background Run</button>
+      <a href="status.php"><button type="button">View Runs & Logs</button></a>
+    </div>
+  </form>
+
+  <p class="muted" style="margin-top:16px">
+    Each run gets its own folder under <code>/srv/admin-tools/_mailer-logs/</code> with stdout and outputs:
+    <code>matched_done.csv</code> and <code>unmatched_skipped.csv</code>.
+  </p>
+</body>
+</html>

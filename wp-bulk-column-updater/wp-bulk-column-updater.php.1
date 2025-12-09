@@ -1,0 +1,251 @@
+<?php
+/**
+ * WP Bulk Column Updater — Worker v1.3.0
+ * - Matches users by 1 or 2 CSV columns; updates ONE target.
+ * - Username (user_login) updates are BLOCKED.
+ * - New target: "learndash_group" — replaces membership with exact IDs from CSV.
+ */
+
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+if (!defined('WP_DISABLE_FATAL_ERROR_HANDLER')) define('WP_DISABLE_FATAL_ERROR_HANDLER', true);
+
+require '/var/www/html/wp-load.php'; // adjust if needed
+
+/* -------- args -------- */
+$argv_map = [];
+foreach (($argv ?? []) as $a) {
+  if (preg_match('/^--([^=]+)=(.*)$/', $a, $m)) $argv_map[$m[1]] = $m[2];
+  elseif (preg_match('/^--(.+)$/', $a, $m))     $argv_map[$m[1]] = true;
+}
+$csv       = (string)($argv_map['csv'] ?? '');
+$primary   = strtolower(trim((string)($argv_map['primary'] ?? '')));
+$secondary = strtolower(trim((string)($argv_map['secondary'] ?? '')));
+$target    = trim((string)($argv_map['target'] ?? ''));
+$live      = !empty($argv_map['live']);
+$limit     = isset($argv_map['limit']) ? max(0, (int)$argv_map['limit']) : 0;
+
+if ($csv === '' || !is_file($csv)) { fwrite(STDERR, "❌ CSV missing: $csv\n"); exit(2); }
+if ($primary === '') { fwrite(STDERR, "❌ Primary key required\n"); exit(2); }
+if ($target === '')  { fwrite(STDERR, "❌ Target field required\n"); exit(2); }
+
+/* -------- helpers -------- */
+function detect_delimiter($line) {
+  foreach ([",","\t",";"] as $d) if (count(str_getcsv($line,$d))>1) return $d;
+  return ",";
+}
+function norm_label($s){ return strtolower(trim(preg_replace('/[^a-z0-9]+/','',$s))); }
+function build_idx_map($header){ $m=[]; foreach($header as $i=>$h){ $m[norm_label($h)]=$i; } return $m; }
+function v($row,$i){ return isset($row[$i]) ? trim((string)$row[$i]) : ''; }
+function find_idx(array $map, array $labels) {
+  foreach ($labels as $label) {
+    $key = norm_label($label);
+    if (array_key_exists($key, $map)) return $map[$key];
+  }
+  return null;
+}
+// parse group list like "123", "123,456", "123|456 ; 789"
+function parse_group_ids($s) {
+  $parts = preg_split('/[,\|;\s]+/', (string)$s, -1, PREG_SPLIT_NO_EMPTY);
+  $out = [];
+  foreach ($parts as $p) if (ctype_digit($p)) $out[] = (int)$p;
+  return array_values(array_unique($out));
+}
+
+/* -------- CSV -------- */
+$fh = fopen($csv,'r');
+if (!$fh) { fwrite(STDERR,"❌ Cannot open CSV\n"); exit(2); }
+$first = fgets($fh);
+if ($first === false) { fwrite(STDERR,"❌ Empty CSV\n"); exit(2); }
+$delim  = detect_delimiter($first);
+$header = str_getcsv($first,$delim);
+$idxmap = build_idx_map($header);
+
+/* header aliases */
+$idx_username = find_idx($idxmap, ['username','user_login','login']);
+$idx_empno    = find_idx($idxmap, ['emp_no','employee_number','employee no','emp number']);
+$idx_fullname = find_idx($idxmap, ['full_name','fullname','name','employee name']);
+$idx_passport = find_idx($idxmap, ['passport_number','passport','passport no']);
+$idx_nic      = find_idx($idxmap, ['nic_number','nic','nic no','national id','id number']);
+$idx_email    = find_idx($idxmap, ['email_address','email','user_email','email address']);
+$idx_ldgroup  = find_idx($idxmap, ['learndash_group','ld_group','learndash groups','group id','group ids']);
+
+$valid_keys = [
+  'username'        => $idx_username,
+  'emp_no'          => $idx_empno,
+  'full_name'       => $idx_fullname,
+  'passport_number' => $idx_passport,
+  'nic_number'      => $idx_nic,
+  'email_address'   => $idx_email,
+];
+
+if (!isset($valid_keys[$primary])) {
+  fwrite(STDERR,"❌ CSV missing primary column: {$primary}\n"); exit(2);
+}
+if ($secondary !== '' && !isset($valid_keys[$secondary])) {
+  fwrite(STDERR,"❌ CSV missing secondary column: {$secondary}\n"); exit(2);
+}
+
+/* -------- target parsing -------- */
+$is_meta=false; $meta_key=''; $target_field='';
+$ld_replace = false;
+
+if (stripos($target,'meta:')===0){ $is_meta=true; $meta_key=trim(substr($target,5)); }
+else {
+  $tf = strtolower(trim($target));
+  if ($tf === 'email address' || $tf === 'email') $tf = 'user_email';
+  if (in_array($tf, ['username','user_login'], true)) {
+    fwrite(STDERR,"❌ Updating username is not allowed\n"); exit(2);
+  }
+  if ($tf === 'learndash_group') {
+    $ld_replace = true;        // special mode
+    $target_field = 'learndash_group';
+  } else {
+    $target_field = $tf;       // user_email, display_name, first_name, last_name
+  }
+}
+
+/* where the new value comes from */
+$target_idx = null;
+if ($is_meta) {
+  $target_idx = find_idx($idxmap, [$meta_key]);
+} elseif ($ld_replace) {
+  $target_idx = $idx_ldgroup; // must be from learndash_group column
+} else {
+  $target_idx = find_idx($idxmap, [$target_field, $target]); // allow alias
+}
+
+/* -------- run -------- */
+echo "WP Bulk Column Updater — v1.3.0\n";
+echo "Mode: ".($live?'LIVE':'DRY RUN')."\n";
+echo "Primary: {$primary}".($secondary?(" + ".$secondary):'')."\n";
+echo "Target: ".($is_meta ? "meta:{$meta_key}" : ($ld_replace?'learndash_group(replace)':$target_field))."\n";
+echo "CSV: {$csv}\n\n";
+
+$processed=0; $updated=0; $skipped=0;
+
+while (($row = fgetcsv($fh,0,$delim)) !== false) {
+  if ($limit>0 && $processed>=$limit) break;
+  if (count(array_filter($row,fn($x)=>trim((string)$x)!==''))===0) continue;
+  $processed++;
+
+  $pval = v($row,$valid_keys[$primary]);
+  $sval = $secondary !== '' ? v($row,$valid_keys[$secondary]) : '';
+
+  if ($pval === '') { echo "⚠️ Skip row {$processed}: primary empty\n"; $skipped++; continue; }
+
+  // new value
+  $newval = ($target_idx !== null) ? v($row,$target_idx) : null;
+  if ($newval === null || $newval === '') {
+    echo "⚠️ Skip: no new value for target on row {$processed}\n"; $skipped++; continue;
+  }
+
+  // lookup by primary
+  $user = null;
+  switch ($primary) {
+    case 'username':        $user = get_user_by('login',$pval); break;
+    case 'email_address':   $user = get_user_by('email',$pval); break;
+    case 'emp_no':          $u=get_users(['meta_key'=>'employee_number','meta_value'=>$pval,'number'=>1]); $user=$u[0]??null; break;
+    case 'passport_number': $u=get_users(['meta_key'=>'passport_no','meta_value'=>$pval,'number'=>1]); $user=$u[0]??null; break;
+    case 'nic_number':      $u=get_users(['meta_key'=>'nic_no','meta_value'=>$pval,'number'=>1]); $user=$u[0]??null; break;
+    case 'full_name':       $u=get_users(['meta_key'=>'full_name','meta_value'=>$pval,'number'=>1]); $user=$u[0]??null; break;
+  }
+  if (!$user) { echo "❌ No match for primary='{$pval}'\n"; $skipped++; continue; }
+
+  // secondary check
+  if ($secondary !== '') {
+    $ok=false; $uid=(int)$user->ID;
+    switch ($secondary) {
+      case 'emp_no':          $ok = (get_user_meta($uid,'employee_number',true) === $sval); break;
+      case 'passport_number': $ok = (get_user_meta($uid,'passport_no',true) === $sval); break;
+      case 'nic_number':      $ok = (get_user_meta($uid,'nic_no',true) === $sval); break;
+      case 'email_address':   $ok = (strcasecmp($user->user_email,$sval)===0); break;
+      case 'username':        $ok = (strcasecmp($user->user_login,$sval)===0); break;
+      case 'full_name':       $ok = (get_user_meta($uid,'full_name',true) === $sval); break;
+    }
+    if (!$ok) { echo "❌ Secondary mismatch for {$user->user_login}\n"; $skipped++; continue; }
+  }
+
+  $uid = (int)$user->ID;
+
+  /* --- meta --- */
+  if ($is_meta) {
+    $old = (string)get_user_meta($uid,$meta_key,true);
+    if ($old === $newval) { echo "↩️ {$user->user_login} — meta {$meta_key} already '{$old}'\n"; $skipped++; continue; }
+    echo ($live?'✅':'👁️')." {$user->user_login} — meta {$meta_key}: '{$old}' → '{$newval}'\n";
+    if ($live) update_user_meta($uid,$meta_key,$newval);
+    $updated++; continue;
+  }
+
+  /* --- LearnDash group replacement --- */
+  if ($ld_replace) {
+    if (!function_exists('learndash_get_users_group_ids') || !function_exists('ld_update_group_access')) {
+      echo "❌ {$user->user_login} — LearnDash functions missing\n"; $skipped++; continue;
+    }
+    $desired = parse_group_ids($newval);
+    $current = array_map('intval', (array)learndash_get_users_group_ids($uid));
+    sort($desired); sort($current);
+
+    if ($desired === $current) {
+      echo "↩️ {$user->user_login} — LD groups already ".($current?implode(',',$current):'(none)')."\n";
+      $skipped++; continue;
+    }
+
+    // compute diffs
+    $to_add = array_values(array_diff($desired, $current));
+    $to_rm  = array_values(array_diff($current, $desired));
+
+    if ($live) {
+      foreach ($to_rm as $gid) { ld_update_group_access($uid, $gid, 'remove'); }
+      foreach ($to_add as $gid) { ld_update_group_access($uid, $gid); }
+      // verify
+      $now = array_map('intval', (array)learndash_get_users_group_ids($uid));
+      sort($now);
+      if ($now !== $desired) {
+        echo "❌ {$user->user_login} — post-update LD verify failed; now=".implode(',',$now)." wanted=".implode(',',$desired)."\n";
+        $skipped++; continue;
+      }
+      echo "✅ {$user->user_login} — LD groups replaced: -[".implode(',',$to_rm)."] +[".implode(',',$to_add)."] → now ".($now?implode(',',$now):'(none)')."\n";
+    } else {
+      echo "👁️ {$user->user_login} — would replace LD groups: -[".implode(',',$to_rm)."] +[".implode(',',$to_add)."]\n";
+    }
+    $updated++; continue;
+  }
+
+  /* --- core user fields --- */
+  $field = $target_field;
+
+  if ($field === 'user_email') {
+    if (!is_email($newval)) { echo "❌ {$user->user_login} — invalid email '{$newval}'\n"; $skipped++; continue; }
+    $existing = email_exists($newval);
+    if ($existing && (int)$existing !== $uid) {
+      echo "❌ {$user->user_login} — email '{$newval}' already used by user ID {$existing}\n"; $skipped++; continue;
+    }
+  }
+
+  $old = $user->{$field} ?? '';
+  if ($old === $newval) { echo "↩️ {$user->user_login} — {$field} already '{$old}'\n"; $skipped++; continue; }
+
+  if ($live) {
+    $res = wp_update_user(['ID'=>$uid,$field=>$newval]);
+    if (is_wp_error($res)) {
+      echo "❌ {$user->user_login} — update failed: ".$res->get_error_code()." (".$res->get_error_message().")\n";
+      $skipped++; continue;
+    }
+    $user = get_user_by('id',$uid);
+    $now  = $user->{$field} ?? '';
+    if ($now !== $newval) {
+      echo "❌ {$user->user_login} — post-update verification failed; still '{$now}'\n";
+      $skipped++; continue;
+    }
+    echo "✅ {$user->user_login} — {$field}: '{$old}' → '{$newval}'\n";
+  } else {
+    echo "👁️ {$user->user_login} — would set {$field}: '{$old}' → '{$newval}'\n";
+  }
+  $updated++;
+}
+
+fclose($fh);
+@touch(dirname($csv).'/DONE');
+echo "\n📊 Summary: processed={$processed}, updated={$updated}, skipped={$skipped}, mode=".($live?'LIVE':'DRY')."\n";
+exit(0);

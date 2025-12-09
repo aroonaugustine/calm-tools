@@ -1,0 +1,16 @@
+{
+    "version": "1.4.3",
+    "created_at": "2025-11-22T05:03:30+00:00",
+    "user": 2,
+    "csv_path": "\/srv\/admin-tools\/wp-bulk-column-updater\/runs\/csv-1763787810-i6IVZv.csv",
+    "primary": "username",
+    "secondary": "",
+    "limit": 0,
+    "live": true,
+    "mappings": [
+        {
+            "target": "user_email",
+            "column": "user_email"
+        }
+    ]
+}

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>LearnDash — Finish Remaining Steps (v2.3-web)</title>
+  <meta name="robots" content="noindex,nofollow">
+  <style>
+    body{font-family:system-ui,Arial,sans-serif;margin:40px;max-width:900px}
+    fieldset{border:1px solid #ddd;border-radius:8px;padding:16px;margin-bottom:18px}
+    label{display:block;margin:8px 0}
+    input[type=text],input[type=password],input[type=number]{width:520px;max-width:100%;padding:8px}
+    .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    button{padding:10px 16px;border:1px solid #333;border-radius:8px;background:#fafafa;cursor:pointer}
+    .muted{color:#666}
+    code{background:#f6f6f6;padding:2px 6px;border-radius:4px}
+  </style>
+</head>
+<body>
+  <h1>LearnDash — Finish Remaining Steps <span class="muted">v2.3-web</span></h1>
+  <p class="muted">
+    Marks incomplete lessons/topics/quizzes as complete for a single user. If quizzes exist, records a 100% pass and marks the quiz step complete too. <br>
+    Uses <code>wp-load.php</code> so it runs outside WP Admin. Protected with a launcher token.
+  </p>
+
+  <form method="get" action="finish_user.php" target="_blank">
+    <fieldset>
+      <legend>Auth</legend>
+      <label>Launcher Token:
+        <input type="password" name="token" placeholder="paste token" required>
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>User & Course</legend>
+      <label>User (login or email):
+        <input type="text" name="user" placeholder="e.g. harischandra01119 or user@example.com" required>
+      </label>
+      <label>Course ID (optional; blank = process all enrolled courses):
+        <input type="number" name="course_id" min="0" step="1" placeholder="2869">
+      </label>
+      <label class="row"><input type="checkbox" name="dry_run" value="1" checked> Dry run (show actions, no writes)</label>
+    </fieldset>
+
+    <div class="row" style="margin-top:12px">
+      <button type="submit">Run</button>
+    </div>
+  </form>
+
+  <p class="muted" style="margin-top:16px">
+    Output is plain text. Example direct URL:<br>
+    <code>?user=harischandra01119&amp;dry_run=1</code> &nbsp;or&nbsp;
+    <code>?user=user@example.com&amp;course_id=2869</code>
+  </p>
+</body>
+</html>

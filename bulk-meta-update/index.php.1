@@ -1,0 +1,89 @@
+<?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+/**
+ * WP Meta Bulk Updater — v2.0.1
+ * Supports blank "Search For" values.
+ */
+
+require_once '/var/www/html/wp-load.php';
+
+$token = '6714e52aed21125dd999ff7c31666c1806e033aa2cb8a14073b41ae7026ec0b0'; // change this to your own
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if ($_POST['token'] !== $token) {
+        die('Invalid token.');
+    }
+
+    $meta_key   = trim($_POST['meta_key'] ?? '');
+    $old_value  = trim($_POST['old_value'] ?? '');
+    $new_value  = trim($_POST['new_value'] ?? '');
+    $mode       = $_POST['mode'] ?? 'dry';
+    $dry_run    = $mode === 'dry';
+
+    // Validation: meta_key and new_value must exist, old_value can be empty (for null updates)
+    if ($meta_key === '' || $new_value === '') {
+        die('Meta field and new value are required.');
+    }
+
+    $run_dir = __DIR__ . '/logs';
+    if (!is_dir($run_dir)) mkdir($run_dir, 0775, true);
+
+    require_once __DIR__ . '/worker.php';
+    [$summary_path, $log_path, $csv_path] = wpmbu200_run([
+        'meta_key' => $meta_key,
+        'old_value' => $old_value,   // may be blank
+        'new_value' => $new_value,
+        'live' => !$dry_run,
+    ], $run_dir);
+
+    echo "<h3>Process complete</h3>";
+    echo "<p><strong>Summary:</strong> <a href='logs/summary.json' target='_blank'>summary.json</a></p>";
+    echo "<p><strong>Log:</strong> <a href='logs/log.ndjson' target='_blank'>log.ndjson</a></p>";
+    echo "<p><strong>Changes (CSV):</strong> <a href='logs/changes.csv' target='_blank'>changes.csv</a></p>";
+    exit;
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>WP Meta Bulk Updater — v2.0.1</title>
+<style>
+body { font-family: Arial, sans-serif; max-width: 720px; margin: 40px auto; }
+input, select, button { padding: 8px; width: 100%; margin-bottom: 12px; }
+label { font-weight: bold; margin-top: 10px; display:block; }
+button { background:#0073aa; color:white; border:none; cursor:pointer; }
+button:hover { background:#005f8d; }
+fieldset { border:1px solid #ccc; padding:20px; }
+small { color:#555; display:block; margin-top:-8px; margin-bottom:10px; }
+</style>
+</head>
+<body>
+<h2>WP Meta Bulk Updater — v2.0.1</h2>
+<form method="POST">
+  <label>Access Token</label>
+  <input type="password" name="token" required>
+
+  <label>Meta Field / Core Field</label>
+  <input type="text" name="meta_key" placeholder="e.g. company, display_name" required>
+
+  <label>Search For (case-insensitive)</label>
+  <input type="text" name="old_value" placeholder="Leave blank to match empty values">
+  <small>Leave this blank if you want to update records where the field is empty.</small>
+
+  <label>Replace With (exact case)</label>
+  <input type="text" name="new_value" placeholder="e.g. NETWORK WIZARD SDN BHD" required>
+
+  <label>Mode</label>
+  <select name="mode">
+    <option value="dry">Dry Run (no DB changes)</option>
+    <option value="live">Live Update</option>
+  </select>
+
+  <button type="submit">Run Bulk Update</button>
+</form>
+</body>
+</html>

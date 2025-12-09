@@ -1,0 +1,14 @@
+{
+    "ok": true,
+    "version": "1.4.3",
+    "rows_processed": 150,
+    "updated_count": 150,
+    "skipped": 31,
+    "no_pk": 0,
+    "no_match": 31,
+    "duration_sec": 3,
+    "live": true,
+    "at": "2025-11-19T09:03:35+00:00",
+    "pk_header_used": "PASSPORT NO",
+    "sk_header_used": null
+}

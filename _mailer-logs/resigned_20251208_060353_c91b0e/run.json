@@ -1,0 +1,19 @@
+{
+    "pid": "1047508",
+    "started_gmt": "2025-12-08T06:03:55+00:00",
+    "stdout": "/srv/admin-tools/_mailer-logs/resigned_20251208_060353_c91b0e/stdout.log",
+    "matched": "/srv/admin-tools/_mailer-logs/resigned_20251208_060353_c91b0e/matched_done.csv",
+    "unmatched": "/srv/admin-tools/_mailer-logs/resigned_20251208_060353_c91b0e/unmatched_skipped.csv",
+    "csv": "/srv/admin-tools/_mailer-logs/resigned_20251208_060353_c91b0e/input.csv",
+    "batch_size": 0,
+    "batch_delay_ms": 250,
+    "match_mode": "strict",
+    "args": [
+        "--match=strict",
+        "--remove-groups",
+        "--unenroll-courses",
+        "--reset-progress",
+        "--um-inactive",
+        "--strip-roles"
+    ]
+}

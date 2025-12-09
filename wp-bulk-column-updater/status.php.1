@@ -1,0 +1,119 @@
+<?php
+/**
+ * Bulk Updater — Status v1.2.0
+ * Lists runs (if no ?id) and shows live stdout + metadata for a run.
+ */
+
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+const LOG_BASE = '/srv/admin-tools/wp-bulk-column-updater/_logs';
+
+function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
+function list_runs(){
+  $dirs = @glob(LOG_BASE.'/bulk_updater_*', GLOB_ONLYDIR) ?: [];
+  rsort($dirs);
+  return $dirs;
+}
+
+$id = preg_replace('/[^A-Za-z0-9_:-]/', '', $_GET['id'] ?? '');
+
+// List view
+if ($id === '') {
+  header('Content-Type: text/html; charset=utf-8'); ?>
+  <!doctype html>
+  <meta charset="utf-8">
+  <title>WP Bulk Column Updater — Runs</title>
+  <style>
+    body{font-family:system-ui,Arial,sans-serif;margin:32px;max-width:960px}
+    ul{line-height:1.7}
+    code{background:#f6f8fa;padding:2px 4px;border-radius:4px}
+  </style>
+  <h2>Runs</h2>
+  <p>Logs base: <code><?=h(LOG_BASE)?></code></p>
+  <ul>
+    <?php foreach (list_runs() as $d): $bn=basename($d); ?>
+      <li><a href="?id=<?=h($bn)?>"><?=h($bn)?></a></li>
+    <?php endforeach; if (!list_runs()): ?>
+      <li><em>No runs yet.</em></li>
+    <?php endif; ?>
+  </ul>
+  <?php exit;
+}
+
+// Detail view
+$run_dir = LOG_BASE . '/' . $id;
+$run_json = $run_dir.'/run.json';
+$stdout   = $run_dir.'/stdout.log';
+$started  = is_file($run_dir.'/STARTED');
+$done     = is_file($run_dir.'/DONE');
+
+$meta = [];
+if (is_file($run_json)) {
+  $raw = @file_get_contents($run_json);
+  $meta = json_decode((string)$raw, true) ?: [];
+}
+$pid   = (string)($meta['pid'] ?? '');
+$alive = ($pid !== '' && ctype_digit($pid) && file_exists("/proc/$pid"));
+
+header('Content-Type: text/html; charset=utf-8'); ?>
+<!doctype html>
+<meta charset="utf-8">
+<title>WP Bulk Column Updater — Run <?=h($id)?></title>
+<?php if (!$done): ?><meta http-equiv="refresh" content="3"><?php endif; ?>
+<style>
+  body{font-family:system-ui,Arial,sans-serif;margin:24px;max-width:1100px}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0}
+  pre{background:#0b1220;color:#e2e8f0;padding:12px;border-radius:8px;overflow:auto;max-height:70vh}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid #ddd;margin-right:8px;background:#f7f7f7}
+  a.btn{display:inline-block;padding:8px 12px;border:1px solid #333;border-radius:8px;background:#fafafa;margin-right:8px;text-decoration:none;color:#222}
+  .muted{color:#64748b}
+  code{background:#f6f8fa;padding:2px 4px;border-radius:4px}
+  table.meta{border-collapse:collapse;margin:10px 0}
+  table.meta td{border:1px solid #ddd;padding:6px 8px}
+  .hdr{background:#f7f7f7;font-weight:700}
+</style>
+
+<p><a class="btn" href="<?=h($_SERVER['PHP_SELF'])?>">← Back to Runs</a></p>
+
+<h2>WP Bulk Column Updater — Run <?=h($id)?></h2>
+<div class="muted">Folder: <code><?=h($run_dir)?></code></div>
+
+<div class="row">
+  <?php if ($started): ?><span class="pill">STARTED</span><?php endif; ?>
+  <?php if ($done): ?><span class="pill">DONE</span><?php else: ?>
+    <span class="pill"><?= $alive ? "RUNNING (pid ".h($pid).")" : "NOT RUNNING" ?></span>
+  <?php endif; ?>
+</div>
+
+<?php if (!empty($meta)): ?>
+  <h3>Metadata</h3>
+  <table class="meta">
+    <tr><td class="hdr">PID</td><td><?=h($pid ?: '(unknown)')?></td></tr>
+    <tr><td class="hdr">Started (GMT)</td><td><?=h($meta['started_gmt'] ?? '(unknown)')?></td></tr>
+    <tr><td class="hdr">Mode</td><td><?=!empty($meta['live'])?'LIVE':'DRY RUN'?></td></tr>
+    <tr><td class="hdr">Primary</td><td><?=h($meta['primary'] ?? '')?></td></tr>
+    <tr><td class="hdr">Secondary</td><td><?=h($meta['secondary'] ?? '(none)')?></td></tr>
+    <tr><td class="hdr">Target</td><td><?=h($meta['target'] ?? '')?></td></tr>
+    <tr><td class="hdr">CSV</td><td><code><?=h($meta['csv'] ?? '')?></code></td></tr>
+    <tr><td class="hdr">Stdout</td><td><code><?=h($meta['stdout'] ?? $stdout)?></code></td></tr>
+  </table>
+<?php endif; ?>
+
+<h3>Live Output (auto-refreshes)</h3>
+<pre><?php
+if (is_file($stdout)) {
+  $max = 512 * 1024; // ~512KB
+  $sz  = filesize($stdout);
+  $fh  = fopen($stdout, 'r');
+  if ($fh) {
+    if ($sz > $max) fseek($fh, -$max, SEEK_END);
+    fpassthru($fh);
+    fclose($fh);
+  } else {
+    echo h("Unable to open stdout.log");
+  }
+} else {
+  echo h("No stdout yet. Waiting…");
+}
+?></pre>

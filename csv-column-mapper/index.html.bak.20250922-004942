@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CSV Column Mapper — v12.0</title>
+  <meta name="robots" content="noindex,nofollow">
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; max-width: 1100px; }
+    label { display: block; margin-top: 14px; }
+    select { width: 420px; max-width: 95vw; }
+    table { border-collapse: collapse; margin-top: 20px; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; vertical-align: top; }
+    th { background: #f0f0f0; }
+    .map-table { margin-bottom: 20px; }
+    .hint { color: #666; font-size: 12px; margin-top: 4px; }
+    .template-col { white-space: nowrap; font-weight: bold; }
+    .version { color:#666; font-size:12px; }
+    .diag { margin-top: 12px; color:#444; font-size: 13px; }
+    .diag b { color:#000; }
+    .status { font-size:12px; color:#555; margin-top:4px; }
+    .ok { color:#0a7; }
+    .bad { color:#c33; }
+    button[disabled] { opacity: .5; cursor: not-allowed; }
+    .row-warn { background: #fff7e6; }
+    .score { font-size: 11px; color:#555; }
+    .reasons { font-size: 11px; color:#777; margin-top: 4px; }
+    .pill { display:inline-block; border:1px solid #ddd; border-radius:999px; padding:2px 8px; margin-right:6px; font-size:11px; color:#555; background:#fafafa; }
+    .subtle { color:#666; font-size:12px; }
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: 12px; background:#f3f3f3; padding:1px 5px; border-radius:4px; }
+    fieldset { border:1px solid #ddd; border-radius:8px; padding:12px; }
+  </style>
+</head>
+<body>
+
+  <h2>CSV Column Mapper <span class="version">(v12.0)</span></h2>
+
+  <div class="grid">
+    <!-- LEFT COLUMN -->
+    <div>
+      <label>
+        Select input.csv:
+        <input type="file" id="inputCSV" accept=".csv" />
+        <div id="inputStatus" class="status">Waiting for file…</div>
+      </label>
+
+      <label>
+        Select template.csv:
+        <input type="file" id="templateCSV" accept=".csv" />
+        <div id="templateStatus" class="status">Waiting for template…</div>
+      </label>
+
+      <fieldset style="margin-top:12px;">
+        <legend>Template Columns</legend>
+        <label style="display:flex; align-items:center; gap:8px;">
+          <input type="checkbox" id="useDefaultTemplate">
+          Use built-in default template (no upload needed)
+        </label>
+        <div class="hint">You can still upload a template to override the default in this session.</div>
+      </fieldset>
+
+      <label style="margin-top:12px">
+        (Optional) Existing usernames CSV (to avoid collisions with WordPress):
+        <input type="file" id="existingUsernamesCSV" accept=".csv" />
+        <div class="hint">Any CSV with a <b>user_login</b> column (or first column) works.</div>
+      </label>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div>
+      <fieldset>
+        <legend>WordPress Integration (optional)</legend>
+        <label style="display:flex; align-items:center; gap:8px;">
+          <input type="checkbox" id="wpEnable" />
+          Enable live checks against WordPress (usernames &amp; emails)
+        </label>
+        <div class="hint">Requires the <span class="kbd">wp-lookup.php</span> endpoint on your server. This tool never writes to WP; it only checks for existing usernames/emails.</div>
+        <label>Lookup endpoint URL (absolute or relative):
+          <input id="wpUrl" style="width:100%;" placeholder="/admin-tools/csv-column-mapper/wp-lookup.php" value="/admin-tools/csv-column-mapper/wp-lookup.php">
+        </label>
+        <label>Auth token (must match server file):
+          <input id="wpToken" style="width:100%;" placeholder="set a secret token">
+        </label>
+        <button id="wpSyncBtn" onclick="syncWithWordPress()" disabled>Fetch existing (WP)</button>
+        <div id="wpStatus" class="status">WP checks disabled.</div>
+      </fieldset>
+    </div>
+  </div>
+
+  <div id="mappingSection"></div>
+  <button id="genBtn" onclick="generateOutput()" disabled>Generate output.csv</button>
+  <div id="diag" class="diag"></div>
+
+  <script>
+    const VERSION = "12.0";
+
+    // ===== Default template headers (v12.0) =====
+    const DEFAULT_TEMPLATE_HEADERS = [
+      "user_login","user_email","display_name","first_name","last_name",
+      "passport_no","nic_no","mobile_no","user_pass","date_of_birth",
+      "visa_exp","passport_exp","visa_issue_date","home_address","office_address",
+      "emergency_contact_email","emergency_contact_phone","gender","employee_number",
+      "employment_status","designation","position","company","division","nationality",
+      "expat_local","wp_role","learndash_courses","learndash_groups",
+      // NEW FIELDS
+      "join_date","resign_date","perm_address","emergency_contact_who"
+    ];
+
+    let inputData = [];
+    let inputHeaders = [];
+    let templateHeaders = [];
+    let mappings = {};
+    let inputProfiles = null;
+
+    const inputStatusEl = document.getElementById('inputStatus');
+    const templateStatusEl = document.getElementById('templateStatus');
+    const genBtn = document.getElementById('genBtn');
+
+    const wpEnableEl = document.getElementById('wpEnable');
+    const wpUrlEl = document.getElementById('wpUrl');
+    const wpTokenEl = document.getElementById('wpToken');
+    const wpSyncBtn = document.getElementById('wpSyncBtn');
+    const wpStatus = document.getElementById('wpStatus');
+
+    const useDefaultTemplateEl = document.getElementById('useDefaultTemplate');
+
+    function updateGenBtn() {
+      genBtn.disabled = !(inputHeaders.length && templateHeaders.length);
+    }
+    wpEnableEl.addEventListener('change', () => {
+      wpSyncBtn.disabled = !wpEnableEl.checked;
+      wpStatus.textContent = wpEnableEl.checked ? 'Ready to sync with WordPress.' : 'WP checks disabled.';
+    });
+
+    useDefaultTemplateEl?.addEventListener('change', () => {
+      if (useDefaultTemplateEl.checked) {
+        templateHeaders = DEFAULT_TEMPLATE_HEADERS.slice();
+        templateStatusEl.innerHTML = `<span class="ok">Default template loaded: ${templateHeaders.length} columns.</span>`;
+        maybeRenderMappingUI();
+        updateGenBtn();
+      } else {
+        // Clear back to "waiting"; user may upload a template.csv
+        templateHeaders = [];
+        templateStatusEl.textContent = 'Waiting for template…';
+        maybeRenderMappingUI();
+        updateGenBtn();
+      }
+    });
+
+    // ---------- Helpers ----------
+    function toUpperCanon(s) {
+      return (s || "")
+        .replace(/\u00A0/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toUpperCase();
+    }
+    function squashKey(s) { return (s || "").toUpperCase().replace(/[^A-Z0-9]+/g, ""); }
+    function norm(s){ return (s || "").toString().toLowerCase().replace(/[^a-z0-9]+/g," "); }
+    function unique(arr){ return Array.from(new Set(arr)); }
+    function tokens(s){ return unique(norm(s).split(" ").filter(Boolean)); }
+    function intersect(a,b){ const B = new Set(b); return a.filter(x=>B.has(x)); }
+    function pad2(n){ return String(n).padStart(2,"0"); }
+
+    // ---------- Canonical & group logic (trimmed) ----------
+    const rawCompanyDivisionPairs = [
+      ["KR","KISSY RUWERN CO LTD"],["KRCP","KISSY RUWERN CO LTD"],["KRI","KISSY RUWERN CO LTD"],
+      ["KRQP","KISSY RUWERN CO LTD"],["KRVIP","KISSY RUWERN CO LTD"],
+      ["YCI - GSS","YADSENDEW CLOUD INC"],["YCI - CW","YADSENDEW CLOUD INC"],["YCI - BJ","YADSENDEW CLOUD INC"],
+      ["YCI - PG","YADSENDEW CLOUD INC"],["YCI - M1","YADSENDEW CLOUD INC"],["YCI - TWS","YADSENDEW CLOUD INC"],
+      ["YCI - CF","YADSENDEW CLOUD INC"],["YCI - QQ288","YADSENDEW CLOUD INC"],["YCI - SG","YADSENDEW CLOUD INC"],
+      ["YCI - BJ88","YADSENDEW CLOUD INC"],["YCI - BetStar/BS","YADSENDEW CLOUD INC"],
+      ["WSM - D7","WSM IT SDN BHD"],["WSM - XW","WSM IT SDN BHD"],["WSM - W88","WSM IT SDN BHD"],
+      ["WSM - AN","WSM IT SDN BHD"],["WSM - Fun 88/ OGG","WSM IT SDN BHD"],["WSM - E-pay","WSM IT SDN BHD"],
+      ["WSM - WA","WSM IT SDN BHD"],["WSM - Genesis","WSM IT SDN BHD"],["WSM - PROP","WSM IT SDN BHD"],
+      ["HO","KW IT HARDWARE SDN BHD"],["CX","KW IT HARDWARE SDN BHD"],["TNG","KW IT HARDWARE SDN BHD"],
+      ["NOVA","KW IT HARDWARE SDN BHD"],["ACE","KW IT HARDWARE SDN BHD"],["XINXUAN","KW IT HARDWARE SDN BHD"],
+      ["Pu Cian - P5","PU CIAN CO LTD"],["IDN","TKW SUCCESS TRADING SDN BHD"],["200M","TKW SUCCESS TRADING SDN BHD"],
+      ["BTNV","TKW SUCCESS TRADING SDN BHD"],["PANDA","TKW SUCCESS TRADING SDN BHD"],["TKW KG32","TKW SUCCESS TRADING SDN BHD"],
+      ["Teleperformer","TELEPERFORMER CO LTD"],["Diyou","DIYOU TECHNOLOGY LTD"],
+      ["RANSWIN","LINKUP"], ["KWIT BNZ","KW IT HARDWARE SDN BHD"], ["Maxview","MAXVIEW INTERNATIONAL TRADING"],
+      ["TKW PANDA","TKW SUCCESS TRADING SDN BHD"]
+    ];
+
+    const divisionMap = {
+      "YCI - GSS": 5284, "YCI - CW": 5288, "YCI - BJ": 5290, "YCI - Poseidon": 5292,
+      "YCI - M1": 5294, "YCI - TWS": 5296, "YCI - CF": 5298, "YCI - QQ288": 5300,
+      "YCI - SG": 5302, "Diyou": 5304, "Pu Cian - P5": 5306, "IDN": 5310, "TKW 200M": 5312,
+      "BTNV": 5314, "Teleperformer": 5316, "KR": 5318, "KRCP": 5320, "KRI": 5322,
+      "KRQP": 5324, "KRVIP": 5326, "Horizon": 5328, "CX": 5330, "Tiong": 5332, "NOVA": 5334,
+      "WSM - D7": 5336, "WSM - XW": 5338, "WSM - W88": 5340, "WSM - AN": 5342,
+      "WSM - Fun 88-OGG": 5344, "WSM - E-pay": 5346, "WSM - WA": 5348, "WSM - Genesis": 5350,
+      "PortCityHQ": 5375, "TKW - PS": 5452, "CX HR": 5454, "Mixui": 5456, "RANSWIN": 5458, "PANDA": 5460,
+      "XINXUAN": 5462, "YCI - BJ88": 5465, "YCI - BetStar-BS": 5511, "WSM - PROP": 5513, "TNG": 5519,
+      "ACE": 5515, "YCI - PG": 5523, "TKW KG32": 5535, "KWIT BNZ": 5544, "Maxview": 5517
+    };
+
+    const divisionGroupMapUpper = {};
+    Object.entries(divisionMap).forEach(([k, v]) => {
+      divisionGroupMapUpper[toUpperCanon(k)] = v;
+      divisionGroupMapUpper[squashKey(k)] = v;
+    });
+    divisionGroupMapUpper["TKW PANDA"] = 5460;
+    divisionGroupMapUpper[squashKey("TKW PANDA")] = 5460;
+
+    const divisionToCompany = {};
+    const allowedDivisions = new Set();
+    const allowedCompanies = new Set();
+    const knownOrgPrefixes = new Set();
+    const orgToDivisions = {};
+    const canonicalPairs = rawCompanyDivisionPairs.map(([div, comp]) => {
+      const d = toUpperCanon(div), c = toUpperCanon(comp);
+      divisionToCompany[d] = c;
+      allowedDivisions.add(d);
+      allowedCompanies.add(c);
+      const org = (d.split(" - ")[0] || d).replace(/\s+/g, " ");
+      knownOrgPrefixes.add(org);
+      (orgToDivisions[org] ||= new Set()).add(d);
+      return [d,c];
+    });
+
+    function extractShortToken(divCanon) {
+      const afterDash = divCanon.includes(" - ")
+        ? divCanon.split(" - ").slice(1).join(" - ")
+        : divCanon;
+      return squashKey(afterDash);
+    }
+    const exactKeyMap = {}; const shortBuckets = {}; const orgShortMap = {};
+    canonicalPairs.forEach(([divU]) => {
+      const key = squashKey(divU);
+      exactKeyMap[key] = divU;
+      const org = (divU.split(" - ")[0] || divU).toUpperCase();
+      const shortT = extractShortToken(divU);
+      (shortBuckets[shortT] ||= new Set()).add(divU);
+      orgShortMap[org + "::" + shortT] = divU;
+    });
+    const shortTokenMap = {};
+    Object.entries(shortBuckets).forEach(([tok, set]) => {
+      if (set.size === 1) shortTokenMap[tok] = Array.from(set)[0];
+    });
+    function resolveSpecialAliases(sCanon, sq) {
+      if (sq === "PANDA" || sq === "TKWPANDA") return "TKW PANDA";
+      if (sCanon.includes("YCI") && (sq.includes("POSEIDON") || sCanon.includes("POSEIDON"))) return "YCI - PG";
+      if (sq === "CXHR" || sCanon.includes("CX HR")) return "CX";
+      if (sq === "TKWBTNV" || (sCanon.includes("TKW") && sCanon.includes("BTNV"))) return "BTNV";
+      return null;
+    }
+    function resolveDivisionFlexible(inputDivRaw) {
+      let s = (inputDivRaw || "").replace(/\u00A0/g, " ").trim();
+      if (!s) return null;
+      const sCanon = toUpperCanon(s);
+      const sq = squashKey(sCanon);
+      const special = resolveSpecialAliases(sCanon, sq);
+      if (special) return special;
+      if (allowedDivisions.has(sCanon)) return sCanon;
+      if (exactKeyMap[sq]) return exactKeyMap[sq];
+      const maybeOrg = sCanon;
+      if (knownOrgPrefixes.has(maybeOrg) && orgToDivisions[maybeOrg] && orgToDivisions[maybeOrg].size === 1) {
+        return Array.from(orgToDivisions[maybeOrg])[0];
+      }
+      const shortOnly = extractShortToken(sCanon);
+      if (shortTokenMap[shortOnly]) return shortTokenMap[shortOnly];
+      const presentOrg = Array.from(knownOrgPrefixes).find(org => {
+        const orgSq = squashKey(org);
+        return sq.includes(orgSq) || sCanon.includes(org);
+      });
+      if (presentOrg) {
+        const key = presentOrg.toUpperCase() + "::" + shortOnly;
+        if (orgShortMap[key]) return orgShortMap[key];
+      }
+      return null;
+    }
+
+    // ---------- Column aliasing (expanded) ----------
+    const aliasMap = {
+      "user_login": ["user login","username","user name","users login","login","login name","account","account login","wp username"],
+      "user_email": ["email","email address","e-mail","mail","user email","primary email"],
+      "display_name": ["display name","name","full name","fullname"],
+      "first_name": ["first name","given name","forename"],
+      "last_name": ["last name","surname","family name"],
+      "passport_no": ["passport","passport no","passport number","passport #","passport num","pp no"],
+      "nic_no": ["nic","nic no","nic number","nic #","national id","national id number","nric","nric no"],
+      "mobile_no": ["mobile","mobile no","mobile number","phone","phone no","phone number","contact","contact number","contact no","tel"],
+      "user_pass": ["password","user pass","wp password"],
+      "date_of_birth": ["dob","date of birth","birth date","birthdate","d.o.b"],
+      "visa_exp": ["visa expiry","visa exp","visa expire","visa expiration","visa expiry date","visa exp date"],
+      "passport_exp": ["passport expiry","passport exp","passport expiration","passport expiry date","passport exp date"],
+      "visa_issue_date": ["visa issue","date of visa issue","visa issued","visa issue date"],
+      "home_address": ["home address","address","residential address"],
+      "office_address": ["office address","work address","company address"],
+      "emergency_contact_email": ["emergency email","emergency contact email"],
+      "emergency_contact_phone": ["emergency phone","emergency contact phone","emergency mobile","emergency contact no"],
+      "gender": ["gender","sex"],
+      "employee_number": ["employee number","employee no","emp no","emp number","# no","employee #","staff id","employee id","staff number"],
+      "employment_status": ["employment status","status","status of employee","employee status"],
+      "designation": ["designation","title","job title","position"],
+      "position": ["position","job position"],
+      "company": ["company","client name","employer","organization","organisation"],
+      "division": ["division","sub division","sub-division","department","dept"],
+      "nationality": ["nationality","country","citizenship"],
+      "expat_local": ["expatriate/local","expat/local","expat or local","local or expat"],
+      "wp_role": ["wp role","role","user roles","user role"],
+      "learndash_courses": ["learndash courses","courses","course ids"],
+      "learndash_groups": ["learndash groups","groups","group ids","learndash group ids"],
+
+      /* NEW FIELDS */
+      "join_date": ["join date","doj","date of joining","joining date"],
+      "resign_date": ["resignation date","date of resignation","resign date","dor","last working day","lwd"],
+      "perm_address": ["permanent address","permanent residence","residential address (permanent)","perm address","permanent home address"],
+      "emergency_contact_who": ["emergency contact relationship","emergency relationship","relationship to employee","emergency who","emergency contact – relationship","emergency contact (who)"]
+    };
+
+    // ---------- Value profilers (to infer column type) ----------
+    const STOP_TOKENS_GENERIC = new Set(["no","num","number","#","id"]);
+    const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
+    function guessTypeFromValues(values){
+      const sample = values.filter(v => (v ?? "").toString().trim()).slice(0,200).map(v=>String(v).trim());
+      if (!sample.length) return "unknown";
+      let email=0, phone=0, date=0, digitsMostly=0, alphaNumTight=0, longText=0, nameLike=0;
+      for(const s of sample){
+        const t = s.replace(/\u00A0/g," ").trim();
+        if (EMAIL_REGEX.test(t.toLowerCase())) email++;
+        if (/^\+?\d[\d\s\-()]{5,}$/.test(t)) phone++;
+        if (/^\d{2}[\/.]\d{2}[\/.]\d{4}$/.test(t) || /^\d{4}-\d{2}-\d{2}/.test(t) || /^\d{1,2}[\/-]\d{1,2}[\/-]\d{4}$/.test(t)) date++;
+        if (/^\d{3,}$/.test(t)) digitsMostly++;
+        if (/^[A-Za-z0-9\-\/]{5,}$/.test(t)) alphaNumTight++;
+        if (t.length > 40) longText++;
+        if (/^[A-Za-z][A-Za-z .,'-]{1,}$/.test(t) && t.length<=40) nameLike++;
+      }
+      const n = sample.length;
+      if (email/n > 0.6) return "email";
+      if (phone/n > 0.6) return "phone";
+      if (date/n > 0.6)  return "date";
+      if (nameLike/n > 0.6) return "name";
+      if (digitsMostly/n > 0.6) return "digits";
+      if (alphaNumTight/n > 0.6) return "alnum";
+      if (longText/n > 0.6) return "text";
+      return "unknown";
+    }
+
+    // map of what type each template column prefers (used for auto-matching hints)
+// NOTE: "text" just helps scoring; we don't do any special transform for text.
+const templateDesiredType = {
+  // Emails & phones
+  "user_email": "email",
+  "emergency_contact_email": "email",
+  "mobile_no": "phone",
+  "emergency_contact_phone": "phone",
+
+  // Dates (also normalized by isDateHeader/toDDMMYYYY)
+  "date_of_birth": "date",
+  "visa_exp": "date",
+  "visa_issue_date": "date",
+  "passport_exp": "date",
+  "join_date": "date",
+  "resign_date": "date",
+
+  // Names
+  "first_name": "name",
+  "last_name": "name",
+  "display_name": "name",
+  "nationality": "name",      // often a country/name-like token
+
+  // Alphanumeric / digits
+  "nic_no": "alnum",
+  "passport_no": "alnum",
+  "employee_number": "digits",
+
+  // Free text-ish fields (helps matching only)
+  "home_address": "text",
+  "office_address": "text",
+  "perm_address": "text",
+  "designation": "text",
+  "position": "text",
+  "company": "text",
+  "division": "text",
+  "gender": "text",
+  "employment_status": "text",
+  "expat_local": "text",
+  "emergency_contact_who": "text",
+
+  // We deliberately leave these as unknown because they’re ID lists or roles:
+  // "wp_role": unknown,
+  // "learndash_courses": unknown,   // usually "2871;4216;…"
+  // "learndash_groups":  unknown    // usually numeric IDs
+};
+
+    function columnProfileMap(rows, headers){
+      const map = {}; headers.forEach(h => { map[h] = []; });
+      for (const r of rows){ headers.forEach(h => map[h].push(r[h])); }
+      const typeMap = {}; headers.forEach(h => typeMap[h] = guessTypeFromValues(map[h]));
+      return { values: map, types: typeMap };
+    }
+
+    function levenshtein(a, b) {
+      a = a || ""; b = b || "";
+      const m = a.length, n = b.length;
+      if (!m) return n; if (!n) return m;
+      const dp = Array.from({length: m + 1}, (_, i) => [i]);
+      for (let j = 1; j <= n; j++) dp[0][j] = j;
+      for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+          const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+          dp[i][j] = Math.min(dp[i-1][j] + 1, dp[i][j-1] + 1, dp[i-1][j-1] + cost);
+        }
+      }
+      return dp[m][n];
+    }
+
+    function scoreHeaderToTemplate(inputHeader, templateCol, inputType){
+      const tTokens = tokens(templateCol).filter(t => !STOP_TOKENS_GENERIC.has(t));
+      const iTokens = tokens(inputHeader).filter(t => !STOP_TOKENS_GENERIC.has(t));
+
+      const overlap = intersect(tTokens, iTokens).length;
+      let tokenScore = overlap * 3;
+
+      const aliases = aliasMap[templateCol] || [];
+      const aMatch = aliases.some(a => {
+        const at = tokens(a);
+        return at.every(tok => iTokens.includes(tok));
+      });
+      if (aMatch) tokenScore += 5;
+
+      const ih = inputHeader.toLowerCase();
+      const th = templateCol.toLowerCase();
+      if (ih.includes(th) || th.includes(ih)) tokenScore += 2;
+
+      const lev = levenshtein(ih, th);
+      const levScore = Math.max(0, 4 - Math.min(4, Math.floor(lev/2)));
+
+      const desired = templateDesiredType[templateCol] || "unknown";
+      let typeScore = 0;
+      if (desired !== "unknown" && inputType){
+        if (inputType === desired) typeScore += 6;
+        else if ((desired==="alnum" && (inputType==="digits"||inputType==="alnum")) ||
+                 (desired==="name"  && (inputType==="text" || inputType==="name"))) {
+          typeScore += 2;
+        } else if ((desired==="phone" && inputType==="digits")) {
+          typeScore += 1;
+        }
+      }
+
+      const genericCount = tokens(inputHeader).filter(t => STOP_TOKENS_GENERIC.has(t)).length;
+      const penalty = genericCount > 0 ? Math.min(3, genericCount) : 0;
+
+      const score = tokenScore + levScore + typeScore - penalty;
+
+      const reasons = [];
+      if (overlap) reasons.push(`token overlap ×${overlap}`);
+      if (aMatch) reasons.push(`alias match`);
+      if (ih.includes(th) || th.includes(ih)) reasons.push(`contains`);
+      if (typeScore>=6) reasons.push(`type: strong (${inputType}→${desired})`);
+      else if (typeScore>0) reasons.push(`type: soft (${inputType}→${desired})`);
+      if (penalty) reasons.push(`generic penalty -${penalty}`);
+      if (levScore) reasons.push(`lev +${levScore}`);
+
+      return { score, reasons };
+    }
+
+    function bestGuessForTemplateCol_intelligent(templateCol, _inputHeaders, typeMap){
+      let best = "", bestScore = -Infinity, bestReasons=[];
+      let secondBest = "", secondScore = -Infinity;
+
+      for (const h of _inputHeaders){
+        const {score, reasons} = scoreHeaderToTemplate(h, templateCol, typeMap[h]);
+        if (score > bestScore){
+          secondBest = best; secondScore = bestScore;
+          best = h; bestScore = score; bestReasons = reasons;
+        } else if (score > secondScore){
+          secondBest = h; secondScore = score;
+        }
+      }
+
+      const margin = bestScore - secondScore;
+      const confident = bestScore >= 6 && margin >= 2;
+      return { guess: confident ? best : "", best, bestScore, secondBest, secondScore, confident, bestReasons };
+    }
+
+    // **** Existing usernames & emails (CSV + WP) ****
+    const existingUsernameSet = new Set();
+    const existingEmailSet = new Set();
+
+    document.getElementById("existingUsernamesCSV").addEventListener("change", function (e) {
+      Papa.parse(e.target.files[0], {
+        header: true, skipEmptyLines: true,
+        complete: function (results) {
+          const rows = results.data || [];
+          const fields = results.meta?.fields || [];
+          const hasCol = (fields || []).map(h => (h||"").toString().toLowerCase()).includes("user_login");
+          if (hasCol) {
+            rows.forEach(r => {
+              const v = (r["user_login"] ?? r["User_Login"] ?? r["USER_LOGIN"] ?? "").toString().trim();
+              if (v) existingUsernameSet.add(v.toLowerCase());
+            });
+          } else if (fields.length) {
+            const firstKey = fields[0];
+            rows.forEach(r => {
+              const v = (r[firstKey] ?? "").toString().trim();
+              if (v) existingUsernameSet.add(v.toLowerCase());
+            });
+          }
+          document.getElementById("diag").innerHTML =
+            `Loaded <b>${existingUsernameSet.size}</b> existing usernames from CSV.`;
+        }
+      });
+    });
+
+    async function syncWithWordPress(){
+      if (!wpEnableEl.checked) return;
+      const url = (wpUrlEl.value || "").trim();
+      const token = (wpTokenEl.value || "").trim();
+      if (!url || !token){ wpStatus.innerHTML = '<span class="bad">Set URL and token.</span>'; return; }
+
+      const emails = [];
+      const usernames = [];
+
+      const getCol = (key) => {
+        const mapped = mappings[key];
+        if (mapped) return mapped;
+        if (inputHeaders.includes(key)) return key;
+        return "";
+      };
+      const emailCol = getCol("user_email") || inputHeaders.find(h => /email/i.test(h)) || "";
+      const loginCol = getCol("user_login") || inputHeaders.find(h => /user.?login|username|login/i.test(h)) || "";
+
+      inputData.forEach(r => {
+        if (emailCol){ const e = String(r[emailCol]||"").trim().toLowerCase(); if (EMAIL_REGEX.test(e)) emails.push(e); }
+        if (loginCol){ const u = String(r[loginCol]||"").trim().toLowerCase(); if (u) usernames.push(u); }
+      });
+
+      const payload = {
+        token,
+        emails: Array.from(new Set(emails)).slice(0, 5000),
+        usernames: Array.from(new Set(usernames)).slice(0, 5000)
+      };
+
+      wpStatus.textContent = `Checking ${payload.emails.length} emails & ${payload.usernames.length} usernames…`;
+      try{
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        (data.usernames || []).forEach(u => existingUsernameSet.add(String(u).toLowerCase()));
+        (data.emails || []).forEach(e => existingEmailSet.add(String(e).toLowerCase()));
+        wpStatus.innerHTML = `<span class="ok">Synced. WP has ${existingUsernameSet.size} usernames, ${existingEmailSet.size} emails.</span>`;
+      } catch(err){
+        wpStatus.innerHTML = `<span class="bad">WP sync failed: ${err.message}</span>`;
+      }
+    }
+
+    // ---------- File inputs ----------
+    document.getElementById("inputCSV").addEventListener("change", function (e) {
+      Papa.parse(e.target.files[0], {
+        header: true, skipEmptyLines: true,
+        complete: function (results) {
+          inputData = results.data;
+          inputHeaders = results.meta.fields || [];
+          inputProfiles = columnProfileMap(inputData, inputHeaders);
+          inputStatusEl.innerHTML = `<span class="ok">Loaded ${inputData.length} rows, ${inputHeaders.length} columns.</span>`;
+          maybeRenderMappingUI();
+          updateGenBtn();
+        },
+        error: function(err){ inputStatusEl.innerHTML = `<span class="bad">Error: ${err}</span>`; }
+      });
+    });
+
+    document.getElementById("templateCSV").addEventListener("change", function (e) {
+      Papa.parse(e.target.files[0], {
+        header: true, skipEmptyLines: true,
+        complete: function (results) {
+          templateHeaders = results.meta.fields || [];
+          templateStatusEl.innerHTML = `<span class="ok">Loaded ${templateHeaders.length} template columns.</span>`;
+          maybeRenderMappingUI();
+          updateGenBtn();
+        },
+        error: function(err){ templateStatusEl.innerHTML = `<span class="bad">Error: ${err}</span>`; }
+      });
+    });
+
+    function maybeRenderMappingUI() {
+      const section = document.getElementById("mappingSection");
+      if (!inputHeaders.length || !templateHeaders.length || !inputProfiles) {
+        section.innerHTML = "";
+        return;
+      }
+      section.innerHTML = "<h3>Map Input Columns to Template Columns</h3>";
+      const table = document.createElement("table");
+      table.classList.add("map-table");
+      const thead = document.createElement("thead");
+      thead.innerHTML = "<tr><th>Input Column (auto-guessed, editable)</th><th>→</th><th>Template Column</th></tr>";
+      table.appendChild(thead);
+      const tbody = document.createElement("tbody");
+
+      mappings = {}; // reset
+
+      templateHeaders.forEach(templateCol => {
+        const row = document.createElement("tr");
+        const g = bestGuessForTemplateCol_intelligent(templateCol, inputHeaders, inputProfiles.types);
+
+        const inputSelect = document.createElement("select");
+        inputSelect.innerHTML =
+          `<option value=''>-- None --</option>` +
+          inputHeaders.map(h => `<option value="${h}" ${h === g.guess ? "selected" : ""}>${h}</option>`).join("");
+        mappings[templateCol] = g.guess || "";
+        inputSelect.onchange = () => { mappings[templateCol] = inputSelect.value; };
+
+        const tdInput = document.createElement("td");
+        tdInput.appendChild(inputSelect);
+
+        const tagBar = document.createElement("div");
+        tagBar.className = "reasons";
+        const typeWanted = templateDesiredType[templateCol];
+        if (typeWanted) {
+          const pill = document.createElement("span");
+          pill.className = "pill";
+          pill.textContent = `expects: ${typeWanted}`;
+          tagBar.appendChild(pill);
+        }
+        if (g.best){
+          const pill2 = document.createElement("span");
+          pill2.className = "pill";
+          pill2.textContent = `best: ${g.best} (${g.bestScore.toFixed(1)})`;
+          tagBar.appendChild(pill2);
+        }
+        if (g.secondBest){
+          const pill3 = document.createElement("span");
+          pill3.className = "pill";
+          pill3.textContent = `2nd: ${g.secondBest} (${g.secondScore.toFixed(1)})`;
+          tagBar.appendChild(pill3);
+        }
+        if (g.bestReasons?.length){
+          const reasons = document.createElement("div");
+          reasons.className = "score";
+          reasons.textContent = `why: ${g.bestReasons.join(", ")}`;
+          tdInput.appendChild(reasons);
+        }
+        tdInput.appendChild(tagBar);
+
+        if (!g.confident) row.classList.add("row-warn");
+
+        const tdArrow = document.createElement("td"); tdArrow.innerText = "→";
+        const tdTemplate = document.createElement("td");
+        tdTemplate.innerHTML = `<span class="template-col">${templateCol}</span>`;
+        row.appendChild(tdInput); row.appendChild(tdArrow); row.appendChild(tdTemplate);
+        tbody.appendChild(row);
+      });
+
+      table.appendChild(tbody);
+      const tip = document.createElement("div");
+      tip.className = "subtle";
+      tip.textContent = "Yellow rows indicate low-confidence suggestions — please review.";
+      section.appendChild(table);
+      section.appendChild(tip);
+    }
+
+    // ---------- Sanitizers & helpers ----------
+    function cleanBasic(val) {
+      return String(val ?? "")
+        .replace(/\u00A0/g, " ")
+        .trim()
+        .replace(/\s+/g, " ");
+    }
+    function cleanName(val) { return cleanBasic(val).replace(/,/g, ""); }
+    function sanitizeEmploymentStatus(val) {
+      const v = cleanBasic(val).toLowerCase();
+      if (v === "active") return "Active";
+      if (v === "inactive") return "Inactive";
+      return "";
+    }
+    function sanitizePassport(val) {
+      const v = cleanBasic(val);
+      return /no\s*passport/i.test(v) ? "" : v;
+    }
+    function sanitizeNIC(val) {
+      const v = cleanBasic(val);
+      return /no\s*nic/i.test(v) ? "" : v;
+    }
+    function fixCommonEmailTypos(domain) {
+      const d = domain.toLowerCase();
+      const fixes = {
+        "gmai.com": "gmail.com", "gmal.com": "gmail.com", "gmial.com": "gmail.com",
+        "argmail.com": "gmail.com",
+        "outloo.com": "outlook.com",
+        "hotmial.com": "hotmail.com",
+        "yaho.com": "yahoo.com",
+      };
+      return fixes[d] || d;
+    }
+    function sanitizeEmail(val) {
+      let v = String(val ?? "").trim().toLowerCase();
+      v = v.replace(/\s+/g, "");
+      if (!v) return "";
+      const atIdx = v.indexOf("@");
+      if (atIdx <= 0 || atIdx === v.length - 1) return "";
+      const local = v.slice(0, atIdx);
+      let domain = v.slice(atIdx + 1);
+      domain = fixCommonEmailTypos(domain);
+      const recombined = `${local}@${domain}`;
+      if (!EMAIL_REGEX.test(recombined)) return "";
+      return recombined;
+    }
+    function sanitizeMobile(val) { return String(val ?? "").replace(/[ +]/g, ""); }
+    function toDDMMYYYY(raw) {
+      let s = cleanBasic(raw);
+      if (!s) return "";
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return s;
+      if (/^\d{2}\.\d{2}\.\d{4}$/.test(s)) {
+        const [d,m,y] = s.split(".");
+        return `${d}/${m}/${y}`;
+      }
+      let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (m) { const [,y,mo,d] = m; return `${d}/${mo}/${y}`; }
+      m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+      if (m) {
+        let [,_a,_b,y] = m;
+        let a = parseInt(_a,10), b = parseInt(_b,10);
+        if (a > 12) return `${pad2(a)}/${pad2(b)}/${y}`;
+        if (b > 12) return `${pad2(b)}/${pad2(a)}/${y}`;
+        return `${pad2(a)}/${pad2(b)}/${y}`;
+      }
+      return s;
+    }
+    function isDateHeader(h) {
+      const hn = (h || "").toLowerCase();
+      return hn.includes("date")
+          || ["date_of_birth","passport_exp","visa_exp","visa_issue_date","join_date","resign_date"].includes(hn);
+    }
+
+    // ---------- Username helpers ----------
+    function slugifyLetters(s) {
+      return (s || "")
+        .toLowerCase()
+        .normalize('NFKD').replace(/[\u0300-\u036f]/g,'')
+        .replace(/[^a-z]+/g, '')
+        .slice(0, 50);
+    }
+    function lastDigits(s, n) { return (s || "").replace(/\D+/g, "").slice(-n); }
+    function emailLocal(email) {
+      const v = (email || "").toLowerCase().trim();
+      const i = v.indexOf("@"); return i > 0 ? v.slice(0, i) : v;
+    }
+    function makeUniqueLogin(basis, row, used) {
+      const baseLetters = slugifyLetters(basis);
+      const ln = slugifyLetters(row.last_name || "");
+      const fn = slugifyLetters(row.first_name || "");
+      const disp = slugifyLetters(row.display_name || "");
+
+      const nic5  = lastDigits(row.nic_no, 5);
+      const pass5 = lastDigits(row.passport_no, 5);
+      const emp5  = lastDigits(row.employee_number, 5);
+      const mob4  = lastDigits(row.mobile_no, 4);
+      const dobY  = (row.date_of_birth || "").match(/\b(\d{4})\b/);
+      const em3   = (emailLocal(row.user_email) || "").slice(0,3);
+
+      const suffix = nic5 || pass5 || emp5 || mob4 || (dobY ? dobY[1] : "") || em3 || "usr";
+      let candidate = (ln || disp || fn || baseLetters || "user") + suffix;
+      candidate = candidate.replace(/[^a-z0-9]+/g, '').slice(0, 60);
+      if (!candidate) candidate = "user" + (nic5 || pass5 || emp5 || "00000");
+
+      const lower = s => (s||"").toLowerCase();
+      const isTaken = u => used.has(lower(u)) || existingUsernameSet.has(lower(u));
+
+      if (!isTaken(candidate)) { used.add(lower(candidate)); return candidate; }
+
+      let k = 1;
+      while (true) {
+        const c2 = (candidate + (k === 1 ? "-x" : `-x${k}`)).slice(0, 64);
+        if (!isTaken(c2)) { used.add(lower(c2)); return c2; }
+        k++;
+        if (k > 9999) {
+          const c3 = candidate + "-" + Math.random().toString(36).slice(2,6);
+          used.add(lower(c3));
+          return c3;
+        }
+      }
+    }
+
+    // ---------- Output generation ----------
+    function generateOutput() {
+      const usedLogins = new Set();
+      let collisions = 0, invalidEmails=0, wpEmailHits=0;
+
+      const output = inputData.map(row => {
+        const mappedValues = {};
+        templateHeaders.forEach(th => {
+          const src = mappings[th];
+          let val = src ? row[src] : "";
+          val = cleanBasic(val);
+
+          if (["first_name","last_name","display_name"].includes(th)) val = cleanName(val);
+          if (th === "employment_status") val = sanitizeEmploymentStatus(val);
+          if (th === "passport_no") val = sanitizePassport(val);
+          if (th === "nic_no") val = sanitizeNIC(val);
+          if (th === "user_email") {
+            val = sanitizeEmail(val);
+            if (!val) invalidEmails++;
+            if (val && existingEmailSet.has(val.toLowerCase())) wpEmailHits++;
+          }
+          if (th === "mobile_no") val = sanitizeMobile(val);
+          if (isDateHeader(th) && val) val = toDDMMYYYY(val);
+
+          mappings[th] = mappings[th] || "";
+          mappedValues[th] = val;
+        });
+
+        const outRow = {};
+        const disp = mappedValues["display_name"] || "";
+        const parts = disp.split(" ").filter(Boolean);
+        const lastFromDisp  = parts.length > 1 ? parts[parts.length - 1] : "";
+        const firstFromDisp = parts.length > 1 ? parts.slice(0, -1).join(" ") : (parts[0] || "");
+        outRow["first_name"]   = mappedValues["first_name"] || firstFromDisp;
+        outRow["last_name"]    = mappedValues["last_name"]  || lastFromDisp;
+        outRow["display_name"] = disp;
+
+        const requestedLogin = (mappedValues["user_login"] || "").trim();
+        let finalLogin;
+        if (requestedLogin) {
+          const before = requestedLogin;
+          finalLogin = makeUniqueLogin(before, {
+            ...mappedValues, first_name: outRow.first_name, last_name: outRow.last_name, display_name: outRow.display_name
+          }, usedLogins);
+          if (finalLogin.toLowerCase() !== before.toLowerCase()
+              && (existingUsernameSet.has(before.toLowerCase()) || usedLogins.has(before.toLowerCase()))) {
+            collisions++;
+          }
+        } else {
+          const basis = (outRow.last_name || outRow.display_name || outRow.first_name || "");
+          const made = makeUniqueLogin(basis, {
+            ...mappedValues, first_name: outRow.first_name, last_name: outRow.last_name, display_name: outRow.display_name
+          }, usedLogins);
+          finalLogin = made;
+          if (/-x\d*$/.test(finalLogin)) collisions++;
+        }
+        outRow["user_login"] = finalLogin;
+
+        let finalExpatLocal = mappedValues["expat_local"];
+        if (!finalExpatLocal) {
+          const nat = (mappedValues["nationality"] || "").toLowerCase();
+          const nicNo = mappedValues["nic_no"] || "";
+          if (nat) finalExpatLocal = (nat === "sri lanka" || nat === "sri-lanka" || nat === "sri_lanka") ? "Local" : "Expatriate";
+          else if (nicNo) finalExpatLocal = "Local";
+          else finalExpatLocal = "";
+        }
+        outRow["expat_local"] = finalExpatLocal;
+
+        outRow["wp_role"] = "subscriber";
+        outRow["learndash_courses"] = outRow["expat_local"] === "Expatriate"
+          ? "2871;4216;2869;3027"
+          : "2871;4216;2869";
+
+        const divisionInput = mappedValues["division"] || "";
+        const companyInput  = mappedValues["company"]  || "";
+        const resolvedCanonDivision = resolveDivisionFlexible(divisionInput);
+        if (resolvedCanonDivision && allowedDivisions.has(resolvedCanonDivision)) {
+          outRow["division"] = resolvedCanonDivision;
+          outRow["company"]  = divisionToCompany[resolvedCanonDivision];
+        } else {
+          outRow["division"] = toUpperCanon(divisionInput);
+          const compCanon = toUpperCanon(companyInput);
+          outRow["company"]  = allowedCompanies.has(compCanon) ? compCanon : compCanon || "";
+        }
+
+        // carry all mapped fields over
+        templateHeaders.forEach(th => { if (!(th in outRow)) outRow[th] = mappedValues[th] || ""; });
+
+        const finalUserLogin = String(outRow["user_login"] || "").trim();
+        outRow["user_pass"] = [...finalUserLogin].reverse().join("") + "$";
+
+        const divCanon = toUpperCanon(outRow["division"] || "");
+        outRow["learndash_groups"] =
+          divisionGroupMapUpper[divCanon] ||
+          divisionGroupMapUpper[squashKey(divCanon)] ||
+          "";
+
+        templateHeaders.forEach(h => { if (isDateHeader(h) && outRow[h]) outRow[h] = toDDMMYYYY(outRow[h]); });
+        Object.keys(outRow).forEach(k => { outRow[k] = cleanBasic(outRow[k]); });
+
+        return outRow;
+      });
+
+      const csv = Papa.unparse(output);
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "output.csv";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      const diag = document.getElementById("diag");
+      diag.innerHTML = `Generated <b>${output.length}</b> rows. Username collisions resolved: <b>${collisions}</b>${
+        existingUsernameSet.size ? ` (checked against ${existingUsernameSet.size} existing usernames)` : ''
+      }${existingEmailSet.size ? `; WP emails pre-exist: <b>${wpEmailHits}</b>`:''}. Invalid emails cleaned: <b>${invalidEmails}</b>.`;
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,71 @@
+<?php
+// /admin-tools/csv-column-mapper/wp-lookup.php
+define('WP_USE_THEMES', false);
+require_once('/var/www/html/wp-load.php'); // <-- adjust if needed
+
+// Simple bearer-like token check
+const AUTH_TOKEN = '6714e52aed21125dd999ff7c31666c1806e033aa2cb8a14073b41ae7026ec0b0';
+
+header('Content-Type: application/json');
+
+$raw = file_get_contents('php://input');
+if (!$raw) { http_response_code(400); echo json_encode(['error'=>'Empty body']); exit; }
+
+$req = json_decode($raw, true);
+if (!is_array($req)) { http_response_code(400); echo json_encode(['error'=>'Bad JSON']); exit; }
+
+if (!isset($req['token']) || $req['token'] !== AUTH_TOKEN) {
+  http_response_code(401); echo json_encode(['error'=>'Unauthorized']); exit;
+}
+
+$emails    = array_slice(array_map('strval', $req['emails'] ?? []), 0, 20000);
+$usernames = array_slice(array_map('strval', $req['usernames'] ?? []), 0, 20000);
+$nics      = array_slice(array_map('strval', $req['nics'] ?? []), 0, 20000);
+$passports = array_slice(array_map('strval', $req['passports'] ?? []), 0, 20000);
+
+$emails_lc    = array_map('strtolower', $emails);
+$usernames_lc = array_map('strtolower', $usernames);
+$nics_lc      = array_map('strtolower', $nics);
+$passports_lc = array_map('strtolower', $passports);
+
+$found_emails    = [];
+$found_usernames = [];
+$found_nics      = [];
+$found_passports = [];
+
+// 1) Emails
+if (!empty($emails_lc)) {
+  global $wpdb;
+  $placeholders = implode(',', array_fill(0, count($emails_lc), '%s'));
+  $sql = "SELECT user_email FROM {$wpdb->users} WHERE LOWER(user_email) IN ($placeholders)";
+  $rows = $wpdb->get_col($wpdb->prepare($sql, $emails_lc));
+  foreach ($rows as $e) $found_emails[] = strtolower($e);
+}
+
+// 2) Usernames
+if (!empty($usernames_lc)) {
+  global $wpdb;
+  $placeholders = implode(',', array_fill(0, count($usernames_lc), '%s'));
+  $sql = "SELECT user_login FROM {$wpdb->users} WHERE LOWER(user_login) IN ($placeholders)";
+  $rows = $wpdb->get_col($wpdb->prepare($sql, $usernames_lc));
+  foreach ($rows as $u) $found_usernames[] = strtolower($u);
+}
+
+// 3) NIC & 4) Passport via usermeta keys nic_no / passport_no
+function find_in_usermeta($key, $values_lc) {
+  global $wpdb;
+  if (empty($values_lc)) return [];
+  $placeholders = implode(',', array_fill(0, count($values_lc), '%s'));
+  $sql = "SELECT LOWER(meta_value) FROM {$wpdb->usermeta} WHERE meta_key = %s AND LOWER(meta_value) IN ($placeholders)";
+  $params = array_merge([$key], $values_lc);
+  return $wpdb->get_col($wpdb->prepare($sql, $params));
+}
+$found_nics = find_in_usermeta('nic_no', $nics_lc);
+$found_passports = find_in_usermeta('passport_no', $passports_lc);
+
+echo json_encode([
+  'usernames' => array_values(array_unique($found_usernames)),
+  'emails'    => array_values(array_unique($found_emails)),
+  'nics'      => array_values(array_unique($found_nics)),
+  'passports' => array_values(array_unique($found_passports)),
+]);

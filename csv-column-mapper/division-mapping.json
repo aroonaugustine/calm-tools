@@ -1,0 +1,141 @@
+{
+    "version": "15.11.0",
+    "saved_at": "2025-12-09T06:49:14+00:00",
+    "mapping": {
+        "KRQP": {
+            "official": "KRQP"
+        },
+        "KRVIP": {
+            "official": "KRVIP"
+        },
+        "KRI": {
+            "official": "KRI"
+        },
+        "HO": {
+            "official": "HO"
+        },
+        "TIONG": {
+            "official": "TIONG"
+        },
+        "ACE": {
+            "official": "ACE"
+        },
+        "XINXUAN": {
+            "official": "XINXUAN"
+        },
+        "NOVA": {
+            "official": "NOVA"
+        },
+        "CX": {
+            "official": "CX"
+        },
+        "IDN": {
+            "official": "IDN"
+        },
+        "PANDA": {
+            "official": "PANDA"
+        },
+        "BTNV": {
+            "official": "BTNV"
+        },
+        "200M(A)": {
+            "official": "200M(A)"
+        },
+        "200M(B)": {
+            "official": "200M(B)"
+        },
+        "MAXVIEW": {
+            "official": "MAXVIEW"
+        },
+        "CENTRAL": {
+            "official": "PORTCITYHQ"
+        },
+        "BJ": {
+            "official": "YCI - BJ"
+        },
+        "CF": {
+            "official": "YCI - CF"
+        },
+        "CW": {
+            "official": "YCI - CW"
+        },
+        "GSS": {
+            "official": "YCI - GSS"
+        },
+        "PR3CS": {
+            "official": "YCI - PR3CS"
+        },
+        "M1": {
+            "official": "YCI - M1"
+        },
+        "POSIDON": {
+            "official": "YCI - PG"
+        },
+        "QQ28": {
+            "official": "YCI - QQ288"
+        },
+        "SG": {
+            "official": "YCI - SG"
+        },
+        "BTS": {
+            "official": "YCI - BETSTAR-BS"
+        },
+        "CMD": {
+            "official": "YCI - CMD"
+        },
+        "TWS": {
+            "official": "YCI - TWS"
+        },
+        "BJ88": {
+            "official": "YCI - BJ88"
+        },
+        "BNZ": {
+            "official": "KWIT BNZ"
+        },
+        "D7": {
+            "official": "WSM - D7"
+        },
+        "AN": {
+            "official": "WSM - AN"
+        },
+        "WA": {
+            "official": "WSM - WA"
+        },
+        "WE": {
+            "official": "WSM - WE"
+        },
+        "KG 32": {
+            "official": "TKW KG32"
+        },
+        "DI YOU": {
+            "official": "DIYOU"
+        },
+        "LINKUP": {
+            "official": "RANSWIN"
+        },
+        "SURE WELL": {
+            "official": "SUREWELL"
+        },
+        "TNG": {
+            "official": "TNG"
+        },
+        "VEDA": {
+            "official": "VEDA"
+        },
+        "SUREWELL": {
+            "official": "SUREWELL"
+        },
+        "QQ288": {
+            "official": "YCI - QQ288"
+        },
+        "CX HR": {
+            "official": "CX"
+        },
+        "KG32": {
+            "official": "TKW KG32"
+        },
+        "SJF": {
+            "official": "YCI - SJF"
+        }
+    }
+}

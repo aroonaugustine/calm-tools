@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Resigned Processor — v1.4.1</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+  body{font-family:system-ui,Arial,sans-serif;margin:40px;max-width:980px}
+  fieldset{border:1px solid #ddd;border-radius:8px;padding:16px;margin-bottom:18px}
+  legend{font-weight:700}
+  label{display:block;margin:8px 0}
+  input[type=text],input[type=password],input[type=number]{width:520px;max-width:100%;padding:8px}
+  input[type=file]{padding:6px}
+  .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .muted{color:#666}
+  button{padding:10px 16px;border:1px solid #333;border-radius:8px;background:#fafafa;cursor:pointer}
+  .small{font-size:12px}
+</style>
+</head>
+<body>
+  <h1>Resigned Processor <span class="muted">v1.4.1</span></h1>
+  <form method="post" action="launch.php" enctype="multipart/form-data">
+    <fieldset>
+      <legend>Auth</legend>
+      <label>Launcher Auth Token:
+        <input type="password" name="token" required>
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>CSV Source</legend>
+      <label class="row"><input type="radio" name="csv_mode" value="upload" checked> Upload CSV</label>
+      <input type="file" name="csv_file" accept=".csv">
+      <div style="height:10px"></div>
+      <label class="row"><input type="radio" name="csv_mode" value="server"> Use server path</label>
+      <input type="text" name="csv_path" placeholder="/home/bulk_update/Resigned.csv">
+      <div class="small muted">Tip: “Server path” avoids Cloudflare timeouts for very large files.</div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Matching Policy</legend>
+      <label class="row"><input type="radio" name="match_mode" value="strict" checked> <b>Strict</b> — email + (NIC OR Passport) must match the same WP user</label>
+      <label class="row"><input type="radio" name="match_mode" value="email"> <b>Email only</b> — match by email only</label>
+      <label class="row"><input type="radio" name="match_mode" value="id"> <b>NIC/Passport only</b> — match by NIC or Passport only</label>
+      <div class="small muted">Worker receives <code>--match=strict</code>, <code>--match=email</code>, or <code>--match=id</code>.</div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Batching (avoid 504s)</legend>
+      <label>Batch size (rows per chunk, header excluded):
+        <input type="number" min="0" step="1" name="batch_size" value="0">
+      </label>
+      <div class="small muted">0 = no batching. Try 200–1000 if you’re hitting timeouts.</div>
+      <label>Delay between chunks (ms):
+        <input type="number" min="0" step="50" name="batch_delay_ms" value="250">
+      </label>
+      <div class="small muted">Adds a small pause between chunks to reduce DB and PHP load (optional).</div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Options</legend>
+      <label class="row"><input type="checkbox" name="live" value="1"> Live run (apply changes). Untick = DRY RUN (preview only).</label>
+      <label class="row"><input type="checkbox" name="remove_groups" value="1" checked> Remove from all LearnDash groups</label>
+      <label class="row"><input type="checkbox" name="unenroll_courses" value="1"> Unenroll from all LearnDash courses</label>
+      <label class="row" style="margin-left:24px"><input type="checkbox" name="reset_progress" value="1"> …and reset course progress</label>
+      <label class="row"><input type="checkbox" name="um_inactive" value="1"> Set Ultimate Member account_status = inactive</label>
+      <label class="row"><input type="checkbox" name="strip_roles" value="1"> Strip all WordPress roles (fallback if you don’t have an “inactive” role)</label>
+      <div class="row">
+        <label>Limit (0 = all):
+          <input type="number" name="limit" value="0" class="small">
+        </label>
+      </div>
+    </fieldset>
+
+    <div class="row" style="margin-top:12px">
+      <button type="submit">Launch Background Run</button>
+      <a href="status.php"><button type="button">View Runs & Logs</button></a>
+    </div>
+  </form>
+</body>
+</html>

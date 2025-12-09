@@ -1,0 +1,73 @@
+<?php
+/**
+ * Worker for WP Meta Bulk Updater — v2.0.0
+ */
+
+if (!function_exists('wpmbu200_run')) {
+function wpmbu200_run(array $cfg, string $run_dir): array {
+    global $wpdb;
+
+    $meta_key  = $cfg['meta_key'];
+    $old_value = $cfg['old_value'];
+    $new_value = $cfg['new_value'];
+    $live      = !empty($cfg['live']);
+
+    $logPath = $run_dir . '/log.ndjson';
+    $sumPath = $run_dir . '/summary.json';
+    $csvPath = $run_dir . '/changes.csv';
+    $logFh = fopen($logPath, 'a');
+    $csvFh = fopen($csvPath, 'w');
+
+    fputcsv($csvFh, ['user_id', 'field', 'old_value', 'new_value']);
+
+    $started = time();
+    $rows_checked = 0;
+    $matched = 0;
+    $updated = 0;
+
+    // Get all matching rows (case-insensitive)
+    $meta_table = $wpdb->usermeta;
+    $rows = $wpdb->get_results(
+        $wpdb->prepare("SELECT user_id, meta_value FROM $meta_table WHERE meta_key = %s", $meta_key)
+    );
+
+    foreach ($rows as $row) {
+        $rows_checked++;
+        if (strcasecmp(trim($row->meta_value), trim($old_value)) === 0) {
+            $matched++;
+            fputcsv($csvFh, [$row->user_id, $meta_key, $row->meta_value, $new_value]);
+            fwrite($logFh, json_encode([
+                'user_id'=>$row->user_id,
+                'old'=>$row->meta_value,
+                'new'=>$new_value,
+                'live'=>$live
+            ]) . "\n");
+
+            if ($live) {
+                update_user_meta($row->user_id, $meta_key, $new_value);
+                $updated++;
+            }
+        }
+    }
+
+    fclose($csvFh);
+    fclose($logFh);
+
+    $summary = [
+        'ok' => true,
+        'version' => '2.0.0',
+        'meta_key' => $meta_key,
+        'old_value' => $old_value,
+        'new_value' => $new_value,
+        'live' => $live,
+        'rows_checked' => $rows_checked,
+        'matched' => $matched,
+        'updated' => $updated,
+        'duration_sec' => time() - $started,
+        'at' => date('c')
+    ];
+
+    file_put_contents($sumPath, json_encode($summary, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
+    return [$sumPath, $logPath, $csvPath];
+}
+}

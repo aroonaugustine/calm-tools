@@ -1,0 +1,11 @@
+reason,user_email,NIC,Passport
+"No user matched (policy=strict)",-,,P03088351
+"No user matched (policy=strict)",tina.nguyen@ezglobal.com,,C8236031
+"No user matched (policy=strict)",benzama.ngo@ezglobal.com,,E00205379
+"No user matched (policy=strict)",ozuna.nguyen@ezglobal.com,,E00177396
+"No user matched (policy=strict)",kevinl.nguyen@ezglobal.com,,E02442963
+"No user matched (policy=strict)",gavi.ngo@ezglobal.com,,P03145114
+"Email found, but NIC/Passport mismatch (csv_nic=''→'', wp_nic=''→''; csv_pp='P02872251'→'p02872251', wp_pp='E01418870'→'e01418870')",sol.nguyen@ezglobal.com,,P02872251
+"No user matched (policy=strict)",liu.nguyen@ezglobal.com,,P02331281
+"No user matched (policy=strict)",-,,P02630853
+"No user matched (policy=strict)",tiki.nguyen@ezglobal.com,,E01430146

@@ -1,0 +1,14 @@
+{
+    "pid": "3695628",
+    "args": [
+        "--only-role=um_mailer",
+        "--batch-size=50",
+        "--batch-sleep=2",
+        "--dry-run",
+        "--log-file=/srv/admin-tools/wp-mailer/_mailer-logs/run_20251001_102336_dcaa60/log.csv"
+    ],
+    "stdout": "/srv/admin-tools/wp-mailer/_mailer-logs/run_20251001_102336_dcaa60/stdout.log",
+    "log_csv": "/srv/admin-tools/wp-mailer/_mailer-logs/run_20251001_102336_dcaa60/log.csv",
+    "campaign": "",
+    "started_gmt": "2025-10-01T10:23:36+00:00"
+}

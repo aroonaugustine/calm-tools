@@ -1,0 +1,30 @@
+🧭 WP ENV:
+  ABSPATH: /var/www/html/
+  site_url: http://portcalm.portcitybpo.lk
+  home_url: http://portcalm.portcitybpo.lk/en
+  DB_NAME: portcalmdb
+  table prefix: wp_
+  users table: wp_users
+  users count: 5576
+Resigned Processor v1.4.0 — LIVE
+    Policy: NIC/Passport only
+    Options: groups=on unenroll=on reset=on UM=on strip_roles=on
+🔎 nguyen88351 | policy=id | NIC csv='' vs wp='' → NO | PP csv='P03088351' vs wp='P03088351' → MATCH
+✅ nguyen88351 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(4), ld:progress-reset(4)
+🔎 an36031 | policy=id | NIC csv='' vs wp='' → NO | PP csv='C8236031' vs wp='C8236031' → MATCH
+✅ an36031 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(4), ld:progress-reset(4)
+🔎 ngo05379 | policy=id | NIC csv='' vs wp='' → NO | PP csv='E00205379' vs wp='E00205379' → MATCH
+✅ ngo05379 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(4), ld:progress-reset(4)
+🔎 nguyen77396 | policy=id | NIC csv='' vs wp='' → NO | PP csv='E00177396' vs wp='E00177396' → MATCH
+✅ nguyen77396 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(4), ld:progress-reset(4)
+🔎 nguyen42963 | policy=id | NIC csv='' vs wp='' → NO | PP csv='E02442963' vs wp='E02442963' → MATCH
+✅ nguyen42963 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(4), ld:progress-reset(4)
+🔎 ngo45114 | policy=id | NIC csv='' vs wp='' → NO | PP csv='P03145114' vs wp='P03145114' → MATCH
+✅ ngo45114 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(4), ld:progress-reset(4)
+🔎 nguyen31281 | policy=id | NIC csv='' vs wp='' → NO | PP csv='P02331281' vs wp='P02331281' → MATCH
+✅ nguyen31281 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(4), ld:progress-reset(4)
+🔎 trinh30853 | policy=id | NIC csv='' vs wp='' → NO | PP csv='P02630853' vs wp='P02630853' → MATCH
+✅ trinh30853 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(4), ld:progress-reset(4)
+🔎 nguyen30146 | policy=id | NIC csv='' vs wp='' → NO | PP csv='E01430146' vs wp='E01430146' → MATCH
+✅ nguyen30146 — meta:employment_status=Inactive, um:inactive, roles:strip-all, sessions:kill, ld:groups-removed(1), ld:unenrolled(4), ld:progress-reset(4)
+📊 Summary: matched=9, unmatched=0, processed=9, mode=LIVE

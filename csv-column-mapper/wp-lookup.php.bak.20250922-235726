@@ -1,0 +1,55 @@
+<?php
+/**
+ * WP Lookup API v1.0 (Amazon Linux 2)
+ * Path: /admin-tools/csv-column-mapper/wp-lookup.php
+ * Secured by AUTH_TOKEN. Set WP_ROOT to your WordPress root.
+ */
+declare(strict_types=1);
+header('Content-Type: application/json; charset=utf-8');
+
+/** <<< EDIT THESE TWO AFTER INSTALL (in next step) >>> */
+define('AUTH_TOKEN', '6714e52aed21125dd999ff7c31666c1806e033aa2cb8a14073b41ae7026ec0b0'); // set a strong random string
+define('WP_ROOT', '/var/www/html');                         // set to your actual WP root (folder with wp-load.php)
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+  http_response_code(405);
+  echo json_encode(['error'=>'Method not allowed']); exit;
+}
+$raw = file_get_contents('php://input');
+$payload = json_decode($raw, true);
+if (!is_array($payload)) { http_response_code(400); echo json_encode(['error'=>'Invalid JSON']); exit; }
+
+$token = $payload['token'] ?? '';
+if (!hash_equals(AUTH_TOKEN, (string)$token)) { http_response_code(401); echo json_encode(['error'=>'Unauthorized']); exit; }
+
+$usernames = array_values(array_unique(array_map('strval', $payload['usernames'] ?? [])));
+$emails    = array_values(array_unique(array_map('strval', $payload['emails'] ?? [])));
+if (count($usernames) > 10000 || count($emails) > 10000) { http_response_code(413); echo json_encode(['error'=>'Too many items']); exit; }
+
+$wpLoad = rtrim((string)WP_ROOT,'/').'/wp-load.php';
+if (!file_exists($wpLoad)) { http_response_code(500); echo json_encode(['error'=>'Cannot locate wp-load.php at '.WP_ROOT]); exit; }
+require_once $wpLoad;
+
+global $wpdb;
+$foundUsernames = [];
+$foundEmails = [];
+
+if (!empty($usernames)) {
+  $placeholders = implode(',', array_fill(0, count($usernames), '%s'));
+  $query = "SELECT user_login FROM {$wpdb->users} WHERE LOWER(user_login) IN ($placeholders)";
+  $rowset = $wpdb->get_col($wpdb->prepare($query, array_map('strtolower', $usernames)));
+  foreach ($rowset as $u) $foundUsernames[] = strtolower($u);
+}
+
+if (!empty($emails)) {
+  $placeholders = implode(',', array_fill(0, count($emails), '%s'));
+  $query = "SELECT user_email FROM {$wpdb->users} WHERE LOWER(user_email) IN ($placeholders)";
+  $rowset = $wpdb->get_col($wpdb->prepare($query, array_map('strtolower', $emails)));
+  foreach ($rowset as $e) $foundEmails[] = strtolower($e);
+}
+
+echo json_encode([
+  'ok'=>true,
+  'usernames'=>array_values(array_unique($foundUsernames)),
+  'emails'=>array_values(array_unique($foundEmails))
+], JSON_UNESCAPED_SLASHES);

@@ -1,0 +1,258 @@
+<?php
+/**
+ * LearnDash — Finish remaining steps for a user (verbose, token-protected)
+ * Version: v2.3-web
+ *
+ * Browser usage (token required):
+ *   /admin-tools/wp-ld-tools/finish_user.php?token=...&user=<login_or_email>&dry_run=1
+ *   /admin-tools/wp-ld-tools/finish_user.php?token=...&user=<login_or_email>&course_id=2869
+ *
+ * Behavior:
+ * - Finds the WP user by login or email.
+ * - If course_id provided, processes only that course; otherwise all enrolled (incl. via groups).
+ * - For each step: marks incomplete lessons/topics as complete.
+ * - For each quiz: records a pass result (100%) and marks the quiz complete (so LD can finalize).
+ * - Finally nudges the course node to help LD mark it complete if needed.
+ */
+
+declare(strict_types=1);
+
+// ==========================
+// AUTH — set your tokens here
+// ==========================
+const LD_FINISHER_TOKENS = [
+  // label         => token value
+  'owner'        => '6714e52aed21125dd999ff7c31666c1806e033aa2cb8a14073b41ae7026ec0b0',
+  // 'ops'        => 'CHANGE_ME_OPS_TOKEN',
+];
+
+// ==========================
+// PATH to wp-load.php
+// ==========================
+const WP_LOAD = '/var/www/html/wp-load.php'; // adjust if needed
+
+// ==========================
+// Minimal auth helper
+// ==========================
+function finisher_auth_ok(string $provided): array {
+  $candidate = $provided !== '' ? $provided : (string)($_SERVER['HTTP_X_LD_FINISHER_TOKEN'] ?? '');
+  if ($candidate === '') return [false, ''];
+  foreach (LD_FINISHER_TOKENS as $label => $secret) {
+    if (hash_equals($secret, $candidate)) return [true, (string)$label];
+  }
+  return [false, ''];
+}
+
+// ==========================
+// Request validation + auth
+// ==========================
+header('Content-Type: text/plain; charset=utf-8');
+
+$token  = (string)($_GET['token'] ?? '');
+[$ok, $who] = finisher_auth_ok($token);
+if (!$ok) { http_response_code(401); echo "Unauthorized\n"; exit; }
+
+if (!is_file(WP_LOAD)) {
+  http_response_code(500);
+  echo "wp-load.php not found at ".WP_LOAD."\n";
+  exit;
+}
+
+require WP_LOAD;
+
+// Be verbose + resilient
+@ini_set('display_errors', '0');
+@ini_set('log_errors', '1');
+@ini_set('memory_limit', '512M');
+if (function_exists('set_time_limit')) @set_time_limit(0);
+
+// Print last fatal if we die
+register_shutdown_function(function(){
+  $e = error_get_last();
+  if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+    echo "\n---\nFATAL: {$e['message']} in {$e['file']}:{$e['line']}\n";
+  }
+});
+
+// ==========================
+// Inputs
+// ==========================
+$user_str = trim((string)($_GET['user'] ?? ''));
+$dry_run  = isset($_GET['dry_run']) ? (int)$_GET['dry_run'] : 0;
+$courseId = isset($_GET['course_id']) ? (int)$_GET['course_id'] : 0;
+
+if ($user_str === '') { http_response_code(400); echo "Missing user param (login or email)\n"; exit; }
+
+// Resolve user by email first, then login
+$u = is_email($user_str) ? get_user_by('email', $user_str) : null;
+if (!$u) $u = get_user_by('login', $user_str);
+if (!$u) { echo "❌ User not found: {$user_str}\n"; exit; }
+
+// ==========================
+// Header
+// ==========================
+echo "🚀 LD Finisher v2.3-web\n";
+echo "🔐 Token label: {$who}\n";
+echo "👤 User: {$u->user_login} (ID {$u->ID}) | Email: {$u->user_email}\n";
+echo $dry_run ? "👀 DRY RUN (no writes)\n" : "✍️ LIVE MODE (writes enabled)\n";
+
+// ==========================
+// Collect user courses (direct + via groups)
+// ==========================
+$courses = [];
+if (function_exists('learndash_user_get_enrolled_courses')) {
+  $courses = (array) learndash_user_get_enrolled_courses($u->ID);
+} elseif (function_exists('ld_get_mycourses')) {
+  $courses = (array) ld_get_mycourses($u->ID);
+}
+if (function_exists('learndash_get_users_group_ids') && function_exists('learndash_group_enrolled_courses')) {
+  foreach ((array) learndash_get_users_group_ids($u->ID) as $gid) {
+    $courses = array_merge($courses, (array) learndash_group_enrolled_courses($gid));
+  }
+}
+$courses = array_values(array_unique(array_map('intval', $courses)));
+
+if ($courseId) {
+  if (!in_array($courseId, $courses, true)) {
+    echo "⚠️ Course {$courseId} not in user’s enrollments; will try anyway.\n";
+  }
+  $courses = [$courseId];
+}
+
+if (empty($courses)) {
+  echo "ℹ️ No courses found for user.\n";
+  exit;
+}
+
+echo "📚 Courses to process: " . implode(', ', $courses) . "\n\n";
+
+// ==========================
+// Process each course
+// ==========================
+foreach ($courses as $cid) {
+  $ctitle = get_the_title($cid) ?: "(Course {$cid})";
+  echo "=== 📘 {$ctitle} (ID {$cid}) ===\n";
+
+  // 1) Gather steps (LD 4.x) or fallback to lessons/topics
+  $step_ids = [];
+  if (function_exists('learndash_get_course_steps')) {
+    $step_ids = (array) learndash_get_course_steps($cid);
+    $step_ids = array_map('intval', $step_ids);
+  } else {
+    if (function_exists('learndash_get_course_lessons_list')) {
+      foreach ((array) learndash_get_course_lessons_list($cid, $u->ID) as $lesson) {
+        if (is_array($lesson) && isset($lesson['post']->ID)) $step_ids[] = (int) $lesson['post']->ID;
+      }
+    }
+    if (function_exists('learndash_get_course_topics_list')) {
+      foreach ((array) learndash_get_course_topics_list($cid, 0, $u->ID) as $topic) {
+        if (is_object($topic) && isset($topic->ID)) $step_ids[] = (int) $topic->ID;
+      }
+    }
+    $step_ids = array_values(array_unique($step_ids));
+  }
+
+  // 2) Gather quizzes (normalize to WP_Posts)
+  $quiz_posts = [];
+  if (function_exists('learndash_get_course_quiz_list')) {
+    foreach ((array) learndash_get_course_quiz_list($cid, $u->ID) as $q) {
+      if (is_array($q) && isset($q['post']) && is_object($q['post'])) {
+        $quiz_posts[] = $q['post'];
+      } elseif (is_object($q)) {
+        $quiz_posts[] = $q;
+      }
+    }
+  }
+
+  echo "   • Steps found: ".count($step_ids)."\n";
+  echo "   • Quizzes found: ".count($quiz_posts)."\n";
+
+  // 3) Mark incomplete steps complete
+  $completed_steps = 0; $skipped_steps = 0;
+  foreach ($step_ids as $pid) {
+    $ptitle = get_the_title($pid) ?: "(Post {$pid})";
+    $is_done = function_exists('learndash_is_item_complete')
+      ? (bool) learndash_is_item_complete($u->ID, $pid, $cid)
+      : false;
+
+    if ($is_done) {
+      $skipped_steps++;
+      continue;
+    }
+
+    echo "      ➕ Mark complete: {$ptitle} (#{$pid})\n";
+    if (!$dry_run && function_exists('learndash_process_mark_complete')) {
+      learndash_process_mark_complete($u->ID, $pid, false, $cid);
+    }
+    $completed_steps++;
+  }
+
+  // 4) Ensure quizzes are recorded as passed AND marked complete
+  $completed_quizzes = 0; $skipped_quizzes = 0;
+  foreach ($quiz_posts as $qp) {
+    $qid = (int) $qp->ID;
+    $qtitle = $qp->post_title ?: "(Quiz {$qid})";
+
+    $already_done = function_exists('learndash_is_item_complete')
+      ? (bool) learndash_is_item_complete($u->ID, $qid, $cid)
+      : false;
+
+    if ($already_done) {
+      $skipped_quizzes++;
+      continue;
+    }
+
+    echo "      📝 Pass quiz: {$qtitle} (#{$qid}) → 100%\n";
+    if (!$dry_run && function_exists('ld_update_quiz_data')) {
+      $quizdata = [
+        'quiz'       => $qid,
+        'score'      => 100,
+        'count'      => 1,
+        'pass'       => true,
+        'rank'       => '-',
+        'time'       => time(),
+        'pro_quizid' => $qid,
+        'course'     => $cid,
+      ];
+      ld_update_quiz_data($u->ID, $quizdata, $cid);
+    }
+
+    if (!$dry_run && function_exists('learndash_process_mark_complete')) {
+      learndash_process_mark_complete($u->ID, $qid, false, $cid);
+    }
+
+    $completed_quizzes++;
+  }
+
+  // 5) Nudge course completion if needed
+  $course_is_done = function_exists('learndash_course_completed')
+    ? (bool) learndash_course_completed($u->ID, $cid)
+    : false;
+
+  if (!$course_is_done && !$dry_run && function_exists('learndash_process_mark_complete')) {
+    echo "   • Course not yet complete; nudging…\n";
+    learndash_process_mark_complete($u->ID, $cid, true, $cid);
+    $course_is_done = function_exists('learndash_course_completed')
+      ? (bool) learndash_course_completed($u->ID, $cid)
+      : false;
+  }
+
+  // Progress %
+  $pct = 0;
+  if (function_exists('learndash_course_progress')) {
+    $p = learndash_course_progress(['user_id'=>$u->ID,'course_id'=>$cid,'array'=>true]);
+    if (is_array($p) && isset($p['percentage'])) {
+      $pct = is_numeric($p['percentage'])
+        ? (int) round((float)$p['percentage'])
+        : (int) round((float) str_replace('%','', (string)$p['percentage']));
+    } elseif (is_array($p) && isset($p['completed'], $p['total']) && (int)$p['total'] > 0) {
+      $pct = (int) round(((int)$p['completed'] / (int)$p['total']) * 100);
+    }
+  }
+
+  echo "   ✅ Steps completed this run: {$completed_steps}, quizzes passed: {$completed_quizzes}\n";
+  echo "   ⏭️ Steps already complete: {$skipped_steps}, quizzes already passed: {$skipped_quizzes}\n";
+  echo "   📊 Progress now: {$pct}% | Course complete? ".($course_is_done ? 'YES' : 'NO')."\n\n";
+}
+
+echo $dry_run ? "🏁 DRY RUN done (no writes).\n" : "🎉 Finished (writes applied where needed).\n";

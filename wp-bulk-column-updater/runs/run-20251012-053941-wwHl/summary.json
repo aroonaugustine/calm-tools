@@ -1,0 +1,12 @@
+{
+    "ok": true,
+    "version": "1.4.0",
+    "rows_processed": 9,
+    "updated_count": 9,
+    "skipped": 1,
+    "no_pk": 0,
+    "no_match": 1,
+    "duration_sec": 0,
+    "live": false,
+    "at": "2025-10-12T05:39:41+00:00"
+}

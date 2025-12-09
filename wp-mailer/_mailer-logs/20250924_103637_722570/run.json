@@ -1,0 +1,16 @@
+{
+    "run_id": "20250924_103637_722570",
+    "pid": "2192739",
+    "started_gmt": "2025-09-24T10:36:41+00:00",
+    "args": [
+        "--campaign=20250924",
+        "--only-role=mailer",
+        "--batch-size=50",
+        "--batch-sleep=2"
+    ],
+    "stdout_log": "/srv/admin-tools/wp-mailer/_mailer-logs/20250924_103637_722570/stdout.log",
+    "csv_log": "/srv/admin-tools/wp-mailer/_mailer-logs/20250924_103637_722570/mailer.csv",
+    "mailer": "/srv/admin-tools/wp-mailer/send_never_logged_in-7.php",
+    "php": "/usr/bin/php",
+    "wp_load": "/var/www/html/wp-load.php"
+}

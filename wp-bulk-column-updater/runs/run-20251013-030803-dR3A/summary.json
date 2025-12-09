@@ -1,0 +1,14 @@
+{
+    "ok": true,
+    "version": "1.4.3",
+    "rows_processed": 181,
+    "updated_count": 181,
+    "skipped": 12,
+    "no_pk": 0,
+    "no_match": 12,
+    "duration_sec": 16,
+    "live": true,
+    "at": "2025-10-13T03:08:19+00:00",
+    "pk_header_used": "e-mail Address",
+    "sk_header_used": null
+}

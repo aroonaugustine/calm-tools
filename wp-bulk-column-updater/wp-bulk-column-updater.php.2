@@ -1,0 +1,316 @@
+<?php
+/**
+ * Worker: WP Bulk Column Updater — v1.4.3
+ * - Adds alias-aware header resolution for primary/secondary keys
+ * - Keeps NA normalization for NIC/Passport
+ */
+declare(strict_types=1);
+
+if (!function_exists('wpbcu140_run')) {
+function wpbcu140_run(array $cfg, string $run_dir): array {
+  $csv_path  = $cfg['csv_path'];
+  $primary   = $cfg['primary'];           // logical key: email_address | emp_no | passport_number | nic_number | username
+  $secondary = $cfg['secondary'] ?? '';   // logical key (optional)
+  $limit     = max(0, (int)($cfg['limit'] ?? 0));
+  $live      = !empty($cfg['live']);
+  $mappings  = $cfg['mappings'] ?? [];
+
+  $logPath   = $run_dir . '/log.ndjson';
+  $sumPath   = $run_dir . '/summary.json';
+  $logFh     = fopen($logPath, 'a');
+
+  $writeLog = function(array $row) use($logFh){
+    fwrite($logFh, json_encode($row, JSON_UNESCAPED_UNICODE) . "\n");
+  };
+
+  $na_list = ['na','n.a.','n/a','not applicable','-','—','--','nil','none',''];
+  $norm_ident = function($val) use($na_list){
+    $v = trim((string)$val);
+    $canon = mb_strtolower($v, 'UTF-8');
+    return in_array($canon, $na_list, true) ? null : $v;
+  };
+
+  // --- Open CSV
+  if (!is_file($csv_path)) {
+    $writeLog(['level'=>'error','msg'=>'CSV not found','path'=>$csv_path]);
+    fclose($logFh);
+    file_put_contents($sumPath,json_encode(['ok'=>false,'error'=>'CSV not found']));
+    return [$sumPath,$logPath];
+  }
+  if (($fh = fopen($csv_path, 'r')) === false) {
+    $writeLog(['level'=>'error','msg'=>'Cannot open CSV']);
+    fclose($logFh);
+    file_put_contents($sumPath,json_encode(['ok'=>false,'error'=>'Cannot open CSV']));
+    return [$sumPath,$logPath];
+  }
+
+  $headers = fgetcsv($fh);
+  if (!is_array($headers)) $headers = [];
+  // Normalize display of headers (but keep originals)
+  $headers = array_map(fn($h)=>trim((string)$h), $headers);
+
+  // Build index map
+  $H = array_flip($headers);
+
+  // ---- Header normalization helpers (alias-aware) ----
+  $norm = function(string $s): string {
+    $s = preg_replace("/\r?\n+/", ' ', $s);     // collapse newlines
+    $s = preg_replace('/\s+/', ' ', $s);        // collapse spaces
+    $s = trim($s, " \t\n\r\0\x0B\"");           // trim quotes & spaces
+    $s = strtolower($s);
+    $s = str_replace(["\u{00A0}"], ' ', $s);    // nbsp -> space
+    return $s;
+  };
+
+  // map normalized header -> original header
+  $norm_map = [];
+  foreach ($headers as $h) {
+    $norm_map[$norm($h)] = $h;
+  }
+
+  // known aliases for PK/SK
+  $aliases = [
+    'email_address' => [
+      'email_address','email','e-mail','e-mail address','e mail','e mail address','e-mail address',
+      'user_email','mail'
+    ],
+    'emp_no' => [
+      'emp no','emp no.','employee no','employee number','employee #','emp number','emp #'
+    ],
+    'passport_number' => ['passport number','passport','passport no','passport no.','passport #'],
+    'nic_number' => ['nic number','nic','nic no','nic no.','national id','national id number','national identity card'],
+    'username' => ['username','user name','user_login','login','userid','user id']
+  ];
+
+  // Fuzzy find the actual CSV column name for a logical key
+  $resolve_header_for_key = function(string $logical_key) use ($aliases, $norm_map, $norm) : ?string {
+    if ($logical_key === '') return null;
+    $cands = $aliases[$logical_key] ?? [$logical_key];
+    // exact norm match
+    foreach ($cands as $label) {
+      $w = $norm($label);
+      if (isset($norm_map[$w])) return $norm_map[$w];
+    }
+    // prefix/contains search
+    foreach ($cands as $label) {
+      $w = $norm($label);
+      foreach ($norm_map as $nh => $orig) {
+        if (str_starts_with($nh, $w) || str_contains($nh, $w)) return $orig;
+      }
+    }
+    return null;
+  };
+
+  $pk_header = $resolve_header_for_key($primary);
+  $sk_header = $resolve_header_for_key($secondary);
+
+  if (!$pk_header) {
+    // Log a clear reason up-front; rows will be missing_pk otherwise
+    $writeLog(['level'=>'error','msg'=>'Primary key column not found in CSV headers','primary'=>$primary,'headers'=>$headers]);
+  }
+
+  $rowN=0; $done=0; $updated=0; $skipped=0; $no_match=0; $no_pk=0; $started = time();
+
+  // Helper: value from CSV by header name (original case)
+  $val = function(array $row, ?string $col) use($H){
+    if (!$col) return '';
+    if (!isset($H[$col])) return '';
+    $i = $H[$col];
+    return $row[$i] ?? '';
+  };
+
+  // Resolve a WP user by primary + optional secondary
+  $resolve_user = function(array $row) use($primary,$secondary,$pk_header,$sk_header,$val,$norm_ident){
+    $pk_value = trim((string)$val($row, $pk_header));
+
+    if ($pk_value === '') return [null, 'missing_pk'];
+
+    // Normalize NIC/Passport PKs
+    if ($primary === 'passport_number' || $primary === 'nic_number') {
+      $nv = $norm_ident($pk_value);
+      if ($nv === null) return [null, 'normalized_pk_null'];
+      $pk_value = $nv;
+    }
+
+    $get_by = function($key, $value){
+      switch ($key) {
+        case 'email_address': return get_user_by('email', $value) ?: null;
+        case 'username':      return get_user_by('login', $value) ?: null;
+        case 'emp_no':
+        case 'full_name':
+        case 'passport_number':
+        case 'nic_number':
+          $meta_key = match($key){
+            'emp_no' => 'employee_number',
+            'full_name' => 'display_name',
+            'passport_number' => 'passport_no',
+            'nic_number' => 'nic_no',
+            default => $key
+          };
+          $args = ['meta_key'=>$meta_key, 'meta_value'=>$value, 'number'=>1, 'count_total'=>false, 'fields'=>'all'];
+          $u = get_users($args);
+          return $u ? $u[0] : null;
+        default:
+          return null;
+      }
+    };
+
+    $u1 = $get_by($primary, $pk_value);
+    if ($u1) return [$u1, 'ok'];
+
+    // Try secondary if provided
+    if ($secondary && $sk_header) {
+      $sv = trim((string)$val($row, $sk_header));
+      if ($secondary === 'passport_number' || $secondary === 'nic_number') {
+        $sv = $norm_ident($sv);
+      }
+      if ($sv !== '' && $sv !== null) {
+        $u2 = $get_by($secondary, $sv);
+        if ($u2) return [$u2, 'ok-secondary'];
+      }
+    }
+
+    return [null, 'not_found'];
+  };
+
+  // LearnDash helpers (optional)
+  $set_ld_groups = function(int $user_id, array $new_groups) {
+    if (!function_exists('ld_update_group_access')) return ['ok'=>false,'msg'=>'LearnDash not installed'];
+    $current = function_exists('learndash_get_users_group_ids') ? (array)learndash_get_users_group_ids($user_id) : [];
+    foreach ($current as $gid) {
+      if (function_exists('ld_update_group_access')) ld_update_group_access($user_id, (int)$gid, true);
+    }
+    foreach ($new_groups as $gid) {
+      if (function_exists('ld_update_group_access')) ld_update_group_access($user_id, (int)$gid);
+    }
+    return ['ok'=>true,'msg'=>'groups_replaced','from'=>$current,'to'=>$new_groups];
+  };
+
+  // ---- Process rows
+  while (($row = fgetcsv($fh)) !== false) {
+    $rowN++;
+    if ($limit>0 && $done >= $limit) break;
+
+    [$user, $why] = $resolve_user($row);
+    if (!$user) {
+      if ($why==='missing_pk'){ $no_pk++; }
+      else { $no_match++; }
+      $skipped++;
+      $writeLog(['row'=>$rowN+1,'status'=>'SKIP','why'=>$why]);
+      continue;
+    }
+    $uid = (int)$user->ID;
+
+    // Build updates
+    $core_updates = ['ID'=>$uid];
+    $password = null;
+    $meta_updates = [];
+    $ld_replace = null;
+
+    // Build header index once for mapping lookups
+    $H_local = array_flip($headers);
+    $getCell = function(array $row, string $header) use($H_local){
+      if (!isset($H_local[$header])) return '';
+      return $row[$H_local[$header]] ?? '';
+    };
+
+    foreach ($mappings as $map) {
+      $target = $map['target'];
+      $col    = $map['column']; // this is the CSV header name chosen in the UI
+      $raw    = (string)$getCell($row, $col);
+
+      // Normalize identifiers for meta updates nic_no/passport_no
+      if ($target === 'nic_no' || $target === 'passport_no') {
+        $n = $norm_ident($raw);
+        $raw = ($n===null) ? '' : $n; // null => clear
+      }
+
+      switch ($target) {
+        // core
+        case 'display_name':
+        case 'first_name':
+        case 'last_name':
+          if ($raw!=='') $core_updates[$target] = $raw;
+          break;
+        case 'user_pass':
+          if ($raw!=='') $password = $raw;
+          break;
+
+        // special
+        case 'learndash_group_replace':
+          $raw = trim($raw);
+          if ($raw!=='') {
+            $parts = preg_split('/[,\|]/', $raw);
+            $groups = array_values(array_filter(array_map('intval', $parts), fn($x)=>$x>0));
+            $ld_replace = $groups;
+          }
+          break;
+
+        // meta
+        default:
+          if ($target!=='') {
+            $meta_updates[$target] = $raw;
+          }
+      }
+    }
+
+    $did = false; $changes = [];
+
+    if ($live) {
+      if (count($core_updates) > 1) {
+        $res = wp_update_user($core_updates);
+        if (!is_wp_error($res)) { $did = true; $changes['core']=$core_updates; }
+      }
+      if ($password !== null) {
+        wp_set_password($password, $uid);
+        $did = true; $changes['password']=true;
+      }
+      foreach ($meta_updates as $mk=>$mv) {
+        update_user_meta($uid, $mk, $mv);
+        $did = true;
+      }
+      if (!empty($meta_updates)) $changes['meta']=$meta_updates;
+      if (is_array($ld_replace)) {
+        $r = $set_ld_groups($uid, $ld_replace);
+        $changes['learndash_replace'] = $r;
+        $did = $did || $r['ok'];
+      }
+    } else {
+      if (count($core_updates) > 1) $changes['core']=$core_updates;
+      if ($password !== null) $changes['password']=true;
+      if (!empty($meta_updates)) $changes['meta']=$meta_updates;
+      if (is_array($ld_replace)) $changes['learndash_replace']=['to'=>$ld_replace];
+    }
+
+    $done++;
+    $updated += $did || !$live ? 1 : 0;
+    $writeLog([
+      'row'=>$rowN+1,
+      'status'=>$live?($did?'OK':'NOCHANGE'):'OK-DRYRUN',
+      'user_id'=>$uid,
+      'changes'=>$changes
+    ]);
+  }
+
+  fclose($fh);
+  $dur = time() - $started;
+
+  $summary = [
+    'ok'=>true,
+    'version'=>'1.4.3',
+    'rows_processed'=>$done,
+    'updated_count'=>$updated,
+    'skipped'=>$skipped,
+    'no_pk'=>$no_pk,
+    'no_match'=>$no_match,
+    'duration_sec'=>$dur,
+    'live'=>$live,
+    'at'=>date('c'),
+    'pk_header_used'=>$pk_header ?? null,
+    'sk_header_used'=>$sk_header ?? null
+  ];
+  file_put_contents($sumPath, json_encode($summary, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
+  fclose($logFh);
+  return [$sumPath, $logPath];
+}
+}

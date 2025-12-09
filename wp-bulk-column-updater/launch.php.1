@@ -1,0 +1,122 @@
+<?php
+/**
+ * Bulk Updater — Launcher v1.3.0
+ * Spawns a detached background process and 303-redirects to status.php.
+ */
+
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+const AUTH_TOKEN = '6714e52aed21125dd999ff7c31666c1806e033aa2cb8a14073b41ae7026ec0b0';
+const TOOL_DIR   = '/srv/admin-tools/wp-bulk-column-updater';
+const LOG_DIR    = TOOL_DIR . '/_logs';
+const PHP_CLI    = '/usr/bin/php';
+const WORKER     = TOOL_DIR . '/wp-bulk-column-updater.php'; // ← your worker filename
+
+function bail($code, $msg){
+  http_response_code($code);
+  header('Content-Type: text/plain; charset=utf-8');
+  echo $msg;
+  exit;
+}
+
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') bail(405, 'Method Not Allowed');
+if (!hash_equals(AUTH_TOKEN, (string)($_POST['token'] ?? ''))) bail(401, 'Unauthorized');
+
+foreach ([WORKER => 'Worker', PHP_CLI => 'PHP CLI'] as $p=>$label) {
+  if (!is_file($p)) bail(500, "$label missing: $p");
+}
+if (!is_dir(LOG_DIR)) { @mkdir(LOG_DIR, 02775, true); }
+if (!is_dir(LOG_DIR)) bail(500, 'Logs dir not writable: '.LOG_DIR);
+
+$run_id  = gmdate('Ymd_His') . '_' . bin2hex(random_bytes(3));
+$run_dir = LOG_DIR . '/bulk_updater_' . $run_id;
+@mkdir($run_dir, 02775, true);
+@touch($run_dir.'/STARTED');
+
+// --- CSV acquisition ---
+$mode = $_POST['csv_mode'] ?? 'upload';
+if ($mode === 'server') {
+  $csv_path = trim((string)($_POST['csv_path'] ?? ''));
+  if ($csv_path === '' || !is_file($csv_path)) bail(400, 'CSV path invalid');
+  $csv = $csv_path;
+} else {
+  if (!isset($_FILES['csv_file']) || ($_FILES['csv_file']['error'] ?? 4) !== 0) bail(400, 'No CSV uploaded');
+  $dest = $run_dir . '/input.csv';
+  if (!@move_uploaded_file($_FILES['csv_file']['tmp_name'], $dest)) bail(500, 'Upload save failed.');
+  $csv = $dest;
+}
+
+// --- Options from UI ---
+$primary   = strtolower(trim((string)($_POST['primary_key'] ?? '')));
+$secondary = strtolower(trim((string)($_POST['secondary_key'] ?? '')));
+$target_ty = strtolower(trim((string)($_POST['target_type'] ?? 'user')));
+$target_f  = strtolower(trim((string)($_POST['target_field'] ?? '')));
+$target_k  = trim((string)($_POST['target_key'] ?? ''));
+$live      = !empty($_POST['live']);
+$limit     = max(0, (int)($_POST['limit'] ?? 0));
+
+// Validate essentials
+$valid_keys = ['username','emp_no','full_name','passport_number','nic_number','email_address'];
+if (!in_array($primary, $valid_keys, true)) bail(400, 'Invalid primary key');
+if ($secondary !== '' && !in_array($secondary, $valid_keys, true)) bail(400, 'Invalid secondary key');
+
+if ($target_ty === 'user') {
+  // Disallow username here by design — not even present in UI
+  $valid_user_targets = ['email address','display_name','first_name','last_name','learndash_group'];
+  if (!in_array($target_f, $valid_user_targets, true)) bail(400, 'Invalid user target field');
+  $target = $target_f;
+} elseif ($target_ty === 'meta') {
+  if ($target_k === '') bail(400, 'Meta key required');
+  $target = 'meta:'.$target_k;
+} else {
+  bail(400, 'Invalid target type');
+}
+
+// Build stdout path & meta
+$stdout = $run_dir . '/stdout.log';
+$meta = [
+  'pid'          => '',
+  'started_gmt'  => gmdate('c'),
+  'csv'          => $csv,
+  'stdout'       => $stdout,
+  'primary'      => $primary,
+  'secondary'    => $secondary,
+  'target'       => $target,
+  'live'         => $live ? 1 : 0,
+  'limit'        => $limit,
+];
+file_put_contents($run_dir.'/run.json', json_encode($meta, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
+
+// Build worker args
+$args = [];
+$args[] = '--csv='.$csv;
+$args[] = '--primary='.$primary;
+if ($secondary !== '') $args[] = '--secondary='.$secondary;
+$args[] = '--target='.$target;          // "email address" | "learndash_group" | "meta:foo"
+if ($live) $args[] = '--live';
+if ($limit > 0) $args[] = '--limit='.$limit;
+
+// DETACHED run: setsid + nohup
+$cmd = sprintf(
+  'cd %s && setsid nohup %s %s %s >> %s 2>&1 < /dev/null & echo $!',
+  escapeshellarg(TOOL_DIR),
+  escapeshellarg(PHP_CLI),
+  escapeshellarg(WORKER),
+  implode(' ', array_map('escapeshellarg', $args)),
+  escapeshellarg($stdout)
+);
+$pid = trim((string)shell_exec($cmd));
+if (!ctype_digit($pid)) $pid = '';
+$meta['pid'] = $pid;
+file_put_contents($run_dir.'/run.json', json_encode($meta, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
+
+// Redirect to status
+$location = 'status.php?id=' . rawurlencode('bulk_updater_'.$run_id);
+header('Location: '.$location, true, 303);
+header('Content-Type: text/html; charset=utf-8');
+echo '<!doctype html><meta charset="utf-8"><title>Launching…</title>';
+echo '<p>Launching background job… Redirecting to <a href="'.htmlspecialchars($location).'">status</a>.</p>';
+echo '<meta http-equiv="refresh" content="0;url='.htmlspecialchars($location).'">';
+if (function_exists('fastcgi_finish_request')) fastcgi_finish_request();
+exit;

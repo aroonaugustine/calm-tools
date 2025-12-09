@@ -1,0 +1,1541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CSV Column Mapper — v15.11.0</title>
+  <meta name="robots" content="noindex,nofollow">
+
+  <!-- Papa Parse -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <!-- JSZip (for creating the ZIP) -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; max-width: 1100px; }
+    label { display: block; margin-top: 14px; }
+    select { width: 420px; max-width: 95vw; }
+    table { border-collapse: collapse; margin-top: 20px; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; vertical-align: top; }
+    th { background: #f0f0f0; }
+    .map-table { margin-bottom: 20px; }
+    .hint { color: #666; font-size: 12px; margin-top: 4px; }
+    .template-col { white-space: nowrap; font-weight: bold; }
+    .version { color:#666; font-size:12px; }
+    .diag { margin-top: 12px; color:#444; font-size: 13px; }
+    .diag b { color:#000; }
+    .status { font-size:12px; color:#555; margin-top:4px; }
+    .ok { color:#0a7; }
+    .bad { color:#c33; }
+    button[disabled] { opacity: .5; cursor: not-allowed; }
+    .row-warn { background: #fff7e6; }   /* light yellow for low-confidence */
+    .row-good { background: #eefaf2; }   /* pale green for confident/locked */
+    .score { font-size: 11px; color:#555; }
+    .reasons { font-size: 11px; color:#777; margin-top: 4px; }
+    .pill { display:inline-block; border:1px solid #ddd; border-radius:999px; padding:2px 8px; margin-right:6px; font-size:11px; color:#555; background:#fafafa; }
+    .subtle { color:#666; font-size:12px; }
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .kbd { font-family: ui-monospace, Menlo, Consolas, "Liberation Mono", monospace; font-size: 12px; background:#f3f3f3; padding:1px 5px; border-radius:4px; }
+    fieldset { border:1px solid #ddd; border-radius:8px; padding:12px; }
+    .division-tools { margin-top: 24px; }
+    .division-tools fieldset { margin-top: 0; }
+    .division-preview-table { margin-top: 10px; font-size: 12px; }
+    .division-preview-table th, .division-preview-table td { font-size: 12px; }
+    .btn-small { font-size: 12px; padding: 4px 8px; margin-right: 6px; }
+
+    /* Modal Style A */
+    #divisionModalBackdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    #divisionModal {
+      max-height: 90vh;     /* Previously ~45vh */
+      overflow-y: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 420px;
+      width: 90%;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      font-family: Arial, sans-serif;
+    }
+    #divisionModal h3 {
+      margin-top: 0;
+      margin-bottom: 8px;
+    }
+    #divisionModal p {
+      margin: 6px 0;
+      font-size: 13px;
+      color: #444;
+    }
+    #divisionModal code {
+      background: #f5f5f5;
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    #divisionModal select {
+      width: 100%;
+      margin-top: 6px;
+      padding: 6px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    #divisionModal .modal-actions {
+      margin-top: 14px;
+      text-align: right;
+    }
+    #divisionModal .modal-actions button {
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #333;
+      background: #f7f7f7;
+      cursor: pointer;
+      margin-left: 6px;
+    }
+    #divisionModalError {
+      color: #c33;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>CSV Column Mapper <span class="version">(v15.11.0)</span></h2>
+
+  <div class="grid">
+    <!-- LEFT COLUMN -->
+    <div>
+      <label>
+        Select input.csv:
+        <input type="file" id="inputCSV" accept=".csv" />
+        <div id="inputStatus" class="status">Waiting for file…</div>
+      </label>
+
+      <label>
+        Select template.csv:
+        <input type="file" id="templateCSV" accept=".csv" />
+        <div id="templateStatus" class="status">Waiting for template…</div>
+      </label>
+
+      <fieldset style="margin-top:12px;">
+        <legend>Template Columns</legend>
+        <label style="display:flex; align-items:center; gap:8px;">
+          <input type="checkbox" id="useDefaultTemplate">
+          Use built-in default template (no upload needed)
+        </label>
+        <div class="hint">You can still upload a template to override the default for this session.</div>
+      </fieldset>
+
+      <label style="margin-top:12px">
+        (Optional) Existing usernames CSV (to avoid collisions with WordPress):
+        <input type="file" id="existingUsernamesCSV" accept=".csv" />
+        <div class="hint">Any CSV with a <b>user_login</b> column (or first column) works.</div>
+      </label>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div>
+      <fieldset>
+        <legend>WordPress Integration (optional)</legend>
+        <label style="display:flex; align-items:center; gap:8px;">
+          <input type="checkbox" id="wpEnable" />
+          Enable live checks against WordPress (usernames, emails, NIC &amp; passport)
+        </label>
+        <div class="hint">Requires the <span class="kbd">wp-lookup.php</span> endpoint on your server. This tool never writes to WP; it only checks for existing values.</div>
+        <label>Lookup endpoint URL (absolute or relative):
+          <input id="wpUrl" style="width:100%;" placeholder="/admin-tools/csv-column-mapper/wp-lookup.php" value="/admin-tools/csv-column-mapper/wp-lookup.php">
+        </label>
+        <label>Auth token (must match server file):
+          <input id="wpToken" style="width:100%;" placeholder="set a secret token">
+        </label>
+        <button id="wpSyncBtn" onclick="syncWithWordPress()" disabled>Fetch existing (WP)</button>
+        <div id="wpStatus" class="status">WP checks disabled.</div>
+      </fieldset>
+    </div>
+  </div>
+
+  <!-- Division Mapping Tools -->
+  <div class="division-tools">
+    <fieldset>
+      <legend>Division Mapping (to official divisions & LearnDash groups)</legend>
+      <p class="subtle">
+        This will map raw <b>Division</b> values from your CSV to the official division list (e.g. <code>KG32 → TKW KG32</code>).
+        Exact matches are auto-mapped. Unknown values will be asked one-by-one when you click <b>Generate ZIP</b>.
+      </p>
+      <div style="margin-bottom:8px;">
+        <button type="button" class="btn-small" onclick="loadMappingFromServer()">Load mapping from server</button>
+        <button type="button" class="btn-small" onclick="saveMappingToServer()">Save mapping to server</button>
+        <button type="button" class="btn-small" onclick="exportMappingJson()">Export mapping.json</button>
+        <button type="button" class="btn-small" onclick="triggerMappingImport()">Import mapping.json</button>
+        <input type="file" id="divisionMappingFile" accept=".json" style="display:none;" />
+      </div>
+      <div class="hint">
+        Server JSON is stored via <code>division-mapping-store.php</code> / <code>division-mapping-load.php</code>.
+        Export/import lets you keep a backup or move mappings between environments.
+      </div>
+      <div id="divisionPreview"></div>
+    </fieldset>
+  </div>
+
+  <div id="mappingSection"></div>
+  <button id="genBtn" onclick="handleGenerateClick()" disabled>Generate ZIP</button>
+  <div id="diag" class="diag"></div>
+
+  <!-- Modal: Division Mapping -->
+  <div id="divisionModalBackdrop">
+    <div id="divisionModal">
+      <h3>Map Division to Official Name</h3>
+      <p>Raw division in CSV:</p>
+      <p><code id="modalRawDivision"></code></p>
+
+      <!-- Search bar -->
+<input 
+  type="text"
+  id="modalSearch"
+  placeholder="Search division…"
+  style="width:100%; padding:6px; margin:8px 0; border:1px solid #ccc; border-radius:6px;"
+/>
+
+<label for="modalDivisionSelect">Match to official division:</label>
+<select id="modalDivisionSelect" style="margin-bottom:8px;">
+  <!-- options injected by JS -->
+</select>
+
+<!-- Proper safe container -->
+<label for="modalDivisionSelect">Match to official division:</label>
+<select id="modalDivisionSelect" style="margin-bottom:8px;">
+  <!-- options injected by JS -->
+</select>
+      <div id="divisionModalError"></div>
+      <p class="hint">
+        Choose an official division. If there is truly no match, pick
+        <b>“No Matching Division (separate CSV)”</b> and those rows will go into their own CSV.
+      </p>
+      <div class="modal-actions">
+        <button type="button" onclick="cancelDivisionModal()">Cancel</button>
+        <button type="button" onclick="saveDivisionModal()">Save Mapping</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/*** ========== CONFIG & STATE ========== ***/
+const VERSION = "15.11.0";
+
+const DEFAULT_TEMPLATE_HEADERS = [
+  "user_login","user_email","display_name","first_name","last_name",
+  "passport_no","nic_no","mobile_no","user_pass","date_of_birth",
+  "visa_exp","passport_exp","visa_issue_date","home_address","office_address",
+  "emergency_contact_email","emergency_contact_phone","gender","employee_number",
+  "employment_status","designation","company","division","nationality",
+  "expat_local","wp_role","learndash_courses","learndash_groups",
+  "join_date","resign_date","perm_address","emergency_contact_who"
+];
+
+let inputData = [];
+let inputHeaders = [];
+let templateHeaders = [];
+let mappings = {};
+let inputProfiles = null;
+
+// Division mapping store (Option C: server + export/import)
+let divisionMapping = {}; // key: canonRawDivision → { official: "OFFICIAL_DIV" | null }
+
+const inputStatusEl = document.getElementById('inputStatus');
+const templateStatusEl = document.getElementById('templateStatus');
+const genBtn = document.getElementById('genBtn');
+
+const wpEnableEl = document.getElementById('wpEnable');
+const wpUrlEl = document.getElementById('wpUrl');
+const wpTokenEl = document.getElementById('wpToken');
+const wpSyncBtn = document.getElementById('wpSyncBtn');
+const wpStatus = document.getElementById('wpStatus');
+const useDefaultTemplateEl = document.getElementById('useDefaultTemplate');
+
+const divisionPreviewEl = document.getElementById('divisionPreview');
+const divisionMappingFileEl = document.getElementById('divisionMappingFile');
+
+// Modal elements
+const divisionModalBackdrop = document.getElementById('divisionModalBackdrop');
+const modalRawDivisionEl = document.getElementById('modalRawDivision');
+const modalDivisionSelectEl = document.getElementById('modalDivisionSelect');
+const divisionModalErrorEl = document.getElementById('divisionModalError');
+
+let divisionModalResolve = null;
+let divisionModalReject = null;
+let currentDivisionModalItem = null;
+
+// Known sets (from CSV and/or WP)
+const existingUsernameSet = new Set();
+const existingEmailSet    = new Set();
+const existingNicSet      = new Set();
+const existingPassportSet = new Set();
+
+/*** ========== UI BITS ========== ***/
+function updateGenBtn() {
+  genBtn.disabled = !(inputHeaders.length && templateHeaders.length);
+}
+wpEnableEl.addEventListener('change', () => {
+  wpSyncBtn.disabled = !wpEnableEl.checked;
+  wpStatus.textContent = wpEnableEl.checked ? 'Ready to sync with WordPress.' : 'WP checks disabled.';
+});
+useDefaultTemplateEl?.addEventListener('change', () => {
+  if (useDefaultTemplateEl.checked) {
+    templateHeaders = DEFAULT_TEMPLATE_HEADERS.slice();
+    templateStatusEl.innerHTML = `<span class="ok">Default template loaded: ${templateHeaders.length} columns.</span>`;
+    maybeRenderMappingUI();
+    updateGenBtn();
+  } else {
+    templateHeaders = [];
+    templateStatusEl.textContent = 'Waiting for template…';
+    maybeRenderMappingUI();
+    updateGenBtn();
+  }
+});
+
+/*** ========== HELPERS ========== ***/
+function toUpperCanon(s) { return (s || "").replace(/\u00A0/g, " ").replace(/\s+/g, " ").trim().toUpperCase(); }
+function squashKey(s){ return (s || "").toUpperCase().replace(/[^A-Z0-9]+/g, ""); }
+function norm(s){ return (s || "").toString().toLowerCase().replace(/[^a-z0-9]+/g," "); }
+function unique(arr){ return Array.from(new Set(arr)); }
+function tokens(s){ return unique(norm(s).split(" ").filter(Boolean)); }
+function intersect(a,b){ const B = new Set(b); return a.filter(x=>B.has(x)); }
+function pad2(n){ return String(n).padStart(2,"0"); }
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
+
+/*** ========== DIVISION / COMPANY / LD GROUPS ========== ***/
+
+// Division → Company mapping (business logic)
+const rawCompanyDivisionPairs = [
+  ["KR","KISSY RUWERN CO LTD"],["KRCP","KISSY RUWERN CO LTD"],["KRI","KISSY RUWERN CO LTD"],
+  ["KRQP","KISSY RUWERN CO LTD"],["KRVIP","KISSY RUWERN CO LTD"],
+
+  ["YCI - GSS","YADSENDEW CLOUD INC"],["YCI - CW","YADSENDEW CLOUD INC"],
+  ["YCI - BJ","YADSENDEW CLOUD INC"],["YCI - PG","YADSENDEW CLOUD INC"],
+  ["YCI - M1","YADSENDEW CLOUD INC"],["YCI - TWS","YADSENDEW CLOUD INC"],
+  ["YCI - CF","YADSENDEW CLOUD INC"],["YCI - QQ288","YADSENDEW CLOUD INC"],
+  ["YCI - SG","YADSENDEW CLOUD INC"],["YCI - BJ88","YADSENDEW CLOUD INC"],
+  ["YCI - BetStar-BS","YADSENDEW CLOUD INC"],
+  ["YCI - Poseidon","YADSENDEW CLOUD INC"],
+
+  ["WSM - D7","WSM IT SDN BHD"],["WSM - XW","WSM IT SDN BHD"],["WSM - WE","WSM IT SDN BHD"],
+  ["WSM - AN","WSM IT SDN BHD"],["WSM - FUN 88-OGG","WSM IT SDN BHD"],
+  ["WSM - E-PAY","WSM IT SDN BHD"],["WSM - WA","WSM IT SDN BHD"],
+  ["WSM - GENESIS","WSM IT SDN BHD"],["WSM - PROP","WSM IT SDN BHD"],
+
+  ["HO","KW IT HARDWARE SDN BHD"],["CX","KW IT HARDWARE SDN BHD"],
+  ["CX HR","KW IT HARDWARE SDN BHD"],["TNG","KW IT HARDWARE SDN BHD"],
+  ["NOVA","KW IT HARDWARE SDN BHD"],["ACE","KW IT HARDWARE SDN BHD"],
+  ["XINXUAN","KW IT HARDWARE SDN BHD"],["TIONG","KW IT HARDWARE SDN BHD"],
+
+  ["PU CIAN - P5","PU CIAN CO LTD"],
+
+  ["200M(A)","NETWORK WIZARD SDN BHD"],
+  ["200M(B)","NETWORK WIZARD SDN BHD"],
+  ["200M","NETWORK WIZARD SDN BHD"],
+  ["IDN","NETWORK WIZARD SDN BHD"],["BTNV","NETWORK WIZARD SDN BHD"],
+  ["PANDA","NETWORK WIZARD SDN BHD"],["TKW KG32","NETWORK WIZARD SDN BHD"],
+  ["TKW PANDA","NETWORK WIZARD SDN BHD"],["TKW PS","NETWORK WIZARD SDN BHD"],
+
+  ["TELEPERFORMER","TELEPERFORMER CO LTD"],
+  ["DIYOU","DIYOU TECHNOLOGY LTD"],
+
+  ["RANSWIN","LINKUP"],
+  ["KWIT BNZ","KW IT HARDWARE SDN BHD"],
+  ["MAXVIEW","MAXVIEW INTERNATIONAL TRADING"],
+  ["PORTCITYHQ","PORT CITY BPO"],
+  ["MIXUI","PU CIAN CO LTD"],
+
+  ["NOVA-NT","KW IT HARDWARE SDN BHD"],
+
+  ["SUREWELL","SUREWELL SERVICES LTD"],
+  ["YCI - PR3CS","YADSENDEW CLOUD INC"],
+  ["YCI - CMD","YADSENDEW CLOUD INC"],
+  ["YCI - SJF","YADSENDEW CLOUD INC"],
+  ["VEDA","NETWORK WIZARD SDN BHD"]
+];
+
+// Division → LearnDash Group ID mapping (canonical list)
+const divisionMap = {
+  "YCI - GSS": 5284,
+  "YCI - CW": 5288,
+  "YCI - BJ": 5290,
+  "YCI - PG": 5292,
+  "YCI - M1": 5294,
+  "YCI - TWS": 5296,
+  "YCI - CF": 5298,
+  "YCI - QQ288": 5300,
+  "YCI - SG": 5302,
+  "Diyou": 5304,
+  "Pu Cian - P5": 5306,
+  "IDN": 5310,
+  "200M(A)": 5312,
+  "BTNV": 5314,
+  "Teleperformer": 5316,
+  "KR": 5318,
+  "KRCP": 5320,
+  "KRI": 5322,
+  "KRQP": 5324,
+  "KRVIP": 5326,
+  "HO": 5328,
+  "CX": 5330,
+  "Tiong": 5332,
+  "NOVA": 5334,
+  "WSM - D7": 5336,
+  "WSM - XW": 5338,
+  "WSM - WE": 5340,
+  "WSM - AN": 5342,
+  "WSM - E-pay": 5346,
+  "WSM - WA": 5348,
+  "PortCityHQ": 5375,
+  "TKW PS": 5452,
+  "RANSWIN": 5458,
+  "PANDA": 5460,
+  "XINXUAN": 5462,
+  "YCI - BJ88": 5465,
+  "YCI - BetStar-BS": 5511,
+  "ACE": 5515,
+  "Maxview": 5517,
+  "TNG": 5519,
+  "TKW KG32": 5535,
+  "KWIT BNZ": 5544,
+  "200M(B)": 5597,
+  "NOVA-NT": 5671,
+  "200M": 5673,
+  "SureWell": 5702,
+  "YCI - PR3CS": 5705,
+  "YCI - CMD": 5728,
+  "YCI - SJF": 5818,
+  "VEDA": 5730
+};
+
+// Build normalization structures
+const divisionToCompany = {};
+const shortToFull = {};
+const shortToFullBuckets = {};
+
+rawCompanyDivisionPairs.forEach(([div, comp]) => {
+  const d = toUpperCanon(div);
+  const c = toUpperCanon(comp);
+  divisionToCompany[d] = c;
+
+  // Extract short token (after last dash)
+  const short = d.includes(" - ") ? d.split(" - ").slice(-1)[0] : d;
+  const key = short.trim();
+  (shortToFullBuckets[key] ||= new Set()).add(d);
+});
+
+// Allowed sets for division & company
+const allowedDivisions = new Set(Object.keys(divisionMap).map(k => toUpperCanon(k)));
+const allowedCompanies = new Set(Object.values(divisionToCompany));
+
+// Identify unique short codes (unambiguous only)
+Object.entries(shortToFullBuckets).forEach(([short, set]) => {
+  if (set.size === 1) shortToFull[short] = Array.from(set)[0];
+});
+
+// Division → LD group ID lookup in canonical uppercase
+const divisionGroupMapUpper = Object.fromEntries(
+  Object.entries(divisionMap).map(([div, id]) => [toUpperCanon(div), id])
+);
+
+/*** 🔍 Flexible resolver (used as fallback when no explicit mapping) ***/
+function resolveDivisionFlexible(inputDivRaw) {
+  if (!inputDivRaw) return null;
+  const sCanon = toUpperCanon(inputDivRaw);
+  const sq = squashKey(sCanon);
+
+  if (divisionToCompany[sCanon]) return sCanon;
+
+  if (shortToFull[sCanon]) return shortToFull[sCanon];
+  if (shortToFull[sq]) return shortToFull[sq];
+
+  const maybe = Object.keys(divisionToCompany).find(k => {
+    const keySq = squashKey(k);
+    return sq === keySq || sCanon === k || sq.includes(keySq);
+  });
+  if (maybe) return maybe;
+
+  return sCanon;
+}
+
+/*** ========== MATCHING RULES & TYPING (SMARTER) ========== ***/
+const aliasMap = {
+  "user_login": ["user login","username","user name","users login","login","login name","account","account login","wp username"],
+  "user_email": ["email","email address","e-mail","mail","user email","primary email"],
+  "display_name": ["display name","name","full name","fullname"],
+  "first_name": ["first name","given name","forename"],
+  "last_name":  ["last name","surname","family name"],
+
+  "passport_no": ["passport","passport no","passport number","passport #","passport num","pp no"],
+  "nic_no": ["nic","nic no","nic number","nic #","national id","national id number","nric","nric no"],
+  "mobile_no": ["mobile","mobile no","mobile number","phone","phone no","phone number","contact","contact number","contact no","tel"],
+  "user_pass": ["password","user pass","wp password"],
+  "date_of_birth": ["dob","date of birth","birth date","birthdate","d.o.b"],
+
+  "visa_exp": ["visa expiry","visa exp","visa expire","visa expiration","visa expiry date","visa exp date"],
+  "passport_exp": ["passport expiry","passport exp","passport expiration","passport expiry date","passport exp date"],
+  "visa_issue_date": ["visa issue","date of visa issue","visa issued","visa issue date"],
+
+  "home_address": ["home address","residential address","residence address","resident address"],
+  "office_address": ["office address","work address","company address","office location","location"],
+  "perm_address": ["permanent address","perm address","permanent residence","permanent residential address"],
+
+  "emergency_contact_email": ["emergency email","emergency contact email"],
+  "emergency_contact_phone": ["emergency phone","emergency contact phone","emergency mobile","emergency contact no"],
+  "emergency_contact_who": ["emergency contact relationship","emergency relationship","relationship (emergency)","emergency contact – relationship","emergency contact - relationship"],
+
+  "gender": ["gender","sex"],
+  "employee_number": ["employee number","employee no","emp no","emp number","# no","employee #","staff id","employee id","staff number"],
+  "employment_status": ["employment status","status","status of employee","employee status"],
+  "designation": ["designation","title","job title","position"],
+  "position": ["position","job position"],
+
+  "company": ["company","client name","employer","organization","organisation"],
+  "division": ["division","sub division","sub-division","department","dept"],
+  "nationality": ["nationality","country","citizenship"],
+  "expat_local": ["expatriate/local","expat/local","expat or local","local or expat"],
+
+  "wp_role": ["wp role","role","user roles","user role"],
+  "learndash_courses": ["learndash courses","courses","course ids"],
+  "learndash_groups": ["learndash groups","groups","group ids","learndash group ids"],
+
+  "join_date": ["joining date","join date","doj","date of joining","joined on"],
+  "resign_date": ["resignation date","resign date","last working day","lwd","date of resignation"]
+};
+
+function hardTemplateForHeader(header) {
+  const h = (header || "").trim().toLowerCase();
+  if (/^full\s*name$/.test(h) || /^fullname$/.test(h) || /^name$/.test(h)) return "display_name";
+  if (/^(permanent|perm).*(address)$/.test(h)) return "perm_address";
+  if (/^(resident|residence|residential).*(address)$/.test(h)) return "home_address";
+  if (/^(office|work|company).*(address|location)$/.test(h) || /^location$/.test(h)) return "office_address";
+  if (/\b(?:emp(?:loyee)?|staff)\b.*\b(?:id|number|no[:.]?|#)\b/i.test(h)) return "employee_number";
+  if (/\b(?:emp(?:loyee)?|employment)?\b.*\bstatus\b[:.]?/i.test(h) ||
+      /\bstatus\b[:.]?.*\b(?:emp(?:loyee)?|employment)\b/i.test(h)) return "employment_status";
+  return null;
+}
+
+const STOP_TOKENS_GENERIC = new Set(["no","num","number","#","id","address","location"]);
+
+function guessTypeFromValues(values){
+  const sample = values.filter(v => (v ?? "").toString().trim()).slice(0,200).map(v=>String(v).trim());
+  if (!sample.length) return "unknown";
+  let email=0, phone=0, date=0, digitsMostly=0, alphaNumTight=0, longText=0, nameLike=0;
+  for(const s of sample){
+    const t = s.replace(/\u00A0/g," ").trim();
+    if (EMAIL_REGEX.test(t.toLowerCase())) email++;
+    if (/^\+?\d[\d\s\-()]{5,}$/.test(t)) phone++;
+    if (/^\d{2}[\/.-]\d{2}[\/.-]\d{4}$/.test(t) || /^\d{4}-\d{2}-\d{2}$/.test(t)) date++;
+    if (/^\d{3,}$/.test(t)) digitsMostly++;
+    if (/^[A-Za-z0-9\-\/]{5,}$/.test(t)) alphaNumTight++;
+    if (t.length > 40) longText++;
+    if (/^[A-Za-z][A-Za-z .,'-]{1,}$/.test(t) && t.length<=40) nameLike++;
+  }
+  const n = sample.length;
+  if (email/n > 0.6) return "email";
+  if (phone/n > 0.6) return "phone";
+  if (date/n > 0.6)  return "date";
+  if (nameLike/n > 0.6) return "name";
+  if (digitsMostly/n > 0.6) return "digits";
+  if (alphaNumTight/n > 0.6) return "alnum";
+  if (longText/n > 0.6) return "text";
+  return "unknown";
+}
+
+const templateDesiredType = {
+  "user_email": "email", "emergency_contact_email": "email",
+  "mobile_no": "phone", "emergency_contact_phone": "phone",
+  "date_of_birth": "date", "visa_exp": "date", "visa_issue_date": "date", "passport_exp": "date",
+  "join_date": "date", "resign_date": "date",
+  "first_name": "name", "last_name": "name", "display_name": "name", "nationality": "name",
+  "nic_no": "alnum", "passport_no": "alnum", "employee_number": "digits",
+  "home_address": "text", "office_address": "text", "perm_address": "text",
+  "designation": "text", "company": "text", "division": "text",
+  "gender": "text", "employment_status": "text", "expat_local": "text",
+  "emergency_contact_who": "text"
+};
+
+function columnProfileMap(rows, headers){
+  const map = {}; headers.forEach(h => { map[h] = []; });
+  for (const r of rows){ headers.forEach(h => map[h].push(r[h])); }
+  const typeMap = {}; headers.forEach(h => typeMap[h] = guessTypeFromValues(map[h]));
+  return { values: map, types: typeMap };
+}
+
+function levenshtein(a, b) {
+  a = a || ""; b = b || "";
+  const m = a.length, n = b.length;
+  if (!m) return n; if (!n) return m;
+  const dp = Array.from({length: m + 1}, (_, i) => [i]);
+  for (let j = 1; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(dp[i-1][j] + 1, dp[i][j-1] + 1, dp[i-1][j-1] + cost);
+    }
+  }
+  return dp[m][n];
+}
+
+function scoreHeaderToTemplate(inputHeader, templateCol, inputType){
+  const hardTarget = hardTemplateForHeader(inputHeader);
+  if (hardTarget) {
+    if (templateCol === hardTarget) return { score: 999, reasons: ["hard match"] };
+    return { score: -999, reasons: ["blocked by hard match → " + hardTarget] };
+  }
+
+  if (templateCol === "company") {
+    const ih = (inputHeader || "").toLowerCase();
+    if (/\baddress\b/.test(ih) || /\blocation\b/.test(ih)) {
+      return { score: -500, reasons: ["company ≠ address/location"] };
+    }
+  }
+
+  if ((templateCol === "first_name" || templateCol === "last_name")) {
+    const ih = inputHeader.toLowerCase();
+    if (/^full\s*name$/.test(ih) || /^fullname$/.test(ih) || /^name$/.test(ih)) {
+      return { score: -500, reasons: ["full name reserved for display_name"] };
+    }
+  }
+
+  const tTokens = tokens(templateCol).filter(t => !STOP_TOKENS_GENERIC.has(t));
+  const iTokens = tokens(inputHeader).filter(t => !STOP_TOKENS_GENERIC.has(t));
+  const overlap = intersect(tTokens, iTokens).length;
+  let tokenScore = overlap * 3;
+
+  const aliases = aliasMap[templateCol] || [];
+  const aMatch = aliases.some(a => tokens(a).every(tok => iTokens.includes(tok)));
+  if (aMatch) tokenScore += 5;
+
+  const ih = inputHeader.toLowerCase();
+  const th = templateCol.toLowerCase();
+  if (ih.includes(th) || th.includes(ih)) tokenScore += 2;
+
+  const lev = levenshtein(ih, th);
+  const levScore = Math.max(0, 4 - Math.min(4, Math.floor(lev/2)));
+
+  const desired = templateDesiredType[templateCol] || "unknown";
+  let typeScore = 0;
+  if (desired !== "unknown" && inputType){
+    if (inputType === desired) typeScore += 6;
+    else if ((desired==="alnum" && (inputType==="digits"||inputType==="alnum")) ||
+             (desired==="name"  && (inputType==="text" || inputType==="name"))) typeScore += 2;
+    else if ((desired==="phone" && inputType==="digits")) typeScore += 1;
+  }
+
+  const lowerHeader = ih;
+  const hasDateWord = /\b(date|dob|birth|joining|join|resign|resignation|expiry|exp|issue|valid)\b/.test(lowerHeader);
+  const hasJoinWord = /\b(join|joining|doj)\b/.test(lowerHeader);
+  const hasResignWord = /\b(resign|resignation|exit|last working day|lwd)\b/.test(lowerHeader);
+  const hasDivisionWord = /\b(division|dept|department)\b/.test(lowerHeader);
+  const hasCompanyWord = /\b(company|employer|client|organization|organisation)\b/.test(lowerHeader);
+  const hasNameWord = /\b(name|first|last|surname|family)\b/.test(lowerHeader);
+
+  let ruleScore = 0;
+  const reasons = [];
+
+  const isDateTemplate = ["date_of_birth","visa_exp","passport_exp","visa_issue_date","join_date","resign_date"].includes(templateCol);
+
+  if (isDateTemplate) {
+    if (!hasDateWord && !aMatch) {
+      ruleScore -= 6;
+      reasons.push("header has no date words");
+    }
+    if (templateCol === "join_date" && hasJoinWord) {
+      ruleScore += 4;
+      reasons.push("join-related date");
+    }
+    if (templateCol === "resign_date" && hasResignWord) {
+      ruleScore += 4;
+      reasons.push("resign-related date");
+    }
+    if (templateCol === "date_of_birth" && /\b(dob|birth)\b/.test(lowerHeader)) {
+      ruleScore += 4;
+      reasons.push("birth/DOB date");
+    }
+  } else {
+    if (hasDateWord) {
+      ruleScore -= 6;
+      reasons.push("date-like header but non-date template");
+    }
+  }
+
+  if (["first_name","last_name","display_name"].includes(templateCol)) {
+    if (hasDivisionWord || hasCompanyWord) {
+      ruleScore -= 8;
+      reasons.push("looks like division/company, not a name");
+    }
+    if (!hasNameWord && !aMatch) {
+      ruleScore -= 4;
+      reasons.push("no name keywords");
+    }
+  }
+
+  if (templateCol === "division") {
+    if (hasDivisionWord) {
+      ruleScore += 4;
+      reasons.push("division keywords");
+    }
+    if (hasNameWord && !hasDivisionWord) {
+      ruleScore -= 8;
+      reasons.push("looks like a name, not a division");
+    }
+  }
+
+  if (templateCol === "company") {
+    if (hasCompanyWord) {
+      ruleScore += 4;
+      reasons.push("company keywords");
+    }
+    if (hasNameWord && !hasCompanyWord) {
+      ruleScore -= 4;
+      reasons.push("looks like a personal name");
+    }
+  }
+
+  const genericCount = tokens(inputHeader).filter(t => STOP_TOKENS_GENERIC.has(t)).length;
+  const penalty = genericCount > 0 ? Math.min(3, genericCount) : 0;
+
+  const score = tokenScore + levScore + typeScore + ruleScore - penalty;
+
+  if (overlap) reasons.push(`token overlap ×${overlap}`);
+  if (aMatch) reasons.push(`alias match`);
+  if (ih.includes(th) || th.includes(ih)) reasons.push(`contains`);
+  if (typeScore>=6) reasons.push(`type: strong (${inputType}→${desired})`);
+  else if (typeScore>0) reasons.push(`type: soft (${inputType}→${desired})`);
+  if (penalty) reasons.push(`generic penalty -${penalty}`);
+  if (levScore) reasons.push(`lev +${levScore}`);
+
+  return { score, reasons };
+}
+
+function bestGuessForTemplateCol_intelligent(templateCol, _inputHeaders, typeMap){
+  let best = "", bestScore = -Infinity, bestReasons=[];
+  let secondBest = "", secondScore = -Infinity;
+
+  for (const h of _inputHeaders){
+    const {score, reasons} = scoreHeaderToTemplate(h, templateCol, typeMap[h]);
+    if (score > bestScore){
+      secondBest = best; secondScore = bestScore;
+      best = h; bestScore = score; bestReasons = reasons;
+    } else if (score > secondScore){
+      secondBest = h; secondScore = score;
+    }
+  }
+
+  const margin = bestScore - secondScore;
+  const confident = bestScore >= 8 && margin >= 3;
+
+  return { guess: confident ? best : "", best, bestScore, secondBest, secondScore, confident, bestReasons };
+}
+
+/*** ========== WP LOOKUP (username/email/NIC/passport) ========== ***/
+async function syncWithWordPress(){
+  if (!wpEnableEl.checked) return;
+  const url = (wpUrlEl.value || "").trim();
+  const token = (wpTokenEl.value || "").trim();
+  if (!url || !token){ wpStatus.innerHTML = '<span class="bad">Set URL and token.</span>'; return; }
+
+  const getCol = (key, fallbackRegex) => {
+    const mapped = mappings[key];
+    if (mapped) return mapped;
+    const direct = inputHeaders.find(h => h === key);
+    if (direct) return direct;
+    if (fallbackRegex) {
+      const found = inputHeaders.find(h => fallbackRegex.test(h.toLowerCase()));
+      if (found) return found;
+    }
+    return "";
+  };
+  const emailCol    = getCol("user_email", /email/);
+  const loginCol    = getCol("user_login", /user.?login|username|login/);
+  const nicCol      = getCol("nic_no", /(nic|national.*id|nric)/);
+  const passportCol = getCol("passport_no", /passport/);
+
+  const emails = [], usernames = [], nics = [], passports = [];
+  inputData.forEach(r => {
+    if (emailCol){ const e = String(r[emailCol]||"").trim().toLowerCase(); if (EMAIL_REGEX.test(e)) emails.push(e); }
+    if (loginCol){ const u = String(r[loginCol]||"").trim().toLowerCase(); if (u) usernames.push(u); }
+    if (nicCol){ const v = String(r[nicCol]||"").trim(); if (v) nics.push(v.toLowerCase()); }
+    if (passportCol){ const p = String(r[passportCol]||"").trim(); if (p) passports.push(p.toLowerCase()); }
+  });
+
+  const payload = {
+    token,
+    emails: Array.from(new Set(emails)).slice(0, 20000),
+    usernames: Array.from(new Set(usernames)).slice(0, 20000),
+    nics: Array.from(new Set(nics)).slice(0, 20000),
+    passports: Array.from(new Set(passports)).slice(0, 20000)
+  };
+
+  wpStatus.textContent = `Checking WP for ${payload.emails.length} emails, ${payload.usernames.length} usernames, ${payload.nics.length} NICs, ${payload.passports.length} passports…`;
+  try{
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    (data.usernames || []).forEach(u => existingUsernameSet.add(String(u).toLowerCase()));
+    (data.emails || []).forEach(e => existingEmailSet.add(String(e).toLowerCase()));
+    (data.nics || []).forEach(v => existingNicSet.add(String(v).toLowerCase()));
+    (data.passports || []).forEach(p => existingPassportSet.add(String(p).toLowerCase()));
+
+    wpStatus.innerHTML = `<span class="ok">Synced. WP known → usernames: ${existingUsernameSet.size}, emails: ${existingEmailSet.size}, NICs: ${existingNicSet.size}, passports: ${existingPassportSet.size}.</span>`;
+  } catch(err){
+    wpStatus.innerHTML = `<span class="bad">WP sync failed: ${err.message}</span>`;
+  }
+}
+
+/*** ========== FILE INPUTS & MAPPING UI ========== ***/
+document.getElementById("existingUsernamesCSV").addEventListener("change", function (e) {
+  Papa.parse(e.target.files[0], {
+    header: true, skipEmptyLines: true,
+    complete: function (results) {
+      const rows = results.data || [];
+      const fields = results.meta?.fields || [];
+      const hasCol = (fields || []).map(h => (h||"").toString().toLowerCase()).includes("user_login");
+      if (hasCol) {
+        rows.forEach(r => {
+          const v = (r["user_login"] ?? r["User_Login"] ?? r["USER_LOGIN"] ?? "").toString().trim();
+          if (v) existingUsernameSet.add(v.toLowerCase());
+        });
+      } else if (fields.length) {
+        const firstKey = fields[0];
+        rows.forEach(r => {
+          const v = (r[firstKey] ?? "").toString().trim();
+          if (v) existingUsernameSet.add(v.toLowerCase());
+        });
+      }
+      document.getElementById("diag").innerHTML =
+        `Loaded <b>${existingUsernameSet.size}</b> existing usernames from CSV.`;
+    }
+  });
+});
+
+document.getElementById("inputCSV").addEventListener("change", function (e) {
+  Papa.parse(e.target.files[0], {
+    header: true, skipEmptyLines: true,
+    complete: function (results) {
+      inputData = results.data;
+      inputHeaders = results.meta.fields || [];
+      inputProfiles = columnProfileMap(inputData, inputHeaders);
+      inputStatusEl.innerHTML = `<span class="ok">Loaded ${inputData.length} rows, ${inputHeaders.length} columns.</span>`;
+      maybeRenderMappingUI();
+      updateGenBtn();
+    },
+    error: function(err){ inputStatusEl.innerHTML = `<span class="bad">Error: ${err}</span>`; }
+  });
+});
+
+document.getElementById("templateCSV").addEventListener("change", function (e) {
+  Papa.parse(e.target.files[0], {
+    header: true, skipEmptyLines: true,
+    complete: function (results) {
+      templateHeaders = results.meta.fields || [];
+      templateStatusEl.innerHTML = `<span class="ok">Loaded ${templateHeaders.length} template columns.</span>`;
+      maybeRenderMappingUI();
+      updateGenBtn();
+    },
+    error: function(err){ templateStatusEl.innerHTML = `<span class="bad">Error: ${err}</span>`; }
+  });
+});
+
+function maybeRenderMappingUI() {
+  const section = document.getElementById("mappingSection");
+  if (!inputHeaders.length || !templateHeaders.length || !inputProfiles) {
+    section.innerHTML = "";
+    return;
+  }
+  section.innerHTML = "<h3>Map Input Columns to Template Columns</h3>";
+  const table = document.createElement("table");
+  table.classList.add("map-table");
+  const thead = document.createElement("thead");
+  thead.innerHTML = "<tr><th>Input Column (auto-guessed, editable)</th><th>→</th><th>Template Column</th></tr>";
+  table.appendChild(thead);
+  const tbody = document.createElement("tbody");
+
+  mappings = {}; // reset
+
+  templateHeaders.forEach(templateCol => {
+    const row = document.createElement("tr");
+    const g = bestGuessForTemplateCol_intelligent(templateCol, inputHeaders, inputProfiles.types);
+
+    const inputSelect = document.createElement("select");
+    inputSelect.innerHTML =
+      `<option value=''>-- None --</option>` +
+      inputHeaders.map(h => `<option value="${h}" ${h === g.guess ? "selected" : ""}>${h}</option>`).join("");
+    mappings[templateCol] = g.guess || "";
+    inputSelect.onchange = () => { mappings[templateCol] = inputSelect.value; };
+
+    const tdInput = document.createElement("td");
+    tdInput.appendChild(inputSelect);
+
+    const tagBar = document.createElement("div");
+    tagBar.className = "reasons";
+    const typeWanted = templateDesiredType[templateCol];
+    if (typeWanted) {
+      const pill = document.createElement("span");
+      pill.className = "pill";
+      pill.textContent = `expects: ${typeWanted}`;
+      tagBar.appendChild(pill);
+    }
+    if (g.best){
+      const pill2 = document.createElement("span");
+      pill2.className = "pill";
+      pill2.textContent = `best: ${g.best} (${g.bestScore.toFixed(1)})`;
+      tagBar.appendChild(pill2);
+    }
+    if (g.secondBest){
+      const pill3 = document.createElement("span");
+      pill3.className = "pill";
+      pill3.textContent = `2nd: ${g.secondBest} (${g.secondScore.toFixed(1)})`;
+      tagBar.appendChild(pill3);
+    }
+    if (g.bestReasons?.length){
+      const reasons = document.createElement("div");
+      reasons.className = "score";
+      reasons.textContent = `why: ${g.bestReasons.join(", ")}`;
+      tdInput.appendChild(reasons);
+    }
+    tdInput.appendChild(tagBar);
+
+    if (!g.confident) row.classList.add("row-warn");
+    else row.classList.add("row-good");
+
+    const tdArrow = document.createElement("td"); tdArrow.innerText = "→";
+    const tdTemplate = document.createElement("td");
+    tdTemplate.innerHTML = `<span class="template-col">${templateCol}</span>`;
+    row.appendChild(tdInput); row.appendChild(tdArrow); row.appendChild(tdTemplate);
+    tbody.appendChild(row);
+  });
+
+  table.appendChild(tbody);
+  const tip = document.createElement("div");
+  tip.className = "subtle";
+  tip.textContent = "Yellow rows are low-confidence guesses — please review. Green rows are confident/locked by rules.";
+  section.appendChild(table);
+  section.appendChild(tip);
+}
+
+/*** ========== SANITIZERS ========== ***/
+function cleanBasic(val) { return String(val ?? "").replace(/\u00A0/g, " ").trim().replace(/\s+/g, " "); }
+function cleanName(val) { return cleanBasic(val).replace(/,/g, ""); }
+function sanitizeEmploymentStatus(val) {
+  const v = cleanBasic(val).toLowerCase();
+  if (v === "active") return "Active";
+  if (v === "inactive") return "Inactive";
+  return "";
+}
+function sanitizePassport(val) { const v = cleanBasic(val); return /no\s*passport/i.test(v) ? "" : v; }
+function sanitizeNIC(val) { const v = cleanBasic(val); return /no\s*nic/i.test(v) ? "" : v; }
+function fixCommonEmailTypos(domain) {
+  const d = domain.toLowerCase();
+  const fixes = {"gmai.com":"gmail.com","gmal.com":"gmail.com","gmial.com":"gmail.com","argmail.com":"gmail.com","outloo.com":"outlook.com","hotmial.com":"hotmail.com","yaho.com":"yahoo.com"};
+  return fixes[d] || d;
+}
+function sanitizeEmail(val) {
+  let v = String(val ?? "").trim().toLowerCase();
+  v = v.replace(/\s+/g, "");
+  if (!v) return "";
+  const atIdx = v.indexOf("@");
+  if (atIdx <= 0 || atIdx === v.length - 1) return "";
+  const local = v.slice(0, atIdx);
+  let domain = v.slice(1 + atIdx);
+  domain = fixCommonEmailTypos(domain);
+  const recombined = `${local}@${domain}`;
+  if (!EMAIL_REGEX.test(recombined)) return "";
+  return recombined;
+}
+function sanitizeMobile(val) { return String(val ?? "").replace(/[ +]/g, ""); }
+function toDDMMYYYY(raw) {
+  let s = cleanBasic(raw);
+  if (!s) return "";
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return s;
+  if (/^\d{2}\.\d{2}\.\d{4}$/.test(s)) { const [d,m,y] = s.split("."); return `${d}/${m}/${y}`; }
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) { const [,y,mo,d] = m; return `${d}/${mo}/${y}`; }
+  m = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
+  if (m) {
+    let [,_a,_b,y] = m; let a = parseInt(_a,10), b = parseInt(_b,10);
+    if (a > 12) return `${pad2(a)}/${pad2(b)}/${y}`;
+    if (b > 12) return `${pad2(b)}/${pad2(a)}/${y}`;
+    return `${pad2(a)}/${pad2(b)}/${y}`;
+  }
+  return s;
+}
+function isDateHeader(h) {
+  const hn = (h || "").toLowerCase();
+  return hn.includes("date") || ["date_of_birth","passport_exp","visa_exp","visa_issue_date","join_date","resign_date"].includes(hn);
+}
+
+/*** ========== USERNAME BUILDER ========== ***/
+function slugifyLetters(s) {
+  return (s || "").toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z]+/g, '')
+    .slice(0, 50);
+}
+function lastDigits(s, n) { return (s || "").replace(/\D+/g, "").slice(-n); }
+function emailLocal(email) {
+  const v = (email || "").toLowerCase().trim();
+  const i = v.indexOf("@"); return i > 0 ? v.slice(0, i) : v;
+}
+function makeUniqueLogin(basis, row, used) {
+  const baseLetters = slugifyLetters(basis);
+  const ln = slugifyLetters(row.last_name || "");
+  const fn = slugifyLetters(row.first_name || "");
+  const disp = slugifyLetters(row.display_name || "");
+  const nic5  = lastDigits(row.nic_no, 5);
+  const pass5 = lastDigits(row.passport_no, 5);
+  const emp5  = lastDigits(row.employee_number, 5);
+  const mob4  = lastDigits(row.mobile_no, 4);
+  const dobY  = (row.date_of_birth || "").match(/\b(\d{4})\b/);
+  const em3   = (emailLocal(row.user_email) || "").slice(0,3);
+
+  // new collision-resistant suffix
+// New universal suffix — always unique, even if all fields missing
+const rndNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0'); // 000–999
+const rndStr = Math.random().toString(36).substring(2,5); // 3 random chars
+const suffix = rndNum + rndStr;
+  let candidate = (ln || disp || fn || baseLetters || "user") + suffix;
+  candidate = candidate.replace(/[^a-z0-9]+/g, '').slice(0, 60);
+  if (!candidate) candidate = "user" + (nic5 || pass5 || emp5 || "00000");
+
+  const lower = s => (s||"").toLowerCase();
+  const isTaken = u => used.has(lower(u)) || existingUsernameSet.has(lower(u));
+  if (!isTaken(candidate)) { used.add(lower(candidate)); return candidate; }
+
+  let k = 1;
+  while (true) {
+    const c2 = (candidate + (k === 1 ? "-x" : `-x${k}`)).slice(0, 64);
+    if (!isTaken(c2)) { used.add(lower(c2)); return c2; }
+    k++;
+    if (k > 9999) {
+      const c3 = candidate + "-" + Math.random().toString(36).slice(2,6);
+      used.add(lower(c3));
+      return c3;
+    }
+  }
+}
+
+/*** ========== ZIP HELPERS ========== ***/
+function csvString(rows){ return Papa.unparse(rows); }
+function downloadZip(filename, filesObj){
+  const zip = new JSZip();
+  Object.entries(filesObj).forEach(([name, content]) => {
+    zip.file(name, content);
+  });
+  zip.generateAsync({type: "blob"}).then(blob => {
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  });
+}
+
+/*** ========== DIVISION MAPPING — STORAGE & PREVIEW ========== ***/
+function renderDivisionMappingPreview() {
+  const entries = Object.entries(divisionMapping);
+  if (!entries.length) {
+    divisionPreviewEl.innerHTML = `<div class="status">No custom division mappings yet. Exact matches will still auto-map.</div>`;
+    return;
+  }
+  let html = '<table class="division-preview-table"><thead><tr><th>Raw Division (canonical key)</th><th>Mapped To</th><th>Mode</th></tr></thead><tbody>';
+  for (const [canon, obj] of entries) {
+    const official = obj && typeof obj === 'object' ? obj.official : null;
+    const mode = official === null ? 'No Matching Division (separate CSV)' : 'Mapped to official';
+    html += `<tr><td><code>${canon}</code></td><td>${official ? `<code>${official}</code>` : '<em>none</em>'}</td><td>${mode}</td></tr>`;
+  }
+  html += '</tbody></table>';
+  divisionPreviewEl.innerHTML = html;
+}
+
+async function loadMappingFromServer() {
+  try {
+    const res = await fetch('division-mapping-load.php', { cache: 'no-store' });
+    if (!res.ok) {
+      divisionPreviewEl.innerHTML = `<div class="status">No mapping file on server (yet).</div>`;
+      return;
+    }
+    const data = await res.json();
+    if (data && data.mapping && typeof data.mapping === 'object') {
+      divisionMapping = data.mapping;
+      divisionPreviewEl.innerHTML = `<div class="ok">Loaded division mapping from server (${Object.keys(divisionMapping).length} entries).</div>`;
+      renderDivisionMappingPreview();
+    } else {
+      divisionPreviewEl.innerHTML = `<div class="status">Server mapping is empty.</div>`;
+    }
+  } catch (e) {
+    divisionPreviewEl.innerHTML = `<div class="bad">Failed to load mapping from server: ${e.message}</div>`;
+  }
+}
+
+async function saveMappingToServer() {
+  try {
+    const payload = { version: VERSION, mapping: divisionMapping };
+    const res = await fetch('division-mapping-store.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    divisionPreviewEl.innerHTML = `<div class="ok">Mapping saved to server. ${text}</div>`;
+  } catch (e) {
+    divisionPreviewEl.innerHTML = `<div class="bad">Failed to save mapping to server: ${e.message}</div>`;
+  }
+}
+
+function exportMappingJson() {
+  const payload = { version: VERSION, exported_at: new Date().toISOString(), mapping: divisionMapping };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'division-mapping.json';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function triggerMappingImport() {
+  divisionMappingFileEl.value = '';
+  divisionMappingFileEl.click();
+}
+divisionMappingFileEl.addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const data = JSON.parse(ev.target.result);
+      const mapping = data.mapping && typeof data.mapping === 'object' ? data.mapping : data;
+      if (!mapping || typeof mapping !== 'object') throw new Error('Invalid mapping JSON');
+      divisionMapping = mapping;
+      divisionPreviewEl.innerHTML = `<div class="ok">Imported mapping.json (${Object.keys(divisionMapping).length} entries).</div>`;
+      renderDivisionMappingPreview();
+    } catch (err) {
+      divisionPreviewEl.innerHTML = `<div class="bad">Import failed: ${err.message}</div>`;
+    }
+  };
+  reader.readAsText(file);
+});
+
+/*** ========== DIVISION MAPPING MODAL (ONE-BY-ONE) ========== ***/
+/*** === IMPROVED MODAL WITH RANKING + SEARCH + LARGER HEIGHT === ***/
+
+// Increase modal size
+document.querySelector("#divisionModal").style.maxHeight = "90vh";
+document.querySelector("#divisionModal").style.overflowY = "auto";
+
+function similarityScore(raw, candidate) {
+  const a = toUpperCanon(raw);
+  const b = toUpperCanon(candidate);
+
+  if (a === b) return 999;
+
+  const sa = squashKey(a);
+  const sb = squashKey(b);
+  if (sa === sb) return 100;
+
+  // token match
+  const tA = tokens(raw.toLowerCase());
+  const tB = tokens(candidate.toLowerCase());
+  const overlap = intersect(tA, tB).length;
+  let score = overlap * 10;
+
+  if (b.includes(a) || a.includes(b)) score += 5;
+
+  return score;
+}
+
+function buildRankedDivisionList(rawDivision) {
+  const items = Object.keys(divisionMap);
+
+  const ranked = items.map(div => ({
+    name: div,
+    score: similarityScore(rawDivision, div)
+  }));
+
+  ranked.sort((a, b) => b.score - a.score);
+  return ranked;
+}
+
+function openDivisionModal(item) {
+  currentDivisionModalItem = item;
+  modalRawDivisionEl.textContent = item.rawSample;
+  divisionModalErrorEl.textContent = "";
+
+  const searchInput = document.getElementById("modalSearch");
+  const selectEl = document.getElementById("modalDivisionSelect");
+
+  const rankedList = buildRankedDivisionList(item.rawSample);
+
+  function renderOptions(filter = "") {
+    selectEl.innerHTML = "";
+
+    rankedList.forEach(obj => {
+      if (filter && !obj.name.toLowerCase().includes(filter.toLowerCase())) return;
+
+      const o = document.createElement("option");
+      o.value = obj.name;
+      o.textContent = `${obj.name} (Score ${obj.score})`;
+      selectEl.appendChild(o);
+    });
+
+    const no = document.createElement("option");
+    no.value = "__NO_MATCH__";
+    no.textContent = "No Matching Division (separate CSV)";
+    selectEl.appendChild(no);
+  }
+
+  renderOptions();
+
+  searchInput.oninput = () => renderOptions(searchInput.value);
+
+  divisionModalBackdrop.style.display = "flex";
+}
+
+
+function closeDivisionModal() {
+  divisionModalBackdrop.style.display = 'none';
+  currentDivisionModalItem = null;
+}
+
+function cancelDivisionModal() {
+  if (divisionModalReject) {
+    divisionModalReject(new Error('User cancelled division mapping.'));
+  }
+  divisionModalResolve = null;
+  divisionModalReject = null;
+  closeDivisionModal();
+}
+
+function saveDivisionModal() {
+  const value = modalDivisionSelectEl.value;
+  if (!value) {
+    divisionModalErrorEl.textContent = 'Please select an official division or choose "No Matching Division".';
+    return;
+  }
+  const canon = currentDivisionModalItem.canon;
+  if (value === '__NO_MATCH__') {
+    divisionMapping[canon] = { official: null };
+  } else {
+    const officialCanon = toUpperCanon(value);
+    divisionMapping[canon] = { official: officialCanon };
+  }
+  renderDivisionMappingPreview();
+  if (divisionModalResolve) {
+    divisionModalResolve();
+  }
+  divisionModalResolve = null;
+  divisionModalReject = null;
+  closeDivisionModal();
+}
+
+function ensureDivisionMappings(rawDivisionSet) {
+  // rawDivisionSet: Set of raw division strings
+  const pending = [];
+  for (const raw of rawDivisionSet) {
+    const canon = toUpperCanon(raw);
+    if (!canon) continue;
+
+    // If already mapped (from JSON or earlier), skip
+    if (divisionMapping[canon]) continue;
+
+    // If exact official division exists, auto-map
+    if (allowedDivisions.has(canon)) {
+      divisionMapping[canon] = { official: canon };
+      continue;
+    }
+
+    // New unknown → ask user
+    pending.push({ canon, rawSample: raw });
+  }
+
+  if (!pending.length) {
+    renderDivisionMappingPreview();
+    return Promise.resolve();
+  }
+
+  // One-by-one wizard
+  return new Promise(async (resolve, reject) => {
+    try {
+      for (const item of pending) {
+        await new Promise((res, rej) => {
+          divisionModalResolve = res;
+          divisionModalReject = rej;
+          openDivisionModal(item);
+        });
+      }
+      renderDivisionMappingPreview();
+      resolve();
+    } catch (err) {
+      document.getElementById("diag").innerHTML =
+        `<span class="bad">Generation aborted: ${err.message}</span>`;
+      reject(err);
+    }
+  });
+}
+
+function applyDivisionMapping(divisionInput, companyInput) {
+  const rawClean = cleanBasic(divisionInput);
+  const canon = toUpperCanon(rawClean);
+  const mapping = divisionMapping[canon];
+
+  if (mapping) {
+    if (mapping.official === null) {
+      // Explicit "NO MATCH" → separate CSV
+      return {
+        mode: 'no_match',
+        division: rawClean || canon,
+        company: toUpperCanon(companyInput)
+      };
+    }
+    const official = mapping.official;
+    return {
+      mode: 'mapped',
+      division: official,
+      company: divisionToCompany[official] || toUpperCanon(companyInput)
+    };
+  }
+
+  const resolvedCanonDivision = resolveDivisionFlexible(divisionInput);
+  if (resolvedCanonDivision && allowedDivisions.has(resolvedCanonDivision)) {
+    return {
+      mode: 'auto',
+      division: resolvedCanonDivision,
+      company: divisionToCompany[resolvedCanonDivision] || toUpperCanon(companyInput)
+    };
+  }
+
+  return {
+    mode: 'raw',
+    division: toUpperCanon(divisionInput),
+    company: (() => {
+      const compCanon = toUpperCanon(companyInput);
+      return allowedCompanies.has(compCanon) ? compCanon : (compCanon || "");
+    })()
+  };
+}
+
+/*** ========== GENERATE: OUTER + INNER (with division mapping) ========== ***/
+async function handleGenerateClick() {
+  if (!inputData.length || !templateHeaders.length) return;
+
+  // Collect unique raw division values from input based on mapping
+  const rawDivisions = new Set();
+  const divisionSrcCol = mappings["division"];
+  if (divisionSrcCol) {
+    inputData.forEach(row => {
+      const rawVal = cleanBasic(row[divisionSrcCol] || "");
+      if (rawVal) rawDivisions.add(rawVal);
+    });
+  }
+
+  try {
+    await ensureDivisionMappings(rawDivisions);
+    generateOutputInner();
+  } catch (e) {
+    // Already handled in ensureDivisionMappings
+  }
+}
+
+function generateOutputInner() {
+  if (!inputData.length || !templateHeaders.length) return;
+
+  const usedLogins = new Set();
+  let collisions = 0, invalidEmails=0, wpEmailHits=0;
+
+  const allMapped = [];
+  const divisionNoMatchRows = [];
+
+  inputData.forEach(row => {
+    const mappedValues = {};
+    templateHeaders.forEach(th => {
+      const src = mappings[th];
+      let val = src ? row[src] : "";
+      val = cleanBasic(val);
+
+      if (["first_name","last_name","display_name"].includes(th)) val = cleanName(val);
+      if (th === "employment_status") val = sanitizeEmploymentStatus(val);
+      if (th === "passport_no") val = sanitizePassport(val);
+      if (th === "nic_no") val = sanitizeNIC(val);
+      if (th === "user_email") {
+        val = sanitizeEmail(val);
+        if (!val) invalidEmails++;
+        if (val && existingEmailSet.has(val.toLowerCase())) wpEmailHits++;
+      }
+      if (th === "mobile_no") val = sanitizeMobile(val);
+      if (isDateHeader(th) && val) val = toDDMMYYYY(val);
+      mappings[th] = mappings[th] || "";
+      mappedValues[th] = val;
+    });
+
+    const outRow = {};
+    const disp = mappedValues["display_name"] || "";
+    const parts = disp.split(" ").filter(Boolean);
+    const lastFromDisp  = parts.length > 1 ? parts[parts.length - 1] : "";
+    const firstFromDisp = parts.length > 1 ? parts.slice(0, -1).join(" ") : (parts[0] || "");
+    outRow["first_name"]   = mappedValues["first_name"] || firstFromDisp;
+    outRow["last_name"]    = mappedValues["last_name"]  || lastFromDisp;
+    outRow["display_name"] = disp;
+
+    const requestedLogin = (mappedValues["user_login"] || "").trim();
+    let finalLogin;
+    if (requestedLogin) {
+      const before = requestedLogin;
+      finalLogin = makeUniqueLogin(before, {
+        ...mappedValues, first_name: outRow.first_name, last_name: outRow.last_name, display_name: outRow.display_name
+      }, usedLogins);
+      if (finalLogin.toLowerCase() !== before.toLowerCase()
+          && (existingUsernameSet.has(before.toLowerCase()) || usedLogins.has(before.toLowerCase()))) {
+        collisions++;
+      }
+    } else {
+      const basis = (outRow.last_name || outRow.display_name || outRow.first_name || "");
+      const made = makeUniqueLogin(basis, {
+        ...mappedValues, first_name: outRow.first_name, last_name: outRow.last_name, display_name: outRow.display_name
+      }, usedLogins);
+      finalLogin = made;
+      if (/-x\d*$/.test(finalLogin)) collisions++;
+    }
+    outRow["user_login"] = finalLogin;
+
+    let finalExpatLocal = mappedValues["expat_local"];
+    if (!finalExpatLocal) {
+      const natRaw = mappedValues["nationality"] || "";
+      const nat = natRaw.toLowerCase().replace(/\s+/g, " ").trim();
+      const nicNo = mappedValues["nic_no"] || "";
+
+      const isLocalWord = /\blocal\b/.test(nat);
+      const isSriLankan =
+        nat.includes("sri lanka") ||
+        nat.includes("sri-lanka") ||
+        nat.includes("sri_lanka") ||
+        nat.includes("lankan") ||
+        nat === "sl" ||
+        nat === "lk" ||
+        isLocalWord;
+
+      if (isSriLankan || nicNo) {
+        finalExpatLocal = "Local";
+      } else if (nat) {
+        finalExpatLocal = "Expatriate";
+      } else {
+        finalExpatLocal = "";
+      }
+    }
+    outRow["expat_local"] = finalExpatLocal;
+
+    outRow["wp_role"] = "subscriber";
+    outRow["learndash_courses"] =
+      outRow["expat_local"].toLowerCase() === "expatriate"
+        ? "2871;4216;2869;3027;5732;5780"
+        : "2871;4216;2869;5780";
+
+    const divisionInput = mappedValues["division"] || "";
+    const companyInput  = mappedValues["company"]  || "";
+
+    const divResult = applyDivisionMapping(divisionInput, companyInput);
+
+    if (divResult.mode === 'no_match') {
+      outRow["division"] = divResult.division;
+      outRow["company"]  = divResult.company;
+      // no learndash group
+      templateHeaders.forEach(th => { if (!(th in outRow)) outRow[th] = mappedValues[th] || ""; });
+      outRow["learndash_groups"] = "";
+      divisionNoMatchRows.push(outRow);
+      return; // Do not include in other buckets; separate CSV only
+    }
+
+    outRow["division"] = divResult.division;
+    outRow["company"]  = divResult.company;
+
+    templateHeaders.forEach(th => { if (!(th in outRow)) outRow[th] = mappedValues[th] || ""; });
+
+    const finalUserLogin = String(outRow["user_login"] || "").trim();
+    outRow["user_pass"] = [...finalUserLogin].reverse().join("") + "$";
+
+    const divCanon = toUpperCanon(outRow["division"] || "");
+    outRow["learndash_groups"] =
+      divisionGroupMapUpper[divCanon] ||
+      divisionGroupMapUpper[squashKey(divCanon)] ||
+      "";
+
+    templateHeaders.forEach(h => { if (isDateHeader(h) && outRow[h]) outRow[h] = toDDMMYYYY(outRow[h]); });
+    Object.keys(outRow).forEach(k => { outRow[k] = cleanBasic(outRow[k]); });
+
+    allMapped.push(outRow);
+  });
+
+  // Partition into 3+1 lists
+  const missingEmail = [];
+  const wpMatches = [];
+  const clean = [];
+
+  allMapped.forEach(r => {
+    const email = (r.user_email || "").toLowerCase();
+    const login = (r.user_login || "").toLowerCase();
+    const nic   = (r.nic_no || "").toLowerCase();
+    const pass  = (r.passport_no || "").toLowerCase();
+
+    if (!email) {
+      missingEmail.push(r);
+      return;
+    }
+    const hitWP =
+      (email && existingEmailSet.has(email)) ||
+      (login && existingUsernameSet.has(login)) ||
+      (nic   && existingNicSet.has(nic)) ||
+      (pass  && existingPassportSet.has(pass));
+
+        if (hitWP) {
+      wpMatches.push(r);
+    } else {
+      clean.push(r);
+    }
+  });
+
+  // Build 4 CSV files
+  const files = {
+    "clean.csv": csvString(clean),
+    "missing_email.csv": csvString(missingEmail),
+    "wp_matches.csv": csvString(wpMatches),
+    "division_no_match.csv": csvString(divisionNoMatchRows)
+  };
+
+  // ZIP filename
+  const zipName = `mapped-output-${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.zip`;
+
+  // Trigger download
+  downloadZip(zipName, files);
+
+  // Diagnostic summary
+  const diag = document.getElementById("diag");
+  diag.innerHTML = `
+    <div class="ok"><b>Success!</b> ZIP generated.</div>
+    <ul>
+      <li>Clean rows: <b>${clean.length}</b></li>
+      <li>Missing email rows: <b>${missingEmail.length}</b></li>
+      <li>WP matches (already exist in WP): <b>${wpMatches.length}</b></li>
+      <li>No-match division rows: <b>${divisionNoMatchRows.length}</b></li>
+    </ul>
+  `;
+}
+</script>
+
+</body>
+</html>

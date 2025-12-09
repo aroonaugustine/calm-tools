@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Welcome Sender — v2.6.2-web</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+  body{font-family:system-ui,Arial,sans-serif;margin:40px;max-width:980px}
+  fieldset{border:1px solid #ddd;border-radius:8px;padding:16px;margin-bottom:18px}
+  legend{font-weight:700}
+  label{display:block;margin:8px 0}
+  input[type=text],input[type=password],textarea{width:640px;max-width:100%;padding:8px}
+  input[type=file]{padding:6px}
+  .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .muted{color:#666}
+  .small{font-size:12px}
+  button{padding:10px 16px;border:1px solid #333;border-radius:8px;background:#fafafa;cursor:pointer}
+  .pill{display:inline-block;padding:2px 8px;border:1px solid #ccc;border-radius:999px;font-size:12px;color:#555;margin-left:8px}
+</style>
+<script>
+  function onModeChange(val){
+    document.getElementById('csv_upload_wrap').style.display = (val==='upload') ? '' : 'none';
+    document.getElementById('server_path_wrap').style.display = (val==='server') ? '' : 'none';
+    document.getElementById('manual_wrap').style.display      = (val==='manual') ? '' : 'none';
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    const radios = document.querySelectorAll('input[name="csv_mode"]');
+    radios.forEach(r => r.addEventListener('change', e => onModeChange(e.target.value)));
+    const checked = document.querySelector('input[name="csv_mode"]:checked');
+    if (checked) onModeChange(checked.value);
+  });
+</script>
+</head>
+<body>
+  <h1>Welcome Sender <span class="muted">v2.6.2-web</span></h1>
+  <p class="muted">
+    Sends the “Welcome to CALM” email to users listed in a CSV — or typed manually.<br>
+    CSV can contain <code>user_email</code> (or <code>email</code>) <b>or</b> <code>user_login</code> (or <code>username</code>/<code>login</code>).<br>
+    Optional greeting override: <code>name</code> / <code>full_name</code> / <code>first_name</code>.
+  </p>
+
+  <form method="post" action="launch.php" enctype="multipart/form-data">
+    <fieldset>
+      <legend>Auth</legend>
+      <label>Launcher Auth Token:
+        <input type="password" name="token" placeholder="paste AUTH_TOKEN (launcher)" required>
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Source</legend>
+
+      <label class="row">
+        <input type="radio" name="csv_mode" value="upload" checked> Upload CSV now
+        <span class="pill">Recommended</span>
+      </label>
+      <div id="csv_upload_wrap">
+        <input type="file" name="csv_file" accept=".csv">
+        <div class="small muted">
+          CSV must include either <code>user_email</code>/<code>email</code> OR <code>user_login</code>/<code>username</code>/<code>login</code>.<br>
+          Optional: <code>name</code>/<code>full_name</code>/<code>first_name</code> for the greeting.
+        </div>
+      </div>
+
+      <div style="margin:10px 0"></div>
+
+      <label class="row">
+        <input type="radio" name="csv_mode" value="server"> Use server path
+      </label>
+      <div id="server_path_wrap" style="display:none">
+        <input type="text" name="csv_path" placeholder="/home/bulk_update/send_welcome.csv">
+      </div>
+
+      <div style="margin:10px 0"></div>
+
+      <label class="row">
+        <input type="radio" name="csv_mode" value="manual"> Manual entry (up to 5 emails)
+      </label>
+      <div id="manual_wrap" style="display:none">
+        <textarea name="manual_emails" rows="4" placeholder="e.g. alice@example.com, bob@example.com
+(or one per line)"></textarea>
+        <div class="small muted">Max 5 addresses. We’ll validate and create a temporary CSV for this run.</div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Options</legend>
+      <label class="row"><input type="checkbox" name="send" value="1"> Send emails (untick = dry-run preview)</label>
+      <div class="row">
+        <label>Limit (0 = all): <input type="text" name="limit" value="0" class="small"></label>
+        <label>Only Role: <input type="text" name="only_role" placeholder="e.g. subscriber" class="small"></label>
+        <label>Campaign tag: <input type="text" name="campaign" placeholder="optional" class="small"></label>
+      </div>
+      <div class="row">
+        <label>Batch size: <input type="text" name="batch_size" value="50" class="small"></label>
+        <label>Batch sleep (sec): <input type="text" name="batch_sleep" value="2" class="small"></label>
+      </div>
+    </fieldset>
+
+    <div class="row" style="margin-top:12px">
+      <button type="submit">Launch Background Run</button>
+      <a href="status.php"><button type="button">View Runs & Logs</button></a>
+    </div>
+  </form>
+
+  <p class="muted" style="margin-top:16px">
+    Results CSV and live stdout are stored under <code>/srv/admin-tools/wp-welcome-sender/_mailer-logs/</code>.
+  </p>
+</body>
+</html>

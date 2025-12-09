@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>WP Bulk Column Updater — v1.3.0 UI</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+  :root{--b:#0f172a;--m:#64748b;--bd:#e2e8f0}
+  body{font-family:system-ui,Arial,sans-serif;margin:32px;max-width:980px;color:var(--b)}
+  h1{margin:0 0 12px}
+  fieldset{border:1px solid var(--bd);border-radius:10px;padding:16px;margin:14px 0}
+  legend{font-weight:700}
+  label{display:block;margin:8px 0}
+  .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  input[type=text],input[type=password],input[type=number],select{width:520px;max-width:100%;padding:8px;border:1px solid var(--bd);border-radius:8px}
+  input[type=file]{padding:6px}
+  .muted{color:var(--m)}
+  button{padding:10px 16px;border:1px solid #111;border-radius:8px;background:#f8fafc;cursor:pointer}
+  .small{font-size:12px}
+  .hint{font-size:13px;color:var(--m);margin-top:4px}
+</style>
+</head>
+<body>
+  <h1>WP Bulk Column Updater <span class="muted">v1.3.0</span></h1>
+
+  <form method="post" action="launch.php" enctype="multipart/form-data">
+    <fieldset>
+      <legend>Auth</legend>
+      <label>Launcher Auth Token
+        <input type="password" name="token" required>
+      </label>
+      <div class="hint">Same token used by your other admin tools.</div>
+    </fieldset>
+
+    <fieldset>
+      <legend>CSV Source</legend>
+      <label class="row">
+        <input type="radio" name="csv_mode" value="upload" checked> Upload CSV
+      </label>
+      <input type="file" name="csv_file" accept=".csv">
+
+      <div style="height:8px"></div>
+
+      <label class="row">
+        <input type="radio" name="csv_mode" value="server"> Use server path
+      </label>
+      <input type="text" name="csv_path" placeholder="/path/to/file.csv">
+      <div class="hint">Tip: Server path is best for very large files.</div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Matching Keys (1 or 2)</legend>
+      <label>Primary key (required)
+        <select name="primary_key" required>
+          <option value="">— Select —</option>
+          <option value="username">username</option>
+          <option value="emp_no">emp_no</option>
+          <option value="full_name">full_name</option>
+          <option value="passport_number">passport_number</option>
+          <option value="nic_number">nic_number</option>
+          <option value="email_address">email_address</option>
+        </select>
+      </label>
+
+      <label>Secondary key (optional)
+        <select name="secondary_key">
+          <option value="">— None —</option>
+          <option value="username">username</option>
+          <option value="emp_no">emp_no</option>
+          <option value="full_name">full_name</option>
+          <option value="passport_number">passport_number</option>
+          <option value="nic_number">nic_number</option>
+          <option value="email_address">email_address</option>
+        </select>
+      </label>
+      <div class="hint">Examples: “username → email address”, or “username + emp_no → email address”.</div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Target to Update</legend>
+      <label class="row">
+        <input type="radio" name="target_type" value="user" checked> Update a core user field
+      </label>
+
+      <label>Core user field (username is intentionally NOT offered)
+        <select name="target_field" id="target_field_user">
+          <option value="email address">email address</option>
+          <option value="display_name">display_name</option>
+          <option value="first_name">first_name</option>
+          <option value="last_name">last_name</option>
+          <option value="learndash_group">LearnDash group ID(s) — replace</option>
+        </select>
+      </label>
+      <div class="hint">For LearnDash group ID(s) — replace: the CSV must have a column named <code>learndash_group</code> with one ID or a list like <code>123,456</code> or <code>123|456</code>. Existing memberships are replaced to match exactly.</div>
+
+      <label class="row">
+        <input type="radio" name="target_type" value="meta"> Update a user meta key
+      </label>
+
+      <label>Meta key (when “user meta” is selected above)
+        <input type="text" name="target_key" placeholder="e.g. employee_number">
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Options</legend>
+      <label class="row"><input type="checkbox" name="live" value="1"> Live run (apply changes). Leave unticked for DRY RUN.</label>
+      <label>Limit (0 = all)
+        <input type="number" name="limit" value="0" min="0" step="1" class="small">
+      </label>
+    </fieldset>
+
+    <div class="row" style="margin-top:12px">
+      <button type="submit">Launch Background Run</button>
+      <a href="status.php"><button type="button">View Runs & Logs</button></a>
+    </div>
+  </form>
+</body>
+</html>

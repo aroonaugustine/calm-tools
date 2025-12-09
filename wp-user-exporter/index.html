@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>WP User Exporter — v11.5-AL2</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+  body{font-family:system-ui,Arial,sans-serif;margin:40px;max-width:820px}
+  h1{margin:0 0 8px}
+  .muted{color:#666}
+  fieldset{border:1px solid #ddd;padding:16px;margin-top:20px}
+  label{display:block;margin:10px 0}
+  input[type=text],input[type=password]{width:100%;max-width:520px;padding:8px}
+  button{padding:10px 16px;border-radius:8px;border:1px solid #444;cursor:pointer;margin-top:12px}
+  select{width:100%;max-width:520px;padding:8px}
+</style>
+</head>
+<body>
+  <h1>WP User Exporter <span class="muted">v11.5-AL2</span></h1>
+  <p>This tool streams a CSV of WordPress users. It requires the same <b>AUTH_TOKEN</b> you set in the PHP endpoint.</p>
+
+  <fieldset>
+    <legend>Run Export</legend>
+    <form class="form" method="post" action="./run-export.php">
+
+      <!-- Token -->
+      <label>Auth token:
+        <input type="password" name="token" placeholder="paste AUTH_TOKEN here" required>
+      </label>
+
+      <!-- MULTISELECT ROLE FILTER -->
+      <label>Select Roles to Export (multi-select):
+        <select name="roles[]" multiple size="6">
+          <option value="subscriber">Subscriber</option>
+          <option value="group_leader">Group Leader</option>
+          <option value="administrator">Administrator</option>
+          <option value="editor">Editor</option>
+          <option value="author">Author</option>
+          <option value="contributor">Contributor</option>
+          <option value="none">No Role / Inactive</option>
+        </select>
+      </label>
+
+      <!-- Save Copy -->
+      <label class="row">
+        <input type="checkbox" name="save" value="1">
+        <span>Also save a server copy under <code>/srv/admin-tools/wp-user-exporter/_exports/</code></span>
+      </label>
+
+      <button type="submit">Export Users (CSV)</button>
+    </form>
+  </fieldset>
+
+  <p class="muted" style="margin-top:16px">
+    Note: This page is already protected by your Basic Auth. The token is a second layer.
+  </p>
+
+</body>
+</html>

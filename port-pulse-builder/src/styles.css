@@ -1,0 +1,11 @@
+@import 'react-quill/dist/quill.snow.css';
+@import 'react-easy-crop/react-easy-crop.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Fix for cropper border */
+.reactEasyCrop_CropArea {
+  border: 2px solid #fff !important;
+}

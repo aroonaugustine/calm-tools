@@ -1,0 +1,203 @@
+<?php
+/**
+ * Resigned Processor — v1.2.0
+ * - Deactivate user (role->inactive or remove roles), mark UM account_status=inactive, kill sessions
+ * - Remove from all LearnDash groups
+ * - Unenroll from all LearnDash courses (+ optional progress reset)
+ * - DRY RUN by default; use --live to apply changes
+ *
+ * Usage (spawned by launch.php):
+ *   php resigned_worker.php \
+ *     --csv=/path/file.csv \
+ *     --matched=/srv/admin-tools/_mailer-logs/resigned_xxx/matched_done.csv \
+ *     --unmatched=/srv/admin-tools/_mailer-logs/resigned_xxx/unmatched_skipped.csv \
+ *     [--live] [--limit=100] [--remove-groups] [--unenroll-courses] [--reset-progress] [--um-inactive] [--strip-roles]
+ *
+ * CSV matching keys supported: user_email, NIC #, Passport
+ */
+
+error_reporting(E_ALL); ini_set('display_errors', 1);
+if (!defined('WP_DISABLE_FATAL_ERROR_HANDLER')) define('WP_DISABLE_FATAL_ERROR_HANDLER', true);
+register_shutdown_function(function(){ $e = error_get_last(); if ($e && in_array($e['type'], [E_ERROR,E_PARSE,E_CORE_ERROR,E_COMPILE_ERROR])) fwrite(STDERR, "FATAL: {$e['message']} in {$e['file']}:{$e['line']}\n"); });
+
+require('/var/www/html/wp-load.php'); // adjust if needed
+
+// ---------- Args ----------
+$argv_assoc = [];
+foreach (($argv ?? []) as $a) {
+  if (preg_match('/^--([^=]+)=(.*)$/', $a, $m)) $argv_assoc[$m[1]] = $m[2];
+  elseif (preg_match('/^--(.+)$/', $a, $m))     $argv_assoc[$m[1]] = true;
+}
+$CSV      = (string)($argv_assoc['csv']      ?? '');
+$MATCHED  = (string)($argv_assoc['matched']  ?? '');
+$UNMATCH  = (string)($argv_assoc['unmatched']?? '');
+$LIVE     = !empty($argv_assoc['live']);
+$LIMIT    = isset($argv_assoc['limit']) ? max(0,(int)$argv_assoc['limit']) : 0;
+
+// toggles (default ON for group removal; others optional)
+$DO_GROUPS   = !empty($argv_assoc['remove-groups']);       // remove from LD groups
+$DO_UNENROLL = !empty($argv_assoc['unenroll-courses']);    // unenroll from LD courses
+$DO_RESET    = !empty($argv_assoc['reset-progress']);      // reset LD progress
+$DO_UM       = !empty($argv_assoc['um-inactive']);         // set UM account_status=inactive
+$DO_STRIP    = !empty($argv_assoc['strip-roles']);         // remove all WP roles instead of switching to 'inactive'
+
+// ---------- Helpers ----------
+function detect_delimiter($line) {
+  foreach ([",","\t",";"] as $d) if (count(str_getcsv($line,$d))>1) return $d; return ",";
+}
+function norm_label($s){ return strtolower(trim(preg_replace('/[^\p{L}\p{N}]+/u','',$s))); }
+function build_idx_map($header){ $m=[]; foreach($header as $i=>$h){ $m[norm_label($h)]=$i; } return $m; }
+function v($row,$idx){ return ($idx!==null && isset($row[$idx])) ? trim((string)$row[$idx]) : ''; }
+
+// LearnDash course list for a user
+function ld_all_user_courses($user_id){
+  if (function_exists('learndash_user_get_enrolled_courses')) {
+    $ids = (array)learndash_user_get_enrolled_courses($user_id);
+  } elseif (function_exists('ld_get_mycourses')) {
+    $ids = (array)ld_get_mycourses($user_id);
+  } else { $ids = []; }
+  return array_values(array_unique(array_map('intval',$ids)));
+}
+
+// ---------- Open CSV ----------
+if ($CSV==='' || !is_file($CSV)) { fwrite(STDERR,"❌ CSV not found: $CSV\n"); exit(2); }
+$fh = fopen($CSV,'r'); if(!$fh){ fwrite(STDERR,"❌ Cannot open CSV\n"); exit(2); }
+$first = fgets($fh); if($first===false){ fwrite(STDERR,"❌ Empty CSV\n"); exit(2); }
+$delim  = detect_delimiter($first);
+$header = str_getcsv($first,$delim);
+$idxmap = build_idx_map($header);
+
+// key columns (case-insensitive)
+$idx_email    = $idxmap[norm_label('user_email')] ?? null;
+$idx_nic      = $idxmap[norm_label('NIC #')]      ?? ($idxmap[norm_label('nic')] ?? null);
+$idx_passport = $idxmap[norm_label('Passport')]   ?? ($idxmap[norm_label('passport_no')] ?? null);
+
+// meta columns you already mapped earlier (read but we don’t *need* to write on deactivate)
+$meta_fields = [
+  'expat_local'      => 'Expatriate/Local',
+  'employment_status'=> 'Status of Employee',
+  'company'          => 'Company Name',
+  'division'         => 'Department',
+  'date_of_birth'    => 'DOB',
+  'nic_no'           => 'NIC #',
+  'passport_no'      => 'Passport',
+  'gender'           => 'Gender',
+  'mobile_no'        => 'Mobile',
+  'designation'      => 'Designation',
+  'join_date'        => 'DOJ',
+  'employee_number'  => 'Employee Number',
+];
+$meta_idx = [];
+foreach ($meta_fields as $k=>$label) $meta_idx[$k] = $idxmap[norm_label($label)] ?? null;
+
+// ---------- Output CSVs ----------
+$mf  = fopen($MATCHED,'w');   $uf = fopen($UNMATCH,'w');
+fputcsv($mf, array_merge(['user_login','user_email','actions'], array_keys($meta_fields), ['removed_groups','unenrolled_courses','progress_reset']));
+fputcsv($uf, ['reason','user_email','NIC','Passport']);
+
+echo "🚀 Resigned Processor v1.2.0 — ".($LIVE?'LIVE':'DRY RUN')."\n";
+echo "    Options: groups=".($DO_GROUPS?'on':'off')." unenroll=".($DO_UNENROLL?'on':'off')." reset=".($DO_RESET?'on':'off')." UM=".($DO_UM?'on':'off')." strip_roles=".($DO_STRIP?'on':'off')."\n";
+
+$done=0; $matched=0; $unmatched=0;
+
+while (($row = fgetcsv($fh,0,$delim)) !== false) {
+  if ($LIMIT>0 && $done>=$LIMIT) { echo "⏹️ Limit {$LIMIT} reached.\n"; break; }
+  if (count(array_filter($row, fn($x)=>trim((string)$x)!==''))===0) continue;
+
+  $email    = v($row,$idx_email);
+  $nic      = v($row,$idx_nic);
+  $passport = v($row,$idx_passport);
+
+  // WP user lookup chain: email → NIC → passport
+  $user = $email ? get_user_by('email',$email) : null;
+  if (!$user && $nic)      { $u = get_users(['meta_key'=>'nic_no','meta_value'=>$nic,'number'=>1]);      $user = $u[0] ?? null; }
+  if (!$user && $passport) { $u = get_users(['meta_key'=>'passport_no','meta_value'=>$passport,'number'=>1]); $user = $u[0] ?? null; }
+
+  if (!$user) { fputcsv($uf, ['User not found',$email,$nic,$passport]); $unmatched++; continue; }
+
+  $uid = $user->ID; $login=$user->user_login; $actions=[]; $removed_groups=[]; $unenrolled_courses=[]; $reset_courses=[];
+
+  // --- Deactivate account ---
+  // 1) UM account_status (if requested)
+  if ($DO_UM) {
+    $actions[] = 'um:inactive';
+    if ($LIVE) update_user_meta($uid, 'account_status', 'inactive'); // UM uses 'account_status'
+  }
+
+  // 2) Set role
+  if ($DO_STRIP) {
+    $actions[] = 'roles:strip-all';
+    if ($LIVE) {
+      $user->set_role(''); // removes all roles
+    }
+  } else {
+    $actions[] = 'role:inactive';
+    if ($LIVE) {
+      // ensure role exists; if not, we simply strip roles
+      if (!get_role('inactive')) {
+        // fallback: strip all roles
+        $user->set_role('');
+      } else {
+        $user->set_role('inactive');
+      }
+    }
+  }
+
+  // 3) Invalidate all sessions for this user
+  $actions[] = 'sessions:kill';
+  if ($LIVE) {
+    if (class_exists('WP_Session_Tokens')) {
+      $mgr = WP_Session_Tokens::get_instance($uid);
+      if ($mgr) $mgr->destroy_all();
+    }
+  }
+
+  // 4) LearnDash: remove from groups (optional)
+  if ($DO_GROUPS && function_exists('learndash_get_users_group_ids')) {
+    $gids = (array)learndash_get_users_group_ids($uid);
+    foreach ($gids as $gid) {
+      $removed_groups[] = (int)$gid;
+      if ($LIVE && function_exists('ld_update_group_access')) {
+        ld_update_group_access($uid, (int)$gid, 'remove');
+      }
+    }
+    $actions[] = 'ld:groups-removed('.count($removed_groups).')';
+  }
+
+  // 5) LearnDash: unenroll from all courses (optional)
+  if ($DO_UNENROLL && function_exists('ld_update_course_access')) {
+    $cids = ld_all_user_courses($uid);
+    foreach ($cids as $cid) {
+      $unenrolled_courses[] = (int)$cid;
+      if ($LIVE) {
+        // remove course access
+        ld_update_course_access($uid, (int)$cid, true); // remove access
+      }
+      // optional reset progress
+      if ($DO_RESET && function_exists('learndash_delete_course_progress')) {
+        if ($LIVE) {
+          learndash_delete_course_progress((int)$cid, (int)$uid);
+        }
+        $reset_courses[] = (int)$cid;
+      }
+    }
+    $actions[] = 'ld:unenrolled('.count($unenrolled_courses).')';
+    if ($DO_RESET) $actions[] = 'ld:progress-reset('.count($reset_courses).')';
+  }
+
+  // Collect meta snapshot (old values) for reference
+  $meta_snapshot=[];
+  foreach ($meta_fields as $k=>$label) $meta_snapshot[] = (string)get_user_meta($uid,$k,true);
+
+  fputcsv($mf, array_merge([$login, $user->user_email, implode('|',$actions)], $meta_snapshot, [implode('|',$removed_groups), implode('|',$unenrolled_courses), implode('|',$reset_courses)]));
+  echo ($LIVE ? "✅ " : "👁️ PREVIEW ")."{$login} — ".implode(', ',$actions)."\n";
+  $matched++; $done++;
+}
+
+fclose($fh); fclose($mf); fclose($uf);
+echo "📊 Summary: matched={$matched}, unmatched={$unmatched}, processed={$done}, mode=".($LIVE?'LIVE':'DRY')."\n";
+
+// Notes:
+// - Unenroll uses ld_update_course_access($user_id,$course_id,true). See LearnDash docs.
+// - Progress reset uses learndash_delete_course_progress($course_id,$user_id) if available.
+

@@ -1,0 +1,23 @@
+:root { --bg:#0b0d10; --fg:#e5e7eb; --muted:#9aa3af; --card:#12161c; --accent:#60a5fa; --ok:#22c55e; --warn:#f59e0b; --err:#ef4444; }
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+a{color:var(--accent);text-decoration:none}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#0a0f15;border-bottom:1px solid #1f2937;position:sticky;top:0}
+.brand a{font-weight:700;font-size:18px}
+.container{max-width:1000px;margin:24px auto;padding:0 16px}
+.muted{color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin:16px 0}
+.card{display:block;background:var(--card);padding:16px;border:1px solid #1f2937;border-radius:12px;transition:transform .1s,border .1s}
+.card:hover{transform:translateY(-2px);border-color:#334155}
+.card-title{font-size:18px;font-weight:700;margin-bottom:6px}
+.card-desc{color:var(--muted);font-size:14px;margin-bottom:10px}
+.card-meta{font-size:12px;color:#93a2b7}
+.panel{background:var(--card);padding:16px;border:1px solid #1f2937;border-radius:12px;margin:24px 0}
+.btn{display:inline-block;padding:10px 14px;background:#1f2937;border:1px solid #334155;border-radius:10px}
+.form{display:grid;gap:12px}
+input[type=text],input[type=email],input[type=number],textarea,select{width:100%;padding:10px;background:#0d1218;border:1px solid #1f2937;border-radius:10px;color:var(--fg)}
+input[type=file]{padding:8px;background:#0d1218;border:1px solid #1f2937;border-radius:10px;color:var(--muted)}
+.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;border:1px solid #334155;background:#0d1218}
+.badge.ok{border-color:#14532d;color:#86efac}.badge.run{border-color:#1e3a8a;color:#93c5fd}.badge.err{border-color:#7f1d1d;color:#fca5a5}
+.footer{padding:24px;text-align:center;color:#94a3b8}
+.logbox{background:#0b0f14;border:1px solid #233045;border-radius:12px;padding:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;max-height:420px;overflow:auto}

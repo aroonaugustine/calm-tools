@@ -1,0 +1,101 @@
+<?php
+/**
+ * Resigned Processor — Launcher v1.1.0-web
+ */
+const LAUNCHER_AUTH_TOKEN = '6714e52aed21125dd999ff7c31666c1806e033aa2cb8a14073b41ae7026ec0b0';
+const TOOL_DIR = '/srv/admin-tools/wp-resigned-processor';
+const LOG_DIR  = '/srv/admin-tools/_mailer-logs';
+const PHP_CLI  = '/usr/bin/php'; // will be replaced to system path
+const WORKER   = TOOL_DIR . '/resigned_processor.php';
+const WP_LOAD  = '/var/www/html/wp-load.php';
+
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') { http_response_code(405); echo "Method Not Allowed"; exit; }
+$token = (string)($_POST['token'] ?? '');
+if (!hash_equals(LAUNCHER_AUTH_TOKEN, $token)) { http_response_code(401); echo "Unauthorized"; exit; }
+
+if (!is_file(WORKER)) { http_response_code(500); echo "Worker missing"; exit; }
+if (!is_file(WP_LOAD)) { http_response_code(500); echo "wp-load.php not found at ".WP_LOAD; exit; }
+if (!is_dir(LOG_DIR)) { @mkdir(LOG_DIR, 0755, true); }
+
+$mode = ($_POST['mode'] ?? 'csv') === 'sweep' ? 'sweep' : 'csv';
+$limit = max(0, (int)($_POST['limit'] ?? 0));
+$live  = !empty($_POST['live']);
+$removeGroups = !empty($_POST['remove_groups']);
+
+$run_id  = 'resigned_' . gmdate('Ymd_His') . '_' . bin2hex(random_bytes(3));
+$run_dir = LOG_DIR . '/' . $run_id;
+@mkdir($run_dir, 0755, true);
+
+$stdout_log   = $run_dir . '/stdout.log';
+$matched_csv  = $run_dir . '/matched_done.csv';
+$unmatched_csv= $run_dir . '/unmatched_skipped.csv';
+$meta_json    = $run_dir . '/run.json';
+
+$args = [];
+$args[] = '--mode=' . $mode;
+$args[] = '--matched-file=' . $matched_csv;
+$args[] = '--unmatched-file=' . $unmatched_csv;
+if (!$live) $args[] = '--dry-run';
+if ($limit > 0) $args[] = '--limit=' . $limit;
+if ($removeGroups) $args[] = '--remove-groups';
+
+if ($mode === 'csv') {
+  $csvMode = $_POST['csv_mode'] ?? 'upload';
+  if ($csvMode === 'server') {
+    $p = trim((string)($_POST['csv_path'] ?? ''));
+    if ($p === '' || !is_file($p)) { http_response_code(400); echo "CSV path invalid or not found"; exit; }
+    $csvPath = $p;
+  } else {
+    if (!isset($_FILES['csv_file']) || ($_FILES['csv_file']['error'] ?? 4) !== 0) { http_response_code(400); echo "No CSV uploaded"; exit; }
+    $tmp  = $_FILES['csv_file']['tmp_name'];
+    $dest = $run_dir . '/input.csv';
+    if (!@move_uploaded_file($tmp, $dest)) { http_response_code(500); echo "Failed to save upload"; exit; }
+    $csvPath = $dest;
+  }
+  $args[] = '--csv-file=' . $csvPath;
+} else {
+  $csvPath = '';
+}
+
+$cmd = sprintf(
+  'cd %s && %s %s %s > %s 2>&1 & echo $!',
+  escapeshellarg(TOOL_DIR),
+  escapeshellarg(PHP_CLI),
+  escapeshellarg(WORKER),
+  implode(' ', array_map('escapeshellarg', $args)),
+  escapeshellarg($stdout_log)
+);
+$pid = trim(shell_exec($cmd));
+if (!ctype_digit($pid)) $pid = '';
+
+$meta = [
+  'tool'        => 'wp-resigned-processor',
+  'run_id'      => $run_id,
+  'pid'         => $pid,
+  'started_gmt' => gmdate('c'),
+  'args'        => $args,
+  'mode'        => $mode,
+  'csv_path'    => $csvPath,
+  'stdout_log'  => $stdout_log,
+  'matched_csv' => $matched_csv,
+  'unmatched_csv' => $unmatched_csv,
+  'worker'      => WORKER,
+  'php'         => PHP_CLI,
+  'wp_load'     => WP_LOAD,
+];
+file_put_contents($meta_json, json_encode($meta, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
+
+header('Content-Type: text/html; charset=utf-8'); ?>
+<!doctype html>
+<meta charset="utf-8">
+<title>Launched</title>
+<style>body{font-family:system-ui,Arial;margin:40px;max-width:800px}</style>
+<h3>Launched background run</h3>
+<ul>
+  <li><b>Run ID:</b> <?=htmlspecialchars($run_id)?></li>
+  <li><b>PID:</b> <?=htmlspecialchars($pid)?></li>
+  <li><b>Mode:</b> <?=htmlspecialchars($mode)?></li>
+  <li><b>Started (GMT):</b> <?=htmlspecialchars($meta['started_gmt'])?></li>
+</ul>
+<p>Logs folder: <code><?=htmlspecialchars($run_dir)?></code></p>
+<p><a href="status.php">View Runs & Logs</a></p>
