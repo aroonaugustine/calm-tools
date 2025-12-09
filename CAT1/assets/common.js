@@ -1,1 +1,0 @@
-document.addEventListener('click',e=>{const b=e.target.closest('[data-tail]');if(!b)return;const u=b.getAttribute('data-tail'),o=document.querySelector(b.getAttribute('data-target')||'#log');if(!o)return;fetch(u).then(r=>r.text()).then(t=>{o.textContent=t;o.scrollTop=o.scrollHeight})});
