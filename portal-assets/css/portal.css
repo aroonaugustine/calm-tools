@@ -31,8 +31,10 @@ main {
   background: linear-gradient(135deg, #111827, #1e3a8a);
   color: white;
   border-radius: var(--radius);
-  padding: 40px;
+  padding: 32px;
   box-shadow: var(--shadow);
+  display: grid;
+  gap: 24px;
 }
 
 .hero h1 {
@@ -46,6 +48,47 @@ main {
   color: rgba(255,255,255,.8);
 }
 
+.token-form {
+  background: rgba(15, 23, 42, 0.35);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.token-form label {
+  font-weight: 600;
+}
+
+.token-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+[data-token-input] {
+  flex: 1;
+  min-width: 200px;
+  border-radius: 999px;
+  border: none;
+  padding: 10px 16px;
+}
+
+[data-token-input].token-error {
+  outline: 2px solid #f87171;
+}
+
+.token-save,
+.token-clear {
+  border-radius: 999px;
+  padding: 10px 18px;
+}
+
+.token-hint {
+  color: rgba(255,255,255,.85);
+}
+
 .filters {
   display: flex;
   flex-wrap: wrap;
@@ -53,8 +96,7 @@ main {
   margin: 32px 0 24px;
 }
 
-.filters input,
-.filters select {
+.filters input {
   padding: 12px 16px;
   border-radius: 999px;
   border: 1px solid var(--border);
@@ -119,8 +161,9 @@ main {
 }
 
 .badge.auth {
-  color: #b91c1c;
-  background: rgba(185,28,28,.12);
+  color: #fef3c7;
+  background: rgba(250,204,21,.2);
+  border: 1px solid rgba(250,204,21,.5);
 }
 
 .card-actions {
@@ -138,6 +181,7 @@ main {
   border: 1px solid transparent;
   font-weight: 600;
   transition: background .2s ease, color .2s ease;
+  cursor: pointer;
 }
 
 .button.primary {
@@ -153,6 +197,29 @@ main {
   border-color: var(--border);
   color: var(--text);
   background: white;
+}
+
+.tool-section {
+  margin-bottom: 48px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.section-header h2 {
+  margin: 0;
+}
+
+.pill {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.15);
+  color: var(--accent);
+  font-weight: 600;
 }
 
 .empty-state {

@@ -28,7 +28,7 @@ final class Tool
         $this->tags = $config['tags'] ?? [];
         $this->type = $config['type'] ?? 'web';
         $this->status = $config['status'] ?? 'stable';
-        $this->requiresAuth = (bool)($config['requires_auth'] ?? false);
+        $this->requiresAuth = array_key_exists('requires_auth', $config) ? (bool)$config['requires_auth'] : true;
         $this->notes = $config['notes'] ?? null;
         $this->docs = $config['docs'] ?? null;
     }
