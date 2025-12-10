@@ -173,29 +173,125 @@ function user_has_course_3027(int $user_id): bool {
 }
 
 /**
- * Actually remove access to course 3027 (LIVE mode).
+ * List group IDs that include course 3027.
+ *
+ * @return int[]
  */
-function user_remove_course_3027(int $user_id, bool $dry_run): bool {
-    $course_id = COURSE_ID_3027;
+function course_3027_group_ids(): array {
+    static $cache = null;
+    if ($cache !== null) {
+        return $cache;
+    }
+
+    $cache = [];
+
+    if (function_exists('learndash_get_groups_for_course')) {
+        $cache = array_map('intval', (array) learndash_get_groups_for_course(COURSE_ID_3027));
+        return $cache;
+    }
+
+    if (!function_exists('learndash_group_enrolled_courses')) {
+        return $cache;
+    }
+
+    $group_post_type = function_exists('learndash_get_post_type_slug')
+        ? learndash_get_post_type_slug('group')
+        : 'groups';
+
+    $groups = get_posts([
+        'post_type'      => $group_post_type,
+        'post_status'    => 'any',
+        'numberposts'    => -1,
+        'fields'         => 'ids',
+        'suppress_filters' => true,
+    ]);
+
+    foreach ($groups as $gid) {
+        $courses = (array) learndash_group_enrolled_courses((int)$gid);
+        foreach ($courses as $course_id) {
+            if ((int)$course_id === (int) COURSE_ID_3027) {
+                $cache[] = (int)$gid;
+                break;
+            }
+        }
+    }
+
+    $cache = array_values(array_unique($cache));
+    return $cache;
+}
+
+/**
+ * Remove the user from any groups that provide course 3027.
+ *
+ * @return int[] IDs of groups the user was (or would be) removed from.
+ */
+function remove_user_from_course_3027_groups(int $user_id, bool $dry_run): array {
+    if (!function_exists('learndash_get_users_group_ids')) {
+        return [];
+    }
+
+    $course_groups = course_3027_group_ids();
+    if (empty($course_groups)) {
+        return [];
+    }
+
+    $user_groups = array_map('intval', (array) learndash_get_users_group_ids($user_id));
+    $targets = array_values(array_intersect($user_groups, $course_groups));
+
+    if ($dry_run || empty($targets) || !function_exists('ld_update_group_access')) {
+        return $targets;
+    }
+
+    foreach ($targets as $gid) {
+        ld_update_group_access($user_id, $gid, 'remove');
+    }
+
+    return $targets;
+}
+
+/**
+ * Remove access to course 3027 and detach from related groups.
+ *
+ * @return array{attempted:bool, removed:bool, status:string, groups_removed:int[]}
+ */
+function user_remove_course_3027(int $user_id, bool $dry_run): array {
+    $result = [
+        'attempted' => false,
+        'removed'   => false,
+        'status'    => 'not_enrolled',
+        'groups_removed' => [],
+    ];
 
     if (!user_has_course_3027($user_id)) {
-        // Nothing to remove
-        return false;
+        return $result;
     }
+
+    $result['attempted'] = true;
+    $result['groups_removed'] = remove_user_from_course_3027_groups($user_id, $dry_run);
 
     if ($dry_run) {
-        // Preview only
-        return true;
+        $result['removed'] = true;
+        $result['status'] = 'dry_run';
+        return $result;
     }
 
-    if (function_exists('ld_update_course_access')) {
-        // Third arg = true => REMOVE access
-        ld_update_course_access($user_id, $course_id, true);
-        return true;
+    // If groups removal already stripped access, skip redundant unenroll.
+    if (user_has_course_3027($user_id)) {
+        if (!function_exists('ld_update_course_access')) {
+            $result['status'] = 'ld_function_missing';
+            return $result;
+        }
+        ld_update_course_access($user_id, COURSE_ID_3027, true);
     }
 
-    // Fallback: no LD function (shouldn't happen in your environment)
-    return false;
+    if (!user_has_course_3027($user_id)) {
+        $result['removed'] = true;
+        $result['status'] = 'removed';
+    } else {
+        $result['status'] = empty($result['groups_removed']) ? 'still_enrolled' : 'still_enrolled_via_group';
+    }
+
+    return $result;
 }
 
 /**
@@ -385,8 +481,8 @@ if (!$matched_fh || !$unmatched_fh) {
     exit(2);
 }
 
-// matched: user_login,user_email,status,course_removed
-fputcsv($matched_fh, ['user_login', 'user_email', 'status', 'course_removed']);
+// matched: user_login,user_email,status,course_removed,groups_removed
+fputcsv($matched_fh, ['user_login', 'user_email', 'status', 'course_removed', 'groups_removed']);
 // unmatched: reason,email,login,id,nic,passport
 fputcsv($unmatched_fh, ['reason', 'email', 'login', 'id', 'nic', 'passport']);
 
@@ -432,31 +528,45 @@ while (($row = fgetcsv($fh, 0, $delim)) !== false) {
     $ulog  = (string)$user->user_login;
     $uemail= (string)$user->user_email;
 
-    $had_course = user_has_course_3027($uid);
-    $did_remove = user_remove_course_3027($uid, $dry_run);
+    $removal = user_remove_course_3027($uid, $dry_run);
 
-    if ($had_course) {
-        if ($dry_run) {
-            $status = 'DRY_RUN_would_remove';
-        } else {
-            $status = $did_remove ? 'removed' : 'failed_remove';
-        }
-    } else {
+    if (!$removal['attempted']) {
         $status = 'not_enrolled';
+        $course_removed_flag = 'no';
+    } elseif ($dry_run) {
+        $status = 'DRY_RUN_would_remove';
+        $course_removed_flag = 'would_remove';
+    } elseif ($removal['removed']) {
+        $status = 'removed';
+        $course_removed_flag = 'yes';
+    } elseif ($removal['status'] === 'ld_function_missing') {
+        $status = 'ld_function_missing';
+        $course_removed_flag = 'no';
+    } elseif ($removal['status'] === 'still_enrolled_via_group') {
+        $status = 'still_enrolled_via_group';
+        $course_removed_flag = 'no';
+    } else {
+        $status = 'failed_remove';
+        $course_removed_flag = 'no';
     }
 
-    $course_removed_flag = $did_remove ? 'yes' : ($had_course ? 'would_remove' : 'no');
+    $group_note = '';
+    if (!empty($removal['groups_removed'])) {
+        $group_note = ' (groups: ' . implode(',', $removal['groups_removed']) . ')';
+    }
 
-    if ($did_remove && !$dry_run) {
+    if ($removal['removed'] && !$dry_run) {
         $removed++;
-        echo "✅ {$ulog} ({$uemail}) — course 3027 removed\n";
-    } elseif ($had_course && $dry_run) {
-        echo "👀 [DRY RUN] {$ulog} ({$uemail}) — would remove course 3027\n";
+        echo "✅ {$ulog} ({$uemail}) — course 3027 removed{$group_note}\n";
+    } elseif ($removal['attempted'] && $dry_run) {
+        echo "👀 [DRY RUN] {$ulog} ({$uemail}) — would remove course 3027{$group_note}\n";
+    } elseif ($removal['attempted']) {
+        echo "⚠️ {$ulog} ({$uemail}) — still enrolled in course 3027 (check LearnDash groups){$group_note}\n";
     } else {
         echo "ℹ️ {$ulog} ({$uemail}) — not enrolled in course 3027\n";
     }
 
-    fputcsv($matched_fh, [$ulog, $uemail, $status, $course_removed_flag]);
+    fputcsv($matched_fh, [$ulog, $uemail, $status, $course_removed_flag, implode('|', $removal['groups_removed'])]);
 }
 
 // ====== CLEANUP ======
