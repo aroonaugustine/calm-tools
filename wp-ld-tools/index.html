@@ -61,16 +61,20 @@
         return;
       }
 
-      if (token) {
-        fields.forEach(function(field) {
-          field.value = token;
-          field.type = 'hidden';
-          field.required = false;
-          var label = field.closest('label');
-          if (label) {
-            label.style.display = 'none';
-          }
-        });
+    if (token) {
+      fields.forEach(function(field) {
+        field.value = token;
+        field.type = 'hidden';
+        field.required = false;
+        var label = field.closest('label');
+        if (label) {
+          label.style.display = 'none';
+        }
+        var section = field.closest('fieldset');
+        if (section) {
+          section.style.display = 'none';
+        }
+      });
         return;
       }
 
