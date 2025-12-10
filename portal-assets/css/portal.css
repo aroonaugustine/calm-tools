@@ -161,9 +161,9 @@ main {
 }
 
 .badge.auth {
-  color: #fef3c7;
-  background: rgba(250,204,21,.2);
-  border: 1px solid rgba(250,204,21,.5);
+  color: #92400e;
+  background: rgba(250,204,21,.25);
+  border: 1px solid rgba(250,204,21,.6);
 }
 
 .card-actions {
