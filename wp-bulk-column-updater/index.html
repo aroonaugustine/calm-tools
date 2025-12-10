@@ -298,5 +298,43 @@ document.getElementById('autoMap').onclick = ()=>{
     (mapped ? `  | Auto-mapped ${mapped} field(s).` : '  | No auto-map matches found.');
 };
 </script>
+<script>
+  (function() {
+    var params = new URLSearchParams(window.location.search);
+    var token = params.get('token');
+    var fields = document.querySelectorAll('input[name="token"]');
+
+    if (!fields.length) {
+      return;
+    }
+
+    if (token) {
+      fields.forEach(function(field) {
+        field.value = token;
+        field.type = 'hidden';
+        field.required = false;
+        var label = field.closest('label');
+        if (label) {
+          label.style.display = 'none';
+        }
+      });
+      return;
+    }
+
+    fields.forEach(function(field) {
+      var label = field.closest('label');
+      if (!label || label.querySelector('.token-hint')) {
+        return;
+      }
+      var hint = document.createElement('div');
+      hint.className = 'token-hint';
+      hint.textContent = 'Launch this tool from the CALM Admin Toolkit portal to auto-fill the access token.';
+      hint.style.color = '#b91c1c';
+      hint.style.fontSize = '12px';
+      hint.style.marginTop = '6px';
+      label.appendChild(hint);
+    });
+  })();
+</script>
 </body>
 </html>

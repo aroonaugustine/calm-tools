@@ -14,6 +14,7 @@ error_reporting(E_ALL);
 require_once '/var/www/html/wp-load.php';
 
 $token = '6714e52aed21125dd999ff7c31666c1806e033aa2cb8a14073b41ae7026ec0b0'; // change this to your own
+$portal_token = trim((string)($_GET['token'] ?? ''));
 
 // Preload LearnDash groups for helper UI (if available)
 $ld_groups = [];
@@ -125,8 +126,13 @@ small { color:#555; display:block; margin-top:-8px; margin-bottom:10px; }
 </p>
 
 <form method="POST">
-  <label>Access Token</label>
-  <input type="password" name="token" required>
+  <?php if ($portal_token === ''): ?>
+    <label>Access Token</label>
+    <input type="password" name="token" required placeholder="Enter access token">
+    <small class="token-hint">Launch this tool from the CALM Admin Toolkit portal to auto-fill the token automatically.</small>
+  <?php else: ?>
+    <input type="hidden" name="token" value="<?= htmlspecialchars($portal_token, ENT_QUOTES, 'UTF-8'); ?>">
+  <?php endif; ?>
 
   <label>Target Object</label>
   <select name="target_type">

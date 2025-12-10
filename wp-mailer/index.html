@@ -71,17 +71,55 @@
 
     <div style="height:10px"></div>
 
-    <form method="get" action="send_never_logged_in-7.php" class="row" style="gap:12px;align-items:center;flex-wrap:wrap">
-      <input type="hidden" name="action" value="send_one">
-      <label>Campaign:
-        <input name="campaign" placeholder="YYYYMMDD">
-      </label>
+  <form method="get" action="send_never_logged_in-7.php" class="row" style="gap:12px;align-items:center;flex-wrap:wrap">
+    <input type="hidden" name="action" value="send_one">
+    <label>Campaign:
+      <input name="campaign" placeholder="YYYYMMDD">
+    </label>
       <label>User (login or ID):
         <input name="user" placeholder="aa or 42">
       </label>
-      <label class="row"><input type="checkbox" name="live" value="1"> Send (untick = preview)</label>
-      <button type="submit">Send / Preview One</button>
-    </form>
-  </fieldset>
+    <label class="row"><input type="checkbox" name="live" value="1"> Send (untick = preview)</label>
+    <button type="submit">Send / Preview One</button>
+  </form>
+</fieldset>
+<script>
+  (function() {
+    var params = new URLSearchParams(window.location.search);
+    var token = params.get('token');
+    var fields = document.querySelectorAll('input[name="token"]');
+
+    if (!fields.length) {
+      return;
+    }
+
+    if (token) {
+      fields.forEach(function(field) {
+        field.value = token;
+        field.type = 'hidden';
+        field.required = false;
+        var label = field.closest('label');
+        if (label) {
+          label.style.display = 'none';
+        }
+      });
+      return;
+    }
+
+    fields.forEach(function(field) {
+      var label = field.closest('label');
+      if (!label || label.querySelector('.token-hint')) {
+        return;
+      }
+      var hint = document.createElement('div');
+      hint.className = 'token-hint';
+      hint.textContent = 'Launch this tool from the CALM Admin Toolkit portal to auto-fill the access token.';
+      hint.style.color = '#b91c1c';
+      hint.style.fontSize = '12px';
+      hint.style.marginTop = '6px';
+      label.appendChild(hint);
+    });
+  })();
+</script>
 </body>
 </html>

@@ -7,6 +7,7 @@
  */
 
 const AUTH_TOKEN = '6714e52aed21125dd999ff7c31666c1806e033aa2cb8a14073b41ae7026ec0b0';
+$portal_token = trim((string)($_GET['token'] ?? ''));
 ?>
 <!doctype html>
 <html lang="en">
@@ -36,9 +37,14 @@ It does <strong>NOT</strong> remove groups or reset progress.</p>
   <!-- Auth -->
   <fieldset>
     <legend>Auth</legend>
-    <label>Launcher Token
-      <input type="password" name="token" required placeholder="Enter launcher token">
-    </label>
+    <?php if ($portal_token === ''): ?>
+      <label>Launcher Token
+        <input type="password" name="token" required placeholder="Enter launcher token">
+      </label>
+      <p style="color:#900;font-size:13px;margin:6px 0 0;">Launch this page from the CALM Admin Toolkit portal to auto-fill the token.</p>
+    <?php else: ?>
+      <input type="hidden" name="token" value="<?= htmlspecialchars($portal_token, ENT_QUOTES, 'UTF-8'); ?>">
+    <?php endif; ?>
   </fieldset>
 
   <!-- CSV Source -->
