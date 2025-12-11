@@ -317,6 +317,10 @@ document.getElementById('autoMap').onclick = ()=>{
         if (label) {
           label.style.display = 'none';
         }
+        var section = field.closest('fieldset');
+        if (section) {
+          section.style.display = 'none';
+        }
       });
       return;
     }
