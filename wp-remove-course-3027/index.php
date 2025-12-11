@@ -34,18 +34,18 @@ It does <strong>NOT</strong> remove groups or reset progress.</p>
 
 <form method="post" action="launcher.php" enctype="multipart/form-data">
 
+  <?php if ($portal_token === ''): ?>
   <!-- Auth -->
   <fieldset>
     <legend>Auth</legend>
-    <?php if ($portal_token === ''): ?>
-      <label>Launcher Token
-        <input type="password" name="token" required placeholder="Enter launcher token">
-      </label>
-      <p style="color:#900;font-size:13px;margin:6px 0 0;">Launch this page from the CALM Admin Toolkit portal to auto-fill the token.</p>
-    <?php else: ?>
-      <input type="hidden" name="token" value="<?= htmlspecialchars($portal_token, ENT_QUOTES, 'UTF-8'); ?>">
-    <?php endif; ?>
+    <label>Launcher Token
+      <input type="password" name="token" required placeholder="Enter launcher token">
+    </label>
+    <p style="color:#900;font-size:13px;margin:6px 0 0;">Launch this page from the CALM Admin Toolkit portal to auto-fill the token.</p>
   </fieldset>
+  <?php else: ?>
+  <input type="hidden" name="token" value="<?= htmlspecialchars($portal_token, ENT_QUOTES, 'UTF-8'); ?>">
+  <?php endif; ?>
 
   <!-- CSV Source -->
   <fieldset>
