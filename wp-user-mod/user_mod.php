@@ -241,118 +241,135 @@ $edit_user = $edit_uid ? get_user_by('id', $edit_uid) : null;
 
 ?>
 <!doctype html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
 <title>User Modification Tool — v2.1.5.001</title>
 <meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="/portal-assets/css/portal.css">
 <style>
-  body{font-family:system-ui,Arial,sans-serif;margin:40px;max-width:1100px}
-  fieldset{border:1px solid #ddd;border-radius:8px;padding:16px;margin-bottom:18px}
-  legend{font-weight:700}
-  .row{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
-  input[type=text],input[type=email]{width:420px;max-width:100%;padding:8px}
-  .muted{color:#666}
-  table{border-collapse:collapse;width:100%}
-  th,td{border:1px solid #ddd;padding:8px;text-align:left}
-  th{background:#f6f6f6}
-  .ok{color:#0a7a30}.err{color:#b00020}
-  label{display:block;margin:8px 0}
-  .small{font-size:12px}
+  body { margin: 0; background: var(--page-bg, #f3f5fb); }
+  main { padding: 32px 24px; max-width: 1140px; }
+  .tool-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; }
+  .muted { color: var(--muted); }
+  fieldset { border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 28px; background: rgba(15,23,42,.02); }
+  legend { font-weight: 700; padding: 0 8px; }
+  label { display: block; margin: 10px 0; font-weight: 600; }
+  input[type=text], input[type=email] { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: white; }
+  button { padding: 12px 22px; border-radius: 999px; border: 1px solid var(--border); background: var(--accent); color: white; font-weight: 600; cursor: pointer; }
+  button[type=button] { background: transparent; color: var(--text); }
+  button:hover { background: #1d4ed8; }
+  button[type=button]:hover { background: rgba(15,23,42,.05); }
+  table { border-collapse: collapse; width: 100%; border-radius: 14px; overflow: hidden; }
+  th, td { border: 1px solid var(--border); padding: 10px; text-align: left; font-size: 14px; }
+  th { background: rgba(15,23,42,.04); font-weight: 600; }
+  .stack { display: flex; gap: 10px; flex-wrap: wrap; align-items: baseline; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 3px 8px; border-radius: 999px; background: rgba(59,130,246,.12); color: #1d4ed8; }
+  .ok { color: #0f9d58; margin-bottom: 12px; }
+  .err { color: #b00020; margin-bottom: 12px; }
+  .small { font-size: 12px; }
+  h3 { margin-top: 24px; }
 </style>
+</head>
+<body>
+  <main>
+    <div class="tool-card">
+      <h2>User Modification Tool <span class="muted">v2.1.5.001</span></h2>
+      <p class="muted">Authenticated as token: <span class="badge"><?=h($who)?></span></p>
 
-<h2>User Modification Tool <span class="muted">v2.1.5.001</span></h2>
-<p class="muted">Authenticated as token: <b><?=h($who)?></b></p>
+      <?php if ($msg): ?><div class="ok"><?=h($msg)?></div><?php endif; ?>
+      <?php if ($err): ?><div class="err"><?=h($err)?></div><?php endif; ?>
 
-<?php if ($msg): ?><div class="ok"><?=h($msg)?></div><?php endif; ?>
-<?php if ($err): ?><div class="err"><?=h($err)?></div><?php endif; ?>
-
-<!-- SEARCH -->
-<fieldset>
-  <legend>Search</legend>
-  <form method="get" action="">
-    <input type="hidden" name="token" value="<?=h($provided_token)?>">
-    <input type="hidden" name="action" value="search">
-    <label>Query (min <?=MIN_LEN?> chars):
-      <input type="text" name="q" value="<?=h($q)?>" placeholder="username / email / NIC / Passport / Employee ID">
-    </label>
-    <button type="submit">Search</button>
-  </form>
-  <div class="small muted">Search looks for partial matches across username, email, display name, NIC, passport number, and employee number.</div>
-</fieldset>
+      <fieldset>
+        <legend>Search</legend>
+        <form method="get" action="">
+          <input type="hidden" name="token" value="<?=h($provided_token)?>">
+          <input type="hidden" name="action" value="search">
+          <label>Query (min <?=MIN_LEN?> chars)
+            <input type="text" name="q" value="<?=h($q)?>" placeholder="username / email / NIC / Passport / Employee ID">
+          </label>
+          <button type="submit">Search</button>
+        </form>
+        <div class="small muted">Partial matches across username, email, display name, NIC, passport number, and employee number.</div>
+      </fieldset>
 
 <?php if ($edit_user): ?>
-  <!-- EDIT FORM -->
-  <?php
-    $uid = $edit_user->ID;
-    $meta = [];
-    foreach (meta_field_map() as $k => $_) { $meta[$k] = (string)get_user_meta($uid, $k, true); }
-    $first_name = (string)get_user_meta($uid,'first_name',true);
-    $last_name  = (string)get_user_meta($uid,'last_name',true);
-    $nickname   = (string)get_user_meta($uid,'nickname',true);
-  ?>
-  <fieldset>
-    <legend>Edit User</legend>
-    <form method="post" action="">
-      <input type="hidden" name="token" value="<?=h($provided_token)?>">
-      <input type="hidden" name="action" value="save">
-      <input type="hidden" name="uid" value="<?=h((string)$uid)?>">
+      <?php
+        $uid = $edit_user->ID;
+        $meta = [];
+        foreach (meta_field_map() as $k => $_) { $meta[$k] = (string)get_user_meta($uid, $k, true); }
+        $first_name = (string)get_user_meta($uid,'first_name',true);
+        $last_name  = (string)get_user_meta($uid,'last_name',true);
+        $nickname   = (string)get_user_meta($uid,'nickname',true);
+      ?>
+      <fieldset>
+        <legend>Edit User</legend>
+        <form method="post" action="">
+          <input type="hidden" name="token" value="<?=h($provided_token)?>">
+          <input type="hidden" name="action" value="save">
+          <input type="hidden" name="uid" value="<?=h((string)$uid)?>">
 
-      <div class="row">
-        <div><b>Username:</b> <?=h($edit_user->user_login)?></div>
-        <div><b>User ID:</b> <?=h((string)$uid)?></div>
-      </div>
+          <div class="stack">
+            <div><strong>Username:</strong> <?=h($edit_user->user_login)?></div>
+            <div><strong>User ID:</strong> <?=h((string)$uid)?></div>
+          </div>
 
-      <label>First Name:
-        <input type="text" name="first_name" value="<?=h($first_name)?>">
-      </label>
-      <label>Last Name:
-        <input type="text" name="last_name" value="<?=h($last_name)?>">
-      </label>
-      <label>Nickname:
-        <input type="text" name="nickname" value="<?=h($nickname)?>">
-      </label>
-      <label>Email:
-        <input type="email" name="user_email" value="<?=h($edit_user->user_email)?>">
-      </label>
+          <label>First Name
+            <input type="text" name="first_name" value="<?=h($first_name)?>">
+          </label>
+          <label>Last Name
+            <input type="text" name="last_name" value="<?=h($last_name)?>">
+          </label>
+          <label>Nickname
+            <input type="text" name="nickname" value="<?=h($nickname)?>">
+          </label>
+          <label>Email
+            <input type="email" name="user_email" value="<?=h($edit_user->user_email)?>">
+          </label>
 
-      <h3>Custom Fields</h3>
-      <?php foreach (meta_field_map() as $key => $label): ?>
-        <label><?=h($label)?>:
-          <input type="text" name="meta[<?=h($key)?>]" value="<?=h($meta[$key] ?? '')?>">
-        </label>
-      <?php endforeach; ?>
+          <h3>Custom Fields</h3>
+          <?php foreach (meta_field_map() as $key => $label): ?>
+            <label><?=h($label)?>
+              <input type="text" name="meta[<?=h($key)?>]" value="<?=h($meta[$key] ?? '')?>">
+            </label>
+          <?php endforeach; ?>
 
-      <div class="row" style="margin-top:12px">
-        <button type="submit">Save Changes</button>
-        <a href="?token=<?=h($provided_token)?>&action=search&q=<?=h($q?: (string)$uid)?>"><button type="button">Back to Results</button></a>
-      </div>
-    </form>
-  </fieldset>
+          <div class="stack" style="margin-top:16px">
+            <button type="submit">Save Changes</button>
+            <a href="?token=<?=h($provided_token)?>&action=search&q=<?=h($q?: (string)$uid)?>"><button type="button">Back to Results</button></a>
+          </div>
+        </form>
+      </fieldset>
 
 <?php elseif ($results): ?>
-  <!-- RESULTS -->
-  <fieldset>
-    <legend>Results</legend>
-    <table>
-      <tr>
-        <th>Display Name</th>
-        <th>Username</th>
-        <th>Email</th>
-        <th>NIC</th>
-        <th>Passport</th>
-        <th>Employee ID</th>
-        <th>Action</th>
-      </tr>
-      <?php foreach ($results as $r): ?>
-        <tr>
-          <td><?=h($r['display_name'])?></td>
-          <td><?=h($r['user_login'])?></td>
-          <td><?=h($r['user_email'])?></td>
-          <td><?=h($r['nic_no'])?></td>
-          <td><?=h($r['passport_no'])?></td>
-          <td><?=h($r['employee_number'])?></td>
-          <td><a href="?token=<?=h($provided_token)?>&uid=<?=h((string)$r['ID'])?>">Edit</a></td>
-        </tr>
-      <?php endforeach; ?>
-    </table>
-  </fieldset>
+      <fieldset>
+        <legend>Results</legend>
+        <table>
+          <tr>
+            <th>Display Name</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>NIC</th>
+            <th>Passport</th>
+            <th>Employee ID</th>
+            <th>Action</th>
+          </tr>
+          <?php foreach ($results as $r): ?>
+            <tr>
+              <td><?=h($r['display_name'])?></td>
+              <td><?=h($r['user_login'])?></td>
+              <td><?=h($r['user_email'])?></td>
+              <td><?=h($r['nic_no'])?></td>
+              <td><?=h($r['passport_no'])?></td>
+              <td><?=h($r['employee_number'])?></td>
+              <td><a href="?token=<?=h($provided_token)?>&uid=<?=h((string)$r['ID'])?>">Edit</a></td>
+            </tr>
+          <?php endforeach; ?>
+        </table>
+      </fieldset>
 <?php endif; ?>
+
+    </div>
+  </main>
+</body>
+</html>

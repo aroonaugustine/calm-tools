@@ -171,31 +171,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv'])) {
 
 ?>
 
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-  <title>Identifier → LearnDash Report</title>
+    <meta charset="utf-8">
+    <title>Identifier → LearnDash Report</title>
+    <meta name="robots" content="noindex,nofollow">
+    <link rel="stylesheet" href="/portal-assets/css/portal.css">
+    <style>
+        body { margin: 0; }
+        main { padding: 32px 24px; max-width: 820px; }
+        .tool-card { margin-bottom: 24px; }
+        .tool-card h3 { margin-bottom: 12px; }
+        .muted { color: var(--muted); }
+        fieldset { border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-top: 20px; background: var(--card-bg); }
+        legend { font-weight: 700; padding: 0 8px; }
+        label { display: block; margin-bottom: 12px; font-weight: 600; }
+        input[type=file] { width: 100%; padding: 12px; border: 1px dashed var(--border); border-radius: 10px; background: rgba(15,23,42,.02); cursor: pointer; }
+        button { margin-top: 12px; padding: 12px 24px; border-radius: 999px; border: 1px solid var(--border); background: var(--accent); color: white; font-weight: 600; cursor: pointer; }
+        button:hover { background: #1d4ed8; }
+        ul { padding-left: 20px; }
+        ul li { margin-bottom: 6px; }
+        .callout { border-left: 3px solid var(--accent); padding: 12px 16px; border-radius: 10px; background: rgba(15,23,42,.04); margin-top: 16px; }
+    </style>
 </head>
-<body style="font-family:Arial; margin:40px; max-width:600px">
+<body>
+    <main>
+        <div class="tool-card">
+            <h3>Passport / Username / Email → LearnDash Completion Report</h3>
+            <p class="muted">Upload identifiers plus a target date and download an aggregated LearnDash completion report for the standard compliance courses.</p>
 
-<h2>Passport / Username / Email → LearnDash Completion Report</h2>
+            <div class="callout">
+                <strong>CSV columns supported</strong>
+                <ul>
+                    <li><code>passport_no</code> — custom user meta</li>
+                    <li><code>username</code> — WordPress login</li>
+                    <li><code>email</code> — WordPress account email</li>
+                    <li><code>target_date</code> — required for each row</li>
+                </ul>
+            </div>
 
-<p>Upload a CSV with any of the following columns:</p>
-
-<ul>
-  <li><b>passport_no</b> — custom usermeta</li>
-  <li><b>username</b> — WP login</li>
-  <li><b>email</b> — WP registered email</li>
-  <li><b>target_date</b> — required</li>
-</ul>
-
-<form method="post" enctype="multipart/form-data">
-    <input type="file" name="csv" accept=".csv" required>
-    <br><br>
-    <button type="submit" style="padding:10px 20px; font-size:16px;">
-        Generate Report
-    </button>
-</form>
-
+            <form method="post" enctype="multipart/form-data">
+                <fieldset>
+                    <legend>Upload CSV</legend>
+                    <label>Choose CSV File
+                        <input type="file" name="csv" accept=".csv" required>
+                    </label>
+                    <button type="submit">Generate Report</button>
+                </fieldset>
+            </form>
+        </div>
+    </main>
 </body>
 </html>

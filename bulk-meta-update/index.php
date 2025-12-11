@@ -96,164 +96,170 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 ?>
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <title>WP Meta Bulk Updater — v2.2.0</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="/portal-assets/css/portal.css">
 <style>
-body { font-family: Arial, sans-serif; max-width: 880px; margin: 40px auto; }
-input, select, button { padding: 8px; width: 100%; margin-bottom: 12px; box-sizing: border-box; }
-label { font-weight: bold; margin-top: 10px; display:block; }
-button { background:#0073aa; color:white; border:none; cursor:pointer; padding:10px; }
-button:hover { background:#005f8d; }
-fieldset { border:1px solid #ccc; padding:20px; margin-top:16px; }
-small { color:#555; display:block; margin-top:-8px; margin-bottom:10px; }
-.row { display:flex; gap:16px; }
-.col { flex:1; }
-@media (max-width:700px){ .row{ flex-direction:column } }
-.inline { display:flex; gap:10px; align-items:center; }
-.badge { display:inline-block; padding:2px 6px; border-radius:4px; font-size:11px; background:#eef2ff; color:#3730a3; margin-left:4px; }
-.helper-box { font-size:13px; background:#f9fafb; border:1px dashed #cbd5e1; border-radius:8px; padding:10px 12px; margin-top:8px; }
-.helper-title { font-weight:bold; margin-bottom:6px; }
+  body { margin: 0; }
+  main { padding: 32px 24px; max-width: 960px; }
+  .tool-card { margin-bottom: 24px; }
+  .tool-card h3 { margin-bottom: 16px; }
+  fieldset { border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin: 20px 0; background: var(--card-bg); }
+  legend { font-weight: 700; padding: 0 8px; background: var(--card-bg); border-radius: 8px; }
+  label { display: block; margin: 12px 0; font-weight: 600; }
+  input[type=text], input[type=password], input[type=number], select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: white; font-weight: 400; }
+  input[type=checkbox] { margin-right: 8px; }
+  button { padding: 12px 20px; border: 1px solid var(--border); border-radius: 999px; background: var(--accent); color: white; cursor: pointer; font-weight: 600; transition: background .2s ease; }
+  button:hover { background: #1d4ed8; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .col { flex: 1; min-width: 220px; }
+  .inline { display: flex; align-items: center; gap: 10px; font-weight: 500; }
+  .muted { color: var(--muted); font-weight: 400; }
+  .token-hint { color: #b91c1c; font-size: 12px; margin-top: 6px; }
+  .helper-box { font-size: 13px; background: rgba(15,23,42,.04); border: 1px dashed var(--border); border-radius: 10px; padding: 12px 14px; margin-top: 12px; }
+  .helper-title { font-weight: 700; margin-bottom: 6px; }
+  .button-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
 </style>
 </head>
 <body>
-<h2>WP Meta Bulk Updater — v2.2.0</h2>
-<p style="color:#374151;font-size:14px;">
-  Supports users & posts, meta & core fields, conditional updates, dry run & live mode.
-  Now includes <strong>LearnDash group-aware conditions</strong>.
-</p>
+  <main>
+    <div class="tool-card">
+      <h3>WP Meta Bulk Updater <span class="muted">v2.2.0</span></h3>
+      <p class="muted">Supports users & posts, meta & core fields, conditional updates, and LearnDash-aware operators. Dry-run or go live once ready.</p>
 
-<form method="POST">
-  <?php if ($portal_token === ''): ?>
-    <label>Access Token</label>
-    <input type="password" name="token" required placeholder="Enter access token">
-    <small class="token-hint">Launch this tool from the CALM Admin Toolkit portal to auto-fill the token automatically.</small>
-  <?php else: ?>
-    <input type="hidden" name="token" value="<?= htmlspecialchars($portal_token, ENT_QUOTES, 'UTF-8'); ?>">
-  <?php endif; ?>
+      <form method="post">
+        <fieldset>
+          <legend>Auth</legend>
+          <?php if ($portal_token === ''): ?>
+            <label>Access Token
+              <input type="password" name="token" placeholder="Enter access token" required>
+              <span class="token-hint">Launch this tool via the CALM Admin Toolkit portal to auto-fill the access token.</span>
+            </label>
+          <?php else: ?>
+            <input type="hidden" name="token" value="<?= htmlspecialchars($portal_token, ENT_QUOTES, 'UTF-8'); ?>">
+            <p class="muted">Access token supplied via portal link.</p>
+          <?php endif; ?>
+        </fieldset>
 
-  <label>Target Object</label>
-  <select name="target_type">
-    <option value="user">User</option>
-    <option value="post">Post</option>
-  </select>
+        <fieldset>
+          <legend>Target Object</legend>
+          <label>Object Type
+            <select name="target_type">
+              <option value="user">User</option>
+              <option value="post">Post</option>
+            </select>
+          </label>
 
-  <label>Field To Change (Meta or Core)</label>
-  <div class="row">
-    <div class="col">
-      <input type="text" name="field_name" placeholder="e.g. division, display_name" required>
-    </div>
-    <div class="col">
-      <select name="field_type">
-        <option value="meta">Meta</option>
-        <option value="core">Core</option>
-      </select>
-    </div>
-  </div>
+          <label>Field To Change</label>
+          <div class="row">
+            <div class="col">
+              <input type="text" name="field_name" placeholder="e.g. division, display_name" required>
+            </div>
+            <div class="col">
+              <select name="field_type">
+                <option value="meta">Meta</option>
+                <option value="core">Core</option>
+              </select>
+            </div>
+          </div>
 
-  <label>Search For (case-insensitive)</label>
-  <input type="text" name="old_value" placeholder="Leave blank to match empty values">
-  <div class="inline">
-    <input type="checkbox" name="ignore_search" value="1" id="ignore_search">
-    <label for="ignore_search" style="font-weight:normal;">Ignore search filter — apply to all objects that meet the Condition</label>
-  </div>
-  <small>
-    If you check "Ignore search filter" the Search For field is ignored and the updater will consider ALL objects (users/posts) that satisfy the Condition.<br>
-    If unchecked, leaving Search For blank will match empty values (current behaviour).
-  </small>
+          <label>Search For (case-insensitive)
+            <input type="text" name="old_value" placeholder="Leave blank to match empty values">
+          </label>
+          <label class="inline">
+            <input type="checkbox" name="ignore_search" value="1" id="ignore_search">
+            Ignore search filter — apply to all objects that meet the Condition
+          </label>
+          <p class="muted">
+            When "Ignore search filter" is checked the Search For field is ignored and the updater considers all objects that satisfy the Condition.
+            Leaving Search For blank while unchecked matches empty values.
+          </p>
 
-  <label>Replace With (exact case)</label>
-  <input type="text" name="new_value" placeholder="e.g. NETWORK WIZARD SDN BHD" required>
+          <label>Replace With (exact case)
+            <input type="text" name="new_value" placeholder="e.g. NETWORK WIZARD SDN BHD" required>
+          </label>
+        </fieldset>
 
-  <fieldset>
-    <legend><strong>Condition (Only update when this is true)</strong></legend>
+        <fieldset>
+          <legend>Condition (Only update when this is true)</legend>
+          <label>Condition Field</label>
+          <div class="row">
+            <div class="col">
+              <input type="text" name="condition_field" placeholder="e.g. learndash_group_id or leave blank for LD operators">
+            </div>
+            <div class="col">
+              <select name="condition_field_type">
+                <option value="meta">Meta</option>
+                <option value="core">Core</option>
+              </select>
+            </div>
+          </div>
 
-    <label>Condition Field</label>
-    <div class="row">
-      <div class="col"><input type="text" name="condition_field" placeholder="e.g. learndash_group_id or leave blank for LD operators"></div>
-      <div class="col">
-        <select name="condition_field_type">
-          <option value="meta">Meta</option>
-          <option value="core">Core</option>
-        </select>
-      </div>
-    </div>
+          <label>Condition Operator
+            <select name="condition_operator" id="condition_operator">
+              <option value="equals">equals (case-insensitive exact)</option>
+              <option value="contains">contains (case-insensitive substring)</option>
+              <option value="empty">is empty</option>
+              <option value="not_empty">is not empty</option>
+              <option value="ld_group_member">LearnDash: user is in Group ID (Condition Value)</option>
+              <option value="ld_in_any_groups">LearnDash: user is in ANY of these Group IDs (comma-separated)</option>
+            </select>
+          </label>
 
-    <label>Condition Operator</label>
-    <select name="condition_operator" id="condition_operator">
-      <option value="equals">equals (case-insensitive exact)</option>
-      <option value="contains">contains (case-insensitive substring)</option>
-      <option value="empty">is empty</option>
-      <option value="not_empty">is not empty</option>
-      <option value="ld_group_member">LearnDash: user is in Group ID (Condition Value)</option>
-      <option value="ld_in_any_groups">LearnDash: user is in ANY of these Group IDs (comma-separated)</option>
-    </select>
+          <label>Condition Value
+            <input type="text" name="condition_value" id="condition_value" placeholder="Value used with equals/contains or group IDs">
+          </label>
+          <p class="muted">LearnDash operators still work if Condition Field is empty. For other operators, leaving it blank means no additional condition.</p>
 
-    <label>Condition Value</label>
-    <input type="text" name="condition_value" id="condition_value" placeholder="Value used with equals/contains or LearnDash Group ID(s)">
+          <?php if (!empty($ld_groups)): ?>
+            <div class="helper-box">
+              <div class="helper-title">LearnDash Groups Helper</div>
+              <p class="muted" style="margin:0 0 8px;">Pick a group and copy its ID into the Condition Value field.</p>
+              <div class="row">
+                <div class="col">
+                  <select id="ld_group_select">
+                    <option value="">— Select a LearnDash Group —</option>
+                    <?php foreach ($ld_groups as $g): ?>
+                      <option value="<?= (int)$g->ID; ?>"><?= (int)$g->ID; ?> — <?= esc_html(get_the_title($g)); ?></option>
+                    <?php endforeach; ?>
+                  </select>
+                </div>
+                <div class="col" style="max-width:220px;">
+                  <button type="button" id="ld_copy_btn">Copy ID → Condition Value</button>
+                </div>
+              </div>
+              <p class="muted" style="margin:8px 0 0;">For <strong>ld_in_any_groups</strong>, click multiple times to build a comma-separated list (<code>5284,5290,5310</code>).</p>
+            </div>
+          <?php else: ?>
+            <div class="helper-box">
+              <div class="helper-title">LearnDash Groups Helper</div>
+              <p class="muted" style="margin:0;">No <code>groups</code> post type found. Manually type Group IDs into Condition Value when needed.</p>
+            </div>
+          <?php endif; ?>
+        </fieldset>
 
-    <small>
-      If Condition Field is left empty and you use a LearnDash operator, the tool will still check group membership using LearnDash.
-      For non-LearnDash operators, leaving Condition Field blank means "no additional condition".
-    </small>
+        <fieldset>
+          <legend>Mode</legend>
+          <label>Run Mode
+            <select name="mode">
+              <option value="dry">Dry Run (no DB changes)</option>
+              <option value="live">Live Update</option>
+            </select>
+          </label>
+        </fieldset>
 
-<?php if (!empty($ld_groups)): ?>
-    <div class="helper-box">
-      <div class="helper-title">
-        LearnDash Groups Helper <span class="badge">Optional</span>
-      </div>
-      <p style="margin:0 0 6px;font-size:12px;color:#4b5563;">
-        Use this to quickly copy a LearnDash Group ID into the Condition Value field.
-        Works best with operators:
-        <strong>LearnDash: user is in Group ID</strong> or
-        <strong>LearnDash: user is in ANY of these Group IDs</strong>.
-      </p>
-      <div class="row">
-        <div class="col">
-          <select id="ld_group_select">
-            <option value="">— Select a LearnDash Group —</option>
-            <?php foreach ($ld_groups as $g): ?>
-              <option value="<?php echo (int)$g->ID; ?>">
-                <?php echo (int)$g->ID; ?> — <?php echo esc_html(get_the_title($g)); ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
+        <div class="button-row">
+          <button type="submit">Run Bulk Update</button>
         </div>
-        <div class="col" style="max-width:220px;">
-          <button type="button" id="ld_copy_btn" style="width:100%;background:#10b981;">Copy ID → Condition Value</button>
-        </div>
-      </div>
-      <small>
-        For <strong>ld_in_any_groups</strong>, you can select one ID at a time and manually build a comma-separated list (e.g. <code>5284,5290,5310</code>).
-      </small>
+      </form>
     </div>
-<?php else: ?>
-    <div class="helper-box">
-      <div class="helper-title">
-        LearnDash Groups Helper
-      </div>
-      <p style="margin:0;font-size:12px;color:#6b7280;">
-        No <code>groups</code> post type found. If LearnDash is not active or groups are not set up, the helper list will be empty.
-        You can still manually type Group IDs into the Condition Value field when using LearnDash operators.
-      </p>
-    </div>
-<?php endif; ?>
-
-  </fieldset>
-
-  <label>Mode</label>
-  <select name="mode">
-    <option value="dry">Dry Run (no DB changes)</option>
-    <option value="live">Live Update</option>
-  </select>
-
-  <button type="submit">Run Bulk Update</button>
-</form>
+  </main>
 
 <script>
-// Simple JS helper to copy selected LearnDash group ID into Condition Value
 document.addEventListener('DOMContentLoaded', function () {
   var ldSelect = document.getElementById('ld_group_select');
   var ldBtn    = document.getElementById('ld_copy_btn');
@@ -265,15 +271,12 @@ document.addEventListener('DOMContentLoaded', function () {
         alert('Please select a LearnDash group first.');
         return;
       }
-      // Append or replace depending on operator
       var opSel = document.getElementById('condition_operator');
       var op    = opSel ? opSel.value : '';
       if (op === 'ld_in_any_groups' && condVal.value.trim() !== '') {
-        // Append to comma-separated list
         var existing = condVal.value.trim().replace(/\s+/g, '');
         condVal.value = existing ? (existing + ',' + v) : v;
       } else {
-        // Replace for single group
         condVal.value = v;
       }
     });

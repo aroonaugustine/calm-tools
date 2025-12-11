@@ -4,22 +4,32 @@
 <meta charset="utf-8">
 <title>Resigned Processor — v1.4.1</title>
 <meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="/portal-assets/css/portal.css">
 <style>
-  body{font-family:system-ui,Arial,sans-serif;margin:40px;max-width:980px}
-  fieldset{border:1px solid #ddd;border-radius:8px;padding:16px;margin-bottom:18px}
-  legend{font-weight:700}
-  label{display:block;margin:8px 0}
-  input[type=text],input[type=password],input[type=number]{width:520px;max-width:100%;padding:8px}
-  input[type=file]{padding:6px}
-  .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-  .muted{color:#666}
-  button{padding:10px 16px;border:1px solid #333;border-radius:8px;background:#fafafa;cursor:pointer}
-  .small{font-size:12px}
+  body { margin: 0; }
+  main { padding: 32px 24px; max-width: 960px; }
+  .tool-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 30px; }
+  .tool-card h1 { margin-bottom: 6px; }
+  .muted { color: var(--muted); }
+  fieldset { border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; background: rgba(15,23,42,.02); }
+  legend { font-weight: 700; padding: 0 8px; }
+  label { display: block; margin: 10px 0; font-weight: 600; }
+  input[type=text], input[type=password], input[type=number], input[type=file] { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: white; }
+  input[type=radio], input[type=checkbox] { margin-right: 8px; }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  button { padding: 12px 24px; border-radius: 999px; border: 1px solid var(--border); background: var(--accent); color: white; font-weight: 600; cursor: pointer; }
+  button[type=button] { background: transparent; color: var(--text); }
+  button:hover { background: #1d4ed8; }
+  button[type=button]:hover { background: rgba(15,23,42,.05); }
+  .small { font-size: 12px; }
 </style>
 </head>
 <body>
-  <h1>Resigned Processor <span class="muted">v1.4.1</span></h1>
-  <form method="post" action="launch.php" enctype="multipart/form-data">
+  <main>
+    <div class="tool-card">
+      <h1>Resigned Processor <span class="muted">v1.4.1</span></h1>
+      <p class="muted">Batch unenroll resigned staff, strip roles, and clean up LearnDash relationships in a single run.</p>
+      <form method="post" action="launch.php" enctype="multipart/form-data">
     <fieldset>
       <legend>Auth</legend>
       <label>Launcher Auth Token:
@@ -77,6 +87,8 @@
       <a href="status.php"><button type="button">View Runs & Logs</button></a>
     </div>
   </form>
+    </div>
+  </main>
   <script>
     (function() {
       var params = new URLSearchParams(window.location.search);

@@ -4,30 +4,42 @@
 <meta charset="utf-8">
 <title>WP Bulk Column Updater — v1.4.3 (Auto-Map)</title>
 <meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="/portal-assets/css/portal.css">
 <style>
-  :root{--b:#0f172a;--m:#64748b;--bd:#e2e8f0}
-  body{font-family:system-ui,Arial,sans-serif;margin:32px;max-width:980px;color:var(--b)}
-  h1{margin:0 0 12px}
-  fieldset{border:1px solid var(--bd);border-radius:10px;padding:16px;margin:14px 0}
-  legend{font-weight:700}
-  label{display:block;margin:8px 0}
-  select,input[type=text],input[type=password],input[type=number]{width:100%;padding:8px;border:1px solid var(--bd);border-radius:8px}
-  input[type=file]{padding:6px}
-  button{padding:10px 16px;border:1px solid #111;border-radius:8px;background:#f8fafc;cursor:pointer}
-  table{width:100%;border-collapse:collapse;margin-top:8px}
-  th,td{border:1px solid var(--bd);padding:8px;text-align:left}
-  .hint{font-size:13px;color:var(--m)}
-  .pill{display:inline-block;padding:2px 8px;border:1px solid var(--bd);border-radius:999px;background:#f8fafc;font-size:12px}
-  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  body { margin: 0; }
+  main { padding: 32px 24px; max-width: 1020px; }
+  .tool-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; }
+  fieldset { border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin: 18px 0; background: rgba(15,23,42,.02); }
+  legend { font-weight: 700; padding: 0 8px; }
+  label { display: block; margin: 10px 0; font-weight: 600; }
+  select, input[type=text], input[type=password], input[type=number] { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: white; }
+  input[type=file] { width: 100%; padding: 12px; border: 1px dashed var(--border); border-radius: 12px; background: rgba(15,23,42,.02); cursor: pointer; }
+  button { padding: 12px 20px; border-radius: 999px; border: 1px solid var(--border); background: var(--accent); color: white; font-weight: 600; cursor: pointer; }
+  button[type=button] { background: transparent; color: var(--text); border-color: var(--border); }
+  button[type=button]:hover { background: rgba(15,23,42,.05); }
+  button:hover { background: #1d4ed8; }
+  table { width: 100%; border-collapse: collapse; margin-top: 12px; border-radius: 12px; overflow: hidden; }
+  th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+  th { background: rgba(15,23,42,.04); font-weight: 600; }
+  .hint { font-size: 13px; color: var(--muted); }
+  .pill { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--border); font-size: 12px; background: rgba(15,23,42,.02); }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .token-hint { color: #b91c1c; font-size: 12px; margin-top: 6px; display: block; }
 </style>
 </head>
 <body>
-  <h1>WP Bulk Column Updater <span class="hint">v1.4.3</span></h1>
+  <main>
+    <div class="tool-card">
+      <h1>WP Bulk Column Updater <span class="hint">v1.4.3</span></h1>
+      <p class="hint" style="margin:0 0 16px">Map CSV headers to WordPress fields, auto-detect standard columns, and launch a bulk meta update.</p>
 
   <form method="post" action="launch.php" enctype="multipart/form-data" id="csvForm">
     <fieldset>
       <legend>Auth</legend>
-      <label>Launcher Token <input type="password" name="token" required></label>
+      <label>Launcher Token
+        <input type="password" name="token" required>
+        <span class="token-hint">Launch via the CALM Admin Toolkit portal to auto-fill this value.</span>
+      </label>
     </fieldset>
 
     <fieldset>
@@ -82,9 +94,14 @@
       <label>Limit <input type="number" name="limit" value="0" min="0"></label>
     </fieldset>
 
-    <button type="submit">Launch Run</button>
-    <a href="status.php"><button type="button">View Runs</button></a>
+    <div class="row" style="margin-top:18px">
+      <button type="submit">Launch Run</button>
+      <a href="status.php"><button type="button">View Runs</button></a>
+    </div>
   </form>
+
+    </div>
+  </main>
 
 <script>
 /* =========================
