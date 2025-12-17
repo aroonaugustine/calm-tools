@@ -36,6 +36,9 @@
     fields.forEach((field) => {
       field.value = token;
       field.type = 'hidden';
+      if (field.hasAttribute('data-token-keep')) {
+        return;
+      }
       const container = field.closest('label') || field.closest('fieldset');
       if (container) {
         container.querySelector('.token-hint')?.remove();

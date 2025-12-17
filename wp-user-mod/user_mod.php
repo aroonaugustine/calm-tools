@@ -269,7 +269,7 @@ $edit_user = $edit_uid ? get_user_by('id', $edit_uid) : null;
       <fieldset>
         <legend>Search</legend>
         <form method="get" action="">
-          <input type="hidden" name="token" value="<?=h($provided_token)?>">
+          <input type="hidden" name="token" value="<?=h($provided_token)?>" data-token-keep>
           <input type="hidden" name="action" value="search">
           <label>Query (min <?=MIN_LEN?> chars)
             <input type="text" name="q" value="<?=h($q)?>" placeholder="username / email / NIC / Passport / Employee ID">
@@ -291,7 +291,7 @@ $edit_user = $edit_uid ? get_user_by('id', $edit_uid) : null;
       <fieldset>
         <legend>Edit User</legend>
         <form method="post" action="">
-          <input type="hidden" name="token" value="<?=h($provided_token)?>">
+          <input type="hidden" name="token" value="<?=h($provided_token)?>" data-token-keep>
           <input type="hidden" name="action" value="save">
           <input type="hidden" name="uid" value="<?=h((string)$uid)?>">
 
