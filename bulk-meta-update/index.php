@@ -102,8 +102,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <meta charset="utf-8">
 <title>WP Meta Bulk Updater — v15.09.0002.0001</title>
 <meta name="robots" content="noindex,nofollow">
-<link rel="stylesheet" href="/portal-assets/css/portal.css">
-  <link rel="stylesheet" href="/portal-assets/css/tool.css">
+<link rel="stylesheet" href="../portal-assets/css/portal.css">
+  <link rel="stylesheet" href="../portal-assets/css/tool.css">
 </head>
 <body>
 <main>
@@ -270,6 +270,6 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
 </script>
-  <script src="/portal-assets/js/tool.js" defer></script>
+  <script src="../portal-assets/js/tool.js" defer></script>
 </body>
 </html>

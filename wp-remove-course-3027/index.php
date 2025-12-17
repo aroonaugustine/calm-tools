@@ -15,8 +15,8 @@ $portal_token = trim((string)($_GET['token'] ?? ''));
 <meta charset="utf-8">
 <title>Remove Course 3027 — Launcher (v15.09.0002.0001)</title>
 <meta name="robots" content="noindex,nofollow">
-<link rel="stylesheet" href="/portal-assets/css/portal.css">
-  <link rel="stylesheet" href="/portal-assets/css/tool.css">
+<link rel="stylesheet" href="../portal-assets/css/portal.css">
+  <link rel="stylesheet" href="../portal-assets/css/tool.css">
 </head>
 <body>
 
@@ -122,6 +122,6 @@ $portal_token = trim((string)($_GET['token'] ?? ''));
   </div>
 </main>
 
-  <script src="/portal-assets/js/tool.js" defer></script>
+  <script src="../portal-assets/js/tool.js" defer></script>
 </body>
 </html>

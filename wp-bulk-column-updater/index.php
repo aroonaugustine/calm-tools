@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>WP Bulk Column Updater — v15.09.0002.0001 (Auto-Map)</title>
 <meta name="robots" content="noindex,nofollow">
-<link rel="stylesheet" href="/portal-assets/css/portal.css">
+<link rel="stylesheet" href="../portal-assets/css/portal.css">
 <style>
   body { margin: 0; }
   main { padding: 32px 24px; max-width: 1020px; }
@@ -26,7 +26,7 @@
   .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
   .token-hint { color: #b91c1c; font-size: 12px; margin-top: 6px; display: block; }
 </style>
-  <link rel="stylesheet" href="/portal-assets/css/tool.css">
+  <link rel="stylesheet" href="../portal-assets/css/tool.css">
 </head>
 <body>
   <main>
@@ -323,6 +323,6 @@ document.getElementById('autoMap').onclick = ()=>{
     (mapped ? `  | Auto-mapped ${mapped} field(s).` : '  | No auto-map matches found.');
 };
 </script>
-  <script src="/portal-assets/js/tool.js" defer></script>
+  <script src="../portal-assets/js/tool.js" defer></script>
 </body>
 </html>

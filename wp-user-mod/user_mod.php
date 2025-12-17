@@ -246,8 +246,8 @@ $edit_user = $edit_uid ? get_user_by('id', $edit_uid) : null;
 <meta charset="utf-8">
 <title>User Modification Tool — v15.09.0002.0001</title>
 <meta name="robots" content="noindex,nofollow">
-<link rel="stylesheet" href="/portal-assets/css/portal.css">
-  <link rel="stylesheet" href="/portal-assets/css/tool.css">
+<link rel="stylesheet" href="../portal-assets/css/portal.css">
+  <link rel="stylesheet" href="../portal-assets/css/tool.css">
 </head>
 <body>
   <main>
@@ -357,6 +357,6 @@ $edit_user = $edit_uid ? get_user_by('id', $edit_uid) : null;
 
     </div>
   </main>
-  <script src="/portal-assets/js/tool.js" defer></script>
+  <script src="../portal-assets/js/tool.js" defer></script>
 </body>
 </html>

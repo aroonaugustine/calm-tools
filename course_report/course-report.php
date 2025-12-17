@@ -177,8 +177,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv'])) {
     <meta charset="utf-8">
     <title>Identifier → LearnDash Report — v15.09.0002.0001</title>
     <meta name="robots" content="noindex,nofollow">
-    <link rel="stylesheet" href="/portal-assets/css/portal.css">
-  <link rel="stylesheet" href="/portal-assets/css/tool.css">
+    <link rel="stylesheet" href="../portal-assets/css/portal.css">
+  <link rel="stylesheet" href="../portal-assets/css/tool.css">
 </head>
 <body>
     <main>
@@ -213,6 +213,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv'])) {
             </form>
         </div>
     </main>
-  <script src="/portal-assets/js/tool.js" defer></script>
+  <script src="../portal-assets/js/tool.js" defer></script>
 </body>
 </html>
