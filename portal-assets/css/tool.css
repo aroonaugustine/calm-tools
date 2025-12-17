@@ -59,7 +59,7 @@ main {
   background: rgba(255, 255, 255, 0.15);
   color: white;
   font-weight: 600;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
 }
 
 .tool-card__header {
@@ -76,12 +76,12 @@ main {
 }
 
 .tool-card__version {
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   color: var(--muted);
 }
 
 .tool-card__header span {
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   color: var(--muted);
 }
 
@@ -125,7 +125,7 @@ textarea {
   border-radius: 12px;
   padding: 13px 14px;
   background: #f7f8fc;
-  font-size: 0.98rem;
+  font-size: 0.94rem;
   font-family: inherit;
 }
 
@@ -142,7 +142,7 @@ button {
   border: 1px solid var(--border);
   padding: 12px 22px;
   font-weight: 600;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   cursor: pointer;
   transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
   background: var(--accent);
@@ -203,7 +203,7 @@ button.secondary {
 }
 
 .helper-box {
-  font-size: 0.9rem;
+  font-size: 0.86rem;
   background: rgba(15, 23, 42, 0.04);
   border: 1px dashed var(--border);
   border-radius: 10px;
@@ -229,7 +229,7 @@ button.secondary {
   padding: 14px 16px;
   border-radius: 10px;
   margin: 14px 0;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   color: var(--text);
 }
 
@@ -241,7 +241,7 @@ button.secondary {
 
 .subtle {
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.86rem;
   margin: 0;
 }
 
@@ -262,7 +262,7 @@ table {
   border-radius: 12px;
   overflow: hidden;
   margin-top: 12px;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
 }
 
 th,
@@ -270,7 +270,7 @@ td {
   border: 1px solid var(--border);
   padding: 10px;
   text-align: left;
-  font-size: 0.9rem;
+  font-size: 0.86rem;
 }
 
 th {
@@ -288,7 +288,7 @@ th {
   input,
   select,
   textarea {
-    font-size: 0.92rem;
+    font-size: 0.88rem;
   }
 }
 .stack {
