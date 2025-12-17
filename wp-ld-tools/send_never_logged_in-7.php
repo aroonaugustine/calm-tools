@@ -1,6 +1,6 @@
 <?php
 /**
- * send_never_logged_in-7.php — v2.6.3-calmweb
+ * send_never_logged_in-7.php — v15.09.0002.0001-calmweb
  *
  * Fix: The “Please log in and complete…” paragraph now appears ONLY for INCOMPLETE users.
  *      It has been removed from the common footer and placed in the INCOMPLETE block.
@@ -44,7 +44,7 @@ if (CALM_MAIL_DEBUG) {
   });
 }
 
-define('CALM_MAILER_VERSION','v2.6.3-calmweb');
+define('CALM_MAILER_VERSION','v15.09.0002.0001-calmweb');
 
 /* ===== Parse CLI args; fall back to GET in web mode ===== */
 $argv_assoc = [];

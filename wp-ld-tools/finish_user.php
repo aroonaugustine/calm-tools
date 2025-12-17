@@ -1,13 +1,13 @@
 <?php
 /**
  * LearnDash — Finish remaining steps for a user (verbose, token-protected)
- * Version: v2.5-web (broader quiz discovery + robust 100% writeback)
+ * Version: v15.09.0002.0001 (broader quiz discovery + robust 100% writeback)
  *
  * Browser usage (token required):
  *   /admin-tools/wp-ld-tools/finish_user.php?token=...&user=<login_or_email>&dry_run=1
  *   /admin-tools/wp-ld-tools/finish_user.php?token=...&user=<login_or_email>&course_id=2869
  *
- * What’s new in v2.5-web
+ * What’s new in v15.09.0002.0001
  * - Discovers quizzes at the course level and under ALL lessons/topics.
  * - Writes a full 100% record via ld_update_quiz_data() if available,
  *   otherwise falls back to legacy _sfwd-quizzes meta + activity rows.
@@ -87,7 +87,7 @@ if (!$u) { echo "❌ User not found: {$user_str}\n"; exit; }
 // ==========================
 // Header
 // ==========================
-echo "🚀 LD Finisher v2.5-web\n";
+echo "🚀 LD Finisher v15.09.0002.0001\n";
 echo "🔐 Token label: {$who}\n";
 echo "👤 User: {$u->user_login} (ID {$u->ID}) | Email: {$u->user_email}\n";
 echo $dry_run ? "👀 DRY RUN (no writes)\n" : "✍️ LIVE MODE (writes enabled)\n";

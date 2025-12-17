@@ -1,6 +1,6 @@
 <?php
 /**
- * Resigned Processor Launcher — v1.4.2
+ * Resigned Processor Launcher — v15.09.0002.0001
  * - Immediate 303 redirect to status.php after spawning a detached background process
  * - Works with batching (batch_runner.php) or single worker
  */

@@ -1,6 +1,6 @@
 <?php
 /**
- * User Modification Tool — v2.1.5.001
+ * User Modification Tool — v15.09.0002.0001
  * Search & edit WP users (token-gated). Requires min search length 4 chars.
  * - Search by partial username / email / NIC / passport / employee_number
  * - Edit core profile (first/last/nickname/email) + custom meta
@@ -244,22 +244,27 @@ $edit_user = $edit_uid ? get_user_by('id', $edit_uid) : null;
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>User Modification Tool — v2.1.5.001</title>
+<title>User Modification Tool — v15.09.0002.0001</title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="/portal-assets/css/portal.css">
   <link rel="stylesheet" href="/portal-assets/css/tool.css">
 </head>
 <body>
   <main>
-    <div class="tool-card">
-      <header class="tool-card__header">
+    <section class="hero tool-hero">
+      <div>
         <h1>User Modification Tool</h1>
-        <span class="tool-card__version">v2.1.5.001</span>
-        <p class="tool-card__lede">Authenticated as token: <span class="badge"><?=h($who)?></span></p>
-      </header>
+        <p class="tool-card__lede">Search & edit WordPress users by login, email, NIC, passport, or employee ID and tweak their core profile/meta securely.</p>
+      </div>
+      <div class="tool-hero__meta">
+        <span class="tool-hero__pill">v15.09.0002.0001</span>
+      </div>
+    </section>
 
+    <div class="tool-card">
       <?php if ($msg): ?><div class="ok"><?=h($msg)?></div><?php endif; ?>
       <?php if ($err): ?><div class="err"><?=h($err)?></div><?php endif; ?>
+      <p class="tool-card__lede">Authenticated as token: <span class="badge"><?=h($who)?></span></p>
 
       <fieldset>
         <legend>Search</legend>

@@ -1,6 +1,6 @@
 <?php
 /**
- * Resigned Processor — Worker v1.4.0
+ * Resigned Processor — Worker v15.09.0002.0001
  *
  * What it does per matched user:
  *   - (optional) Set Ultimate Member account_status=inactive
@@ -211,7 +211,7 @@ echo "  users table: " . $users_table . "\n";
 $cnt = (int)$wpdb->get_var("SELECT COUNT(*) FROM {$users_table}");
 echo "  users count: {$cnt}\n";
 
-echo "Resigned Processor v1.4.0 — ".($LIVE?'LIVE':'DRY RUN')."\n";
+echo "Resigned Processor v15.09.0002.0001 — ".($LIVE?'LIVE':'DRY RUN')."\n";
 echo "    Policy: " . ($MATCH_POLICY==='email' ? "email only" : ($MATCH_POLICY==='id' ? "NIC/Passport only" : "email + (NIC OR Passport)")) . "\n";
 echo "    Options: groups=".($DO_GROUPS?'on':'off')." unenroll=".($DO_UNENROLL?'on':'off')." reset=".($DO_RESET?'on':'off')
    ." UM=".($DO_UM?'on':'off')." strip_roles=".($DO_STRIP?'on':'off')."\n";

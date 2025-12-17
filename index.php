@@ -33,6 +33,9 @@ function render_tool_cards(array $list): void
             <?php endif; ?>
           </div>
           <h3><?= portal_esc($tool->name()); ?></h3>
+          <?php if ($tool->version()): ?>
+            <span class="badge version"><?= portal_esc($tool->version()); ?></span>
+          <?php endif; ?>
           <p><?= portal_esc($tool->description()); ?></p>
           <?php if ($tool->notes()): ?>
             <p class="notes"><?= portal_esc($tool->notes() ?? ''); ?></p>

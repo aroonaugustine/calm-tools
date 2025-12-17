@@ -1,6 +1,6 @@
 <?php
 /**
- * Remove Course 3027 — Launcher v1.0.3
+ * Remove Course 3027 — Launcher v15.09.0002.0001
  * - Correct DRY-RUN handling
  * - Same behaviour as resigned processor launcher
  */

@@ -28,6 +28,26 @@ main.portal-tool-shell {
   box-shadow: var(--tool-header-shadow);
 }
 
+.tool-hero {
+  margin-bottom: 28px;
+}
+
+.tool-hero__meta {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.tool-hero__pill {
+  border-radius: 999px;
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
 .tool-card__header {
   margin-bottom: 20px;
   display: flex;

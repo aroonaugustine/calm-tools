@@ -1,6 +1,6 @@
 <?php
 /**
- * Resigned Processor — Worker v1.3.0-web
+ * Resigned Processor — Worker v15.09.0002.0001
  *
  * Modes:
  *   --mode=csv   (default)

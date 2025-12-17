@@ -1,6 +1,6 @@
 <?php
 /**
- * Remove Course 3027 — Worker v1.0.3
+ * Remove Course 3027 — Worker v15.09.0002.0001
  *
  * Modes:
  *   CSV mode (only mode)

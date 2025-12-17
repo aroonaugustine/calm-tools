@@ -1,6 +1,6 @@
 <?php
 /**
- * Remove Course 3027 — UI v1.0.3
+ * Remove Course 3027 — UI v15.09.0002.0001
  * - Updated for correct DRY-RUN handling
  * - Supports username or email
  * - Same layout as resigned processor
@@ -13,7 +13,7 @@ $portal_token = trim((string)($_GET['token'] ?? ''));
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Remove Course 3027 — Launcher</title>
+<title>Remove Course 3027 — Launcher (v15.09.0002.0001)</title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="/portal-assets/css/portal.css">
   <link rel="stylesheet" href="/portal-assets/css/tool.css">
@@ -21,11 +21,17 @@ $portal_token = trim((string)($_GET['token'] ?? ''));
 <body>
 
 <main>
-  <div class="tool-card">
-    <header class="tool-card__header">
+  <section class="hero tool-hero">
+    <div>
       <h1>Remove Course 3027</h1>
       <p class="tool-card__lede">Strip LearnDash Course 3027 enrollments via CSV input. Does not alter groups or reset progress.</p>
-    </header>
+    </div>
+    <div class="tool-hero__meta">
+      <span class="tool-hero__pill">v15.09.0002.0001</span>
+    </div>
+  </section>
+
+  <div class="tool-card">
 
 <form method="post" action="launcher.php" enctype="multipart/form-data">
 

@@ -3,7 +3,7 @@
  * division-mapping-load.php
  *
  * Loads division mapping JSON from disk.
- * Called via GET from the CSV Column Mapper (v15.11).
+ * Called via GET from the CSV Column Mapper (v15.09.0002.0001).
  */
 
 declare(strict_types=1);

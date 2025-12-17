@@ -1,6 +1,6 @@
 <?php
 /**
- * CALM Web View — v2.6.1-i18n-courses
+ * CALM Web View — v15.09.0002.0001-i18n-courses
  * Public “View in browser” renderer for mailer links.
  *
  * - Renders live progress from LearnDash

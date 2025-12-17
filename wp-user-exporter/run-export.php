@@ -1,6 +1,6 @@
 <?php
 /**
- * WP User Exporter v11.5-AL2
+ * WP User Exporter v15.09.0002.0001
  * - Streams CSV to the browser
  * - Optional: also saves a copy under /srv/admin-tools/wp-user-exporter/_exports/
  * - NEW: role filtering using POST roles[]
@@ -124,7 +124,7 @@ if ($also_save) {
 // Output headers
 header('Content-Type: text/csv; charset=utf-8');
 header('Content-Disposition: attachment; filename="'.$filename.'"');
-header('X-Exporter-Version: v11.5-AL2');
+header('X-Exporter-Version: v15.09.0002.0001');
 
 // Open file streams
 $stream = fopen('php://output', 'w');

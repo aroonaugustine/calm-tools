@@ -3,7 +3,7 @@
  * division-mapping-store.php
  *
  * Stores division mapping JSON to disk.
- * Called via POST from the CSV Column Mapper (v15.11).
+ * Called via POST from the CSV Column Mapper (v15.09.0002.0001).
  *
  * SECURITY:
  * - Assumes this tool lives behind Basic Auth or a protected admin area.

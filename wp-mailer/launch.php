@@ -1,6 +1,6 @@
 <?php
 /**
- * CALM Mailer — Launcher v2.5.0
+ * CALM Mailer — Launcher v15.09.0002.0001
  * Spawns send_never_logged_in-7.php in background, writes a run folder with live stdout + JSON.
  */
 const AUTH_TOKEN = '6714e52aed21125dd999ff7c31666c1806e033aa2cb8a14073b41ae7026ec0b0';

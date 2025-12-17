@@ -1,6 +1,6 @@
 <?php
 /**
- * Universal CSV Downloader v1.0.3
+ * Universal CSV Downloader v15.09.0002.0001
  *
  * Supports:
  *   - resigned_* processors

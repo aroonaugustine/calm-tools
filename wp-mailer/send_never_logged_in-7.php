@@ -1,6 +1,6 @@
 <?php
 /**
- * send_never_logged_in-7.php — v2.6.5-calmweb
+ * send_never_logged_in-7.php — v15.09.0002.0001-calmweb
  *
  * What’s in this build:
  * - Web actions: ?action=self_test and ?action=send_one&user=...
@@ -43,7 +43,7 @@ if (CALM_MAIL_DEBUG) {
   });
 }
 
-define('CALM_MAILER_VERSION','v2.6.5-calmweb');
+define('CALM_MAILER_VERSION','v15.09.0002.0001-calmweb');
 
 /* ===== Parse CLI args; fall back to GET/POST in web mode ===== */
 $argv_assoc = [];

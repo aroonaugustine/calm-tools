@@ -4,7 +4,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 /**
- * WP Meta Bulk Updater — v2.2.0
+ * WP Meta Bulk Updater — v15.09.0002.0001
  * - Adds LearnDash-aware condition operators:
  *   - ld_group_member      => user is member of a single LearnDash Group ID
  *   - ld_in_any_groups     => user is member of ANY of the given Group IDs (comma-separated)
@@ -100,19 +100,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>WP Meta Bulk Updater — v2.2.0</title>
+<title>WP Meta Bulk Updater — v15.09.0002.0001</title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="/portal-assets/css/portal.css">
   <link rel="stylesheet" href="/portal-assets/css/tool.css">
 </head>
 <body>
-  <main>
-    <div class="tool-card">
-      <header class="tool-card__header">
+<main>
+    <section class="hero tool-hero">
+      <div>
         <h1>WP Meta Bulk Updater</h1>
-        <span class="tool-card__version">v2.2.0</span>
         <p class="tool-card__lede">Supports users &amp; posts, meta &amp; core fields, conditional updates, and LearnDash-aware operators. Dry-run or go live once ready.</p>
-      </header>
+      </div>
+      <div class="tool-hero__meta">
+        <span class="tool-hero__pill">v15.09.0002.0001</span>
+      </div>
+    </section>
+    <div class="tool-card">
 
       <form method="post">
         <fieldset>

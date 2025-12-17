@@ -166,6 +166,12 @@ main {
   border: 1px solid rgba(250,204,21,.6);
 }
 
+.badge.version {
+  color: var(--text);
+  border-color: rgba(15, 23, 42, 0.4);
+  background: rgba(15, 23, 42, 0.04);
+}
+
 .card-actions {
   display: flex;
   flex-wrap: wrap;

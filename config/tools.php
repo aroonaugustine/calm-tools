@@ -12,6 +12,7 @@ return [
         'tags' => ['wordpress', 'csv', 'meta'],
         'type' => 'web',
         'status' => 'stable',
+        'version' => 'v15.09.0002.0001',
         'requires_auth' => true,
     ],
     [
@@ -23,6 +24,7 @@ return [
         'tags' => ['cli', 'company', 'maintenance'],
         'type' => 'cli',
         'status' => 'stable',
+        'version' => 'v15.09.0002.0001',
         'notes' => 'Run from shell: php company_update/batch-company.php',
     ],
     [
@@ -34,6 +36,7 @@ return [
         'tags' => ['learndash', 'csv', 'reports'],
         'type' => 'web',
         'status' => 'stable',
+        'version' => 'v15.09.0002.0001',
     ],
     [
         'slug' => 'csv-column-mapper',
@@ -44,6 +47,7 @@ return [
         'tags' => ['csv', 'mapping'],
         'type' => 'web',
         'status' => 'stable',
+        'version' => 'v15.09.0002.0001',
     ],
     [
         'slug' => 'division-update',
@@ -54,6 +58,7 @@ return [
         'tags' => ['cli', 'division', 'learndash'],
         'type' => 'cli',
         'status' => 'stable',
+        'version' => 'v15.09.0002.0001',
         'notes' => 'Run from shell: php division_update/batch-groups.php',
     ],
     [
@@ -65,6 +70,7 @@ return [
         'tags' => ['react', 'newsletter'],
         'type' => 'web',
         'status' => 'beta',
+        'version' => 'v2.0.0',
     ],
     [
         'slug' => 'wp-bulk-column-updater',
@@ -75,6 +81,7 @@ return [
         'tags' => ['wordpress', 'learndash'],
         'type' => 'web',
         'status' => 'stable',
+        'version' => 'v15.09.0002.0001',
     ],
     [
         'slug' => 'wp-cli-scripts',
@@ -85,6 +92,7 @@ return [
         'tags' => ['cli', 'wordpress'],
         'type' => 'cli',
         'status' => 'stable',
+        'version' => 'v15.09.0002.0001',
         'notes' => 'Run from shell: bash wp-cli-scripts/count-logged-in-users.sh',
     ],
     [
@@ -96,6 +104,7 @@ return [
         'tags' => ['learndash', 'support'],
         'type' => 'web',
         'status' => 'stable',
+        'version' => 'v15.09.0002.0001',
     ],
     [
         'slug' => 'wp-mailer',
@@ -106,6 +115,7 @@ return [
         'tags' => ['mailer', 'cli'],
         'type' => 'web',
         'status' => 'stable',
+        'version' => 'v15.09.0002.0001',
         'requires_auth' => true,
     ],
     [
@@ -117,6 +127,7 @@ return [
         'tags' => ['learndash', 'cleanup'],
         'type' => 'web',
         'status' => 'stable',
+        'version' => 'v15.09.0002.0001',
     ],
     [
         'slug' => 'wp-resigned-processor',
@@ -127,6 +138,7 @@ return [
         'tags' => ['csv', 'automation'],
         'type' => 'web',
         'status' => 'stable',
+        'version' => 'v15.09.0002.0001',
     ],
     [
         'slug' => 'wp-user-exporter',
@@ -137,6 +149,7 @@ return [
         'tags' => ['csv', 'exports'],
         'type' => 'web',
         'status' => 'stable',
+        'version' => 'v15.09.0002.0001',
     ],
     [
         'slug' => 'wp-user-mod',
@@ -147,6 +160,7 @@ return [
         'tags' => ['wordpress', 'support'],
         'type' => 'web',
         'status' => 'stable',
+        'version' => 'v15.09.0002.0001',
         'requires_auth' => true,
     ],
     [
@@ -158,5 +172,6 @@ return [
         'tags' => ['email', 'csv'],
         'type' => 'web',
         'status' => 'stable',
+        'version' => 'v15.09.0002.0001',
     ],
 ];

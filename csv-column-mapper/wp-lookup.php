@@ -8,7 +8,7 @@
  * - existing NIC numbers (user meta: nic_no)
  * - existing passport numbers (user meta: passport_no)
  *
- * Used by CSV Column Mapper v15.11 for collision detection.
+ * Used by CSV Column Mapper v15.09.0002.0001 for collision detection.
  */
 
 declare(strict_types=1);

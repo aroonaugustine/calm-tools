@@ -17,6 +17,7 @@ final class Tool
     private bool $requiresAuth;
     private ?string $notes;
     private ?string $docs;
+    private ?string $version;
 
     public function __construct(array $config)
     {
@@ -28,6 +29,7 @@ final class Tool
         $this->tags = $config['tags'] ?? [];
         $this->type = $config['type'] ?? 'web';
         $this->status = $config['status'] ?? 'stable';
+        $this->version = isset($config['version']) ? (string)$config['version'] : null;
         $this->requiresAuth = array_key_exists('requires_auth', $config) ? (bool)$config['requires_auth'] : true;
         $this->notes = $config['notes'] ?? null;
         $this->docs = $config['docs'] ?? null;
@@ -86,6 +88,11 @@ final class Tool
     public function docs(): ?string
     {
         return $this->docs;
+    }
+
+    public function version(): ?string
+    {
+        return $this->version;
     }
 
     public function isCli(): bool

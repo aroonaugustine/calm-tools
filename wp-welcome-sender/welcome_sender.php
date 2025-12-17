@@ -1,6 +1,6 @@
 <?php
 /**
- * Welcome Sender CLI — v2.5.1-web4
+ * Welcome Sender CLI — v15.09.0002.0001
  * Usage:
  *   php welcome_sender.php --csv-file=/path/to.csv [--log-file=/path/to.csv] [--dry-run] [--limit=N]
  *
@@ -9,7 +9,7 @@
  *   Login:  user_login, username, login, user name
  *   Name:   name, full_name, first_name, first name
  *
- * Changes in v2.5.1-web4:
+ * Changes in v15.09.0002.0001:
  *  - Detects delimiter automatically (comma / tab / semicolon)
  *  - Strips UTF-8 BOM
  *  - Tolerant header matching

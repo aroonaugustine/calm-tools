@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>WP Bulk Column Updater — v1.4.3 (Auto-Map)</title>
+<title>WP Bulk Column Updater — v15.09.0002.0001 (Auto-Map)</title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="/portal-assets/css/portal.css">
 <style>
@@ -30,12 +30,16 @@
 </head>
 <body>
   <main>
-    <div class="tool-card">
-      <header class="tool-card__header">
+    <section class="hero tool-hero">
+      <div>
         <h1>WP Bulk Column Updater</h1>
-        <span class="tool-card__version">v1.4.3</span>
         <p class="tool-card__lede">Map CSV headers to WordPress fields, auto-detect standard columns, and launch a bulk meta update.</p>
-      </header>
+      </div>
+      <div class="tool-hero__meta">
+        <span class="tool-hero__pill">v15.09.0002.0001</span>
+      </div>
+    </section>
+    <div class="tool-card">
 
   <form method="post" action="launch.php" enctype="multipart/form-data" id="csvForm">
     <fieldset>
@@ -110,7 +114,7 @@
 <script>
 /* =========================
    Robust CSV header parser
-   (same as v1.4.1b)
+   (same as v15.09.0002.0001)
 ========================= */
 function stripBOM(text) {
   if (text.charCodeAt(0) === 0xFEFF) return text.slice(1);

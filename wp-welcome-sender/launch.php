@@ -1,6 +1,6 @@
 <?php
 /**
- * Welcome Sender — Launcher v2.6.2-web (multi-token + manual emails)
+ * Welcome Sender — Launcher v15.09.0002.0001-web (multi-token + manual emails)
  * Spawns background CLI job to send welcome emails (CSV / server path / manual emails).
  */
 

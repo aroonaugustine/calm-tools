@@ -1,6 +1,6 @@
 <?php
 /**
- * Worker for WP Meta Bulk Updater v2.2.1
+ * Worker for WP Meta Bulk Updater v15.09.0002.0001
  *
  * Exposes function:
  *   wpmbu220_run(array $opts, string $run_dir): array

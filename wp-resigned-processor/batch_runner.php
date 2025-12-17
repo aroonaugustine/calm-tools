@@ -1,6 +1,6 @@
 <?php
 /**
- * Batch Runner — v1.4.1
+ * Batch Runner — v15.09.0002.0001
  * Splits a CSV into chunks and runs the worker sequentially to avoid timeouts/load.
  *
  * Args:

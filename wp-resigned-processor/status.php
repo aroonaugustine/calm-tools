@@ -1,6 +1,6 @@
 <?php
 /**
- * Resigned Processor — Status viewer v1.1.1
+ * Resigned Processor — Status viewer v15.09.0002.0001
  * - Lists runs if no ?id
  * - With ?id=RUN shows live stdout, PID status, and CSV download links
  */

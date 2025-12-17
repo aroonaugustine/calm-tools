@@ -1,6 +1,6 @@
 <?php
 /**
- * CALM Mailer — Status viewer v2.5.0
+ * CALM Mailer — Status viewer v15.09.0002.0001
  * - Lists runs if no ?id
  * - With ?id=RUN shows live stdout tail, PID status, CSV link
  */
