@@ -17,10 +17,26 @@ $portal_token = trim((string)($_GET['token'] ?? ''));
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="../portal-assets/css/portal.css">
   <link rel="stylesheet" href="../portal-assets/css/tool.css">
+  <script>
+    document.addEventListener('DOMContentLoaded', function(){
+      const radios = document.querySelectorAll('input[name="csv_mode"]');
+      const uploadWrap = document.getElementById('upload_wrap');
+      const serverWrap = document.getElementById('server_wrap');
+      const manualWrap = document.getElementById('manual_wrap');
+      function sync(val){
+        uploadWrap.style.display = val === 'upload' ? '' : 'none';
+        serverWrap.style.display = val === 'server' ? '' : 'none';
+        manualWrap.style.display = val === 'manual' ? '' : 'none';
+      }
+      radios.forEach(r => r.addEventListener('change', e => sync(e.target.value)));
+      const checked = document.querySelector('input[name="csv_mode"]:checked');
+      if (checked) sync(checked.value);
+    });
+  </script>
 </head>
-<body>
+<body class="portal-tool-body">
 
-<main>
+<main class="portal-tool-shell">
   <section class="hero tool-hero">
     <div>
       <h1>Remove Course 3027</h1>
@@ -56,18 +72,33 @@ $portal_token = trim((string)($_GET['token'] ?? ''));
       Use CSV from server path
     </label>
 
-    <label>CSV Path on Server
-      <input type="text" name="csv_path" placeholder="/srv/admin-tools/input.csv">
-    </label>
+    <div id="server_wrap">
+      <label>CSV Path on Server
+        <input type="text" name="csv_path" placeholder="/srv/admin-tools/input.csv">
+      </label>
+    </div>
 
     <label>
       <input type="radio" name="csv_mode" value="upload">
       Upload CSV File
     </label>
 
-    <label>Upload CSV File
-      <input type="file" name="csv_file" accept=".csv">
+    <div id="upload_wrap" style="display:none">
+      <label>Upload CSV File
+        <input type="file" name="csv_file" accept=".csv">
+      </label>
+    </div>
+
+    <label>
+      <input type="radio" name="csv_mode" value="manual">
+      Manual list (up to 10 usernames or emails)
     </label>
+    <div id="manual_wrap" style="display:none">
+      <label>Identifiers (one per line)
+        <textarea name="manual_list" rows="6" placeholder="e.g. alice@example.com&#10;or username123"></textarea>
+      </label>
+      <div class="small muted">We’ll build a temporary CSV for this run (limit 10). Manual mode matches by email or username.</div>
+    </div>
 
   </fieldset>
 

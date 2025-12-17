@@ -22,20 +22,63 @@ global $wpdb;
 
 // Required LearnDash Course IDs
 $COURSE_IDS = [2871, 2869, 3027, 4216];
+$manual_tmp = null;
 
 // -------------------------------------------------------------
 // PROCESS UPLOAD
 // -------------------------------------------------------------
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    $tmp = $_FILES['csv']['tmp_name'];
+    $input_mode = $_POST['input_mode'] ?? 'csv';
+    $csvPath = '';
 
-    if (!file_exists($tmp)) {
-        exit("Upload failed or file missing.");
+    if ($input_mode === 'manual') {
+        $manual_raw = trim((string)($_POST['manual_list'] ?? ''));
+        $manual_date = trim((string)($_POST['manual_date'] ?? ''));
+
+        $lines = array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $manual_raw)));
+        $lines = array_slice($lines, 0, 10);
+
+        if (empty($lines)) {
+            exit("Please provide up to 10 email addresses or usernames (one per line).");
+        }
+        if ($manual_date === '') {
+            exit("Target date is required for manual entries.");
+        }
+
+        $manual_tmp = tempnam(sys_get_temp_dir(), 'ccr_manual_');
+        $fh = fopen($manual_tmp, 'w');
+        if (!$fh) {
+            exit("Failed to create temporary CSV.");
+        }
+
+        fputcsv($fh, ['username', 'email', 'target_date']);
+        foreach ($lines as $line) {
+            $isEmail = filter_var($line, FILTER_VALIDATE_EMAIL);
+            $username = $isEmail ? '' : $line;
+            $email    = $isEmail ? $line : '';
+            fputcsv($fh, [$username, $email, $manual_date]);
+        }
+        fclose($fh);
+        $csvPath = $manual_tmp;
+        register_shutdown_function(function () use ($manual_tmp) {
+            @unlink($manual_tmp);
+        });
+
+    } else {
+        if (!isset($_FILES['csv'])) {
+            exit("Upload failed or file missing.");
+        }
+        $tmp = $_FILES['csv']['tmp_name'];
+
+        if (!file_exists($tmp)) {
+            exit("Upload failed or file missing.");
+        }
+        $csvPath = $tmp;
     }
 
     // Parse CSV
-    $rows = array_map('str_getcsv', file($tmp));
+    $rows = array_map('str_getcsv', file($csvPath));
     $header = array_map('trim', array_shift($rows));
 
     // Detect columns
@@ -179,9 +222,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv'])) {
     <meta name="robots" content="noindex,nofollow">
     <link rel="stylesheet" href="../portal-assets/css/portal.css">
   <link rel="stylesheet" href="../portal-assets/css/tool.css">
+  <script>
+    document.addEventListener('DOMContentLoaded', function(){
+      const radios = document.querySelectorAll('input[name="input_mode"]');
+      const csvWrap = document.getElementById('csv_wrap');
+      const manualWrap = document.getElementById('manual_wrap');
+      function sync(mode){
+        csvWrap.style.display = mode === 'csv' ? '' : 'none';
+        manualWrap.style.display = mode === 'manual' ? '' : 'none';
+      }
+      radios.forEach(r => r.addEventListener('change', e => sync(e.target.value)));
+      const checked = document.querySelector('input[name="input_mode"]:checked');
+      if (checked) sync(checked.value);
+    });
+  </script>
 </head>
-<body>
-    <main>
+<body class="portal-tool-body">
+    <main class="portal-tool-shell">
         <section class="hero tool-hero">
             <div>
                 <h1>Passport / Username / Email → LearnDash Completion Report</h1>
@@ -204,11 +261,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv'])) {
 
             <form method="post" enctype="multipart/form-data">
                 <fieldset>
-                    <legend>Upload CSV</legend>
-                    <label>Choose CSV File
-                        <input type="file" name="csv" accept=".csv" required>
+                    <legend>Input</legend>
+                    <label class="row">
+                      <input type="radio" name="input_mode" value="csv" checked> Upload CSV
                     </label>
-                    <button type="submit">Generate Report</button>
+                    <div id="csv_wrap">
+                      <label>Choose CSV File
+                          <input type="file" name="csv" accept=".csv">
+                      </label>
+                      <div class="small muted">CSV requires a <code>target_date</code> column plus at least one of <code>passport_no</code>, <code>username</code>, or <code>email</code>.</div>
+                    </div>
+                    <div style="height:12px"></div>
+                    <label class="row">
+                      <input type="radio" name="input_mode" value="manual"> Manual list (up to 10 usernames/emails)
+                    </label>
+                    <div id="manual_wrap" style="display:none">
+                      <label>Identifiers (one per line, max 10)
+                        <textarea name="manual_list" rows="6" placeholder="e.g. alice@example.com&#10;or username123"></textarea>
+                      </label>
+                      <label>Target date for all entries
+                        <input type="date" name="manual_date">
+                      </label>
+                      <div class="small muted">We’ll generate a tiny CSV for this run and apply the date above to every identifier.</div>
+                    </div>
+                    <div class="tool-actions">
+                      <button type="submit">Generate Report</button>
+                    </div>
                 </fieldset>
             </form>
         </div>

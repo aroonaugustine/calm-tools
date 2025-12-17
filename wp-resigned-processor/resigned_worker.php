@@ -126,6 +126,10 @@ $idx_email = $idxmap[norm_label('user_email')] ??
              ($idxmap[norm_label('email')] ??
              ($idxmap[norm_label('email address')] ??
              ($idxmap[norm_label('e-mail')] ?? null)));
+$idx_login = $idxmap[norm_label('user_login')] ??
+             ($idxmap[norm_label('username')] ??
+             ($idxmap[norm_label('user name')] ??
+             ($idxmap[norm_label('login')] ?? null)));
 
 $idx_nic = $idxmap[norm_label('nic_no')] ??
            ($idxmap[norm_label('nic number')] ??
@@ -137,15 +141,15 @@ $idx_nic = $idxmap[norm_label('nic_no')] ??
            ($idxmap[norm_label('nric no')] ?? null)))))));
 
 $idx_passport = $idxmap[norm_label('passport_no')] ??
-                ($idxmap[norm_label('passport number')] ??
-                ($idxmap[norm_label('passport #')] ??
-                ($idxmap[norm_label('passport')] ??
-                ($idxmap[norm_label('pp no')] ??
-                ($idxmap[norm_label('pp_no')] ?? null)))));
+           ($idxmap[norm_label('passport number')] ??
+           ($idxmap[norm_label('passport #')] ??
+           ($idxmap[norm_label('passport')] ??
+           ($idxmap[norm_label('pp no')] ??
+           ($idxmap[norm_label('pp_no')] ?? null)))));
 
-$require_email = ($MATCH_POLICY !== 'id');
-if ($require_email && $idx_email === null) {
-  fwrite(STDERR, "❌ CSV must contain an email column. Tried: user_email, email, email address, e-mail\n");
+$require_identifier = ($MATCH_POLICY !== 'id');
+if ($require_identifier && $idx_email === null && $idx_login === null) {
+  fwrite(STDERR, "❌ CSV must contain an email or username column. Tried: user_email / email / user_login / username / login\n");
   exit(2);
 }
 if ($MATCH_POLICY === 'strict' && ($idx_nic===null && $idx_passport===null)) {
@@ -196,7 +200,7 @@ fputcsv($mf, array_merge(
   array_keys($meta_fields),
   ['removed_groups','unenrolled_courses','progress_reset']
 ));
-fputcsv($uf, ['reason','user_email','NIC','Passport']);
+fputcsv($uf, ['reason','user_email','NIC','Passport','Username']);
 
 /* ---------- Print WP env diag ---------- */
 global $wpdb;
@@ -224,15 +228,16 @@ while (($row = fgetcsv($fh,0,$delim)) !== false) {
   if (count(array_filter($row, fn($x)=>trim((string)$x)!==''))===0) continue;
 
   $email    = $idx_email!==null ? v($row,$idx_email) : '';
+  $login_in = $idx_login!==null ? v($row,$idx_login) : '';
   $nic_csv  = $idx_nic!==null      ? v($row,$idx_nic)      : '';
   $pp_csv   = $idx_passport!==null ? v($row,$idx_passport) : '';
 
   $nic_csv_clean = clean_id_like($nic_csv);
   $pp_csv_clean  = clean_id_like($pp_csv);
 
-  if ($require_email && $email === '') {
-    fputcsv($uf, ['Missing email', $email, $nic_csv, $pp_csv]);
-    echo "⚠️  Skipped: no email. CSV(NIC='{$nic_csv}', PP='{$pp_csv}')\n";
+  if ($require_identifier && $email === '' && $login_in === '') {
+    fputcsv($uf, ['Missing email/username', $email, $nic_csv, $pp_csv, $login_in]);
+    echo "⚠️  Skipped: no email/username. CSV(NIC='{$nic_csv}', PP='{$pp_csv}')\n";
     $unmatched++; $done++; continue;
   }
 
@@ -241,6 +246,7 @@ while (($row = fgetcsv($fh,0,$delim)) !== false) {
 
   if ($MATCH_POLICY === 'email' || $MATCH_POLICY === 'strict') {
     if ($email !== '') $user = get_user_by('email',$email);
+    if (!$user && $login_in !== '') $user = get_user_by('login',$login_in);
   } elseif ($MATCH_POLICY === 'id') {
     // Try NIC, then Passport
     if ($nic_csv_clean !== '') {
@@ -254,8 +260,8 @@ while (($row = fgetcsv($fh,0,$delim)) !== false) {
   }
 
   if (!$user) {
-    fputcsv($uf, ["No user matched (policy={$MATCH_POLICY})", $email, $nic_csv, $pp_csv]);
-    echo "❌ No WP user matched (email='{$email}', NIC='{$nic_csv}', PP='{$pp_csv}')\n";
+    fputcsv($uf, ["No user matched (policy={$MATCH_POLICY})", $email, $nic_csv, $pp_csv, $login_in]);
+    echo "❌ No WP user matched (email='{$email}', login='{$login_in}', NIC='{$nic_csv}', PP='{$pp_csv}')\n";
     $unmatched++; $done++; continue;
   }
 
@@ -278,11 +284,11 @@ while (($row = fgetcsv($fh,0,$delim)) !== false) {
 
   $ok = false;
   if ($MATCH_POLICY === 'email') {
-    $ok = true; // email resolved to a user
+    $ok = true; // email/username resolved to a user
   } elseif ($MATCH_POLICY === 'id') {
     $ok = ($nic_ok || $pp_ok); // require an actual ID match
   } else { // strict
-    $ok = ($email !== '' && ($nic_ok || $pp_ok));
+    $ok = ($nic_ok || $pp_ok);
   }
 
   if (!$ok) {

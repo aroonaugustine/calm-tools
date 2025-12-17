@@ -38,7 +38,7 @@ function auth_ok_and_label(string $provided): array {
   return [false, ''];
 }
 
-function normalize_manual_emails(string $raw, int $max = 5): array {
+function normalize_manual_emails(string $raw, int $max = 10): array {
   // Split by commas, whitespace, semicolons
   $parts = preg_split('/[,\s;]+/u', trim($raw)) ?: [];
   $seen = [];
@@ -88,8 +88,8 @@ if ($csvMode === 'server') {
 
 } elseif ($csvMode === 'manual') {
   $raw = (string)($_POST['manual_emails'] ?? '');
-  $emails = normalize_manual_emails($raw, 5);
-  if (empty($emails)) { http_response_code(400); echo "No valid email addresses provided (max 5)."; exit; }
+  $emails = normalize_manual_emails($raw, 10);
+  if (empty($emails)) { http_response_code(400); echo "No valid email addresses provided (max 10)."; exit; }
   // Build a tiny CSV at runtime
   $dest = $run_dir . '/input.csv';
   $fh = @fopen($dest, 'w');

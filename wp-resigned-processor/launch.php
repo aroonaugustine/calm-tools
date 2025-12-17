@@ -13,6 +13,18 @@ const WORKER   = TOOL_DIR . '/resigned_worker.php';
 const BATCHER  = TOOL_DIR . '/batch_runner.php';
 const WP_LOAD  = '/var/www/html/wp-load.php';
 
+function normalize_manual_list(string $raw, int $max = 10): array {
+  $lines = preg_split('/\r\n|\r|\n/', trim($raw)) ?: [];
+  $out = [];
+  foreach ($lines as $line) {
+    $line = trim($line);
+    if ($line === '') continue;
+    $out[] = $line;
+    if (count($out) >= $max) break;
+  }
+  return $out;
+}
+
 function bail($code, $msg){
   http_response_code($code);
   header('Content-Type: text/plain; charset=utf-8');
@@ -36,10 +48,26 @@ $run_dir = LOG_DIR . '/resigned_' . $run_id;
 
 // ---------- CSV acquisition ----------
 $csv_mode = $_POST['csv_mode'] ?? 'server';
+$manual_tmp = null;
 if ($csv_mode === 'server') {
   $csv_path = trim((string)($_POST['csv_path'] ?? ''));
   if ($csv_path==='' || !is_file($csv_path)) bail(400, 'CSV path invalid');
   $csv = $csv_path;
+} elseif ($csv_mode === 'manual') {
+  $list = normalize_manual_list((string)($_POST['manual_list'] ?? ''), 10);
+  if (empty($list)) bail(400, 'No manual usernames/emails provided (max 10).');
+  $manual_tmp = $run_dir . '/input_manual.csv';
+  $fh = @fopen($manual_tmp, 'w');
+  if (!$fh) bail(500, 'Failed to create temporary CSV');
+  fputcsv($fh, ['user_login','user_email']);
+  foreach ($list as $item) {
+    $isEmail = filter_var($item, FILTER_VALIDATE_EMAIL);
+    $login = $isEmail ? '' : $item;
+    $email = $isEmail ? $item : '';
+    fputcsv($fh, [$login, $email]);
+  }
+  fclose($fh);
+  $csv = $manual_tmp;
 } else {
   if (!isset($_FILES['csv_file']) || ($_FILES['csv_file']['error'] ?? 4) !== 0) bail(400, 'No CSV uploaded');
   $dest = $run_dir.'/input.csv';
@@ -63,6 +91,7 @@ $um_inactive      = !empty($_POST['um_inactive']);
 $strip_roles      = !empty($_POST['strip_roles']);
 
 $match_mode = strtolower((string)($_POST['match_mode'] ?? 'strict'));
+if ($csv_mode === 'manual') $match_mode = 'email'; // manual list supports username/email matching
 if (!in_array($match_mode, ['strict','email','id'], true)) $match_mode = 'strict';
 
 $batch_size   = max(0, (int)($_POST['batch_size'] ?? 0));      // 0 = no batching

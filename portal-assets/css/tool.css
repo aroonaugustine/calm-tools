@@ -6,7 +6,8 @@
   --tool-header-shadow: 0 22px 45px rgba(15, 23, 42, 0.12);
 }
 
-body.portal-tool-body {
+body.portal-tool-body,
+body {
   background: radial-gradient(circle at 10% 20%, rgba(37,99,235,0.04), transparent 25%),
               radial-gradient(circle at 90% 10%, rgba(15,23,42,0.04), transparent 20%),
               var(--bg);
@@ -15,7 +16,8 @@ body.portal-tool-body {
   margin: 0;
 }
 
-main.portal-tool-shell {
+main.portal-tool-shell,
+main {
   max-width: var(--tool-shell-max);
   width: min(70vw, 1100px);
   margin: 0 auto;

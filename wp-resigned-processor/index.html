@@ -6,9 +6,25 @@
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="../portal-assets/css/portal.css">
   <link rel="stylesheet" href="../portal-assets/css/tool.css">
+  <script>
+    document.addEventListener('DOMContentLoaded', function(){
+      const radios = document.querySelectorAll('input[name="csv_mode"]');
+      const uploadWrap = document.getElementById('upload_wrap');
+      const serverWrap = document.getElementById('server_wrap');
+      const manualWrap = document.getElementById('manual_wrap');
+      function sync(val){
+        uploadWrap.style.display = val === 'upload' ? '' : 'none';
+        serverWrap.style.display = val === 'server' ? '' : 'none';
+        manualWrap.style.display = val === 'manual' ? '' : 'none';
+      }
+      radios.forEach(r => r.addEventListener('change', e => sync(e.target.value)));
+      const checked = document.querySelector('input[name="csv_mode"]:checked');
+      if (checked) sync(checked.value);
+    });
+  </script>
 </head>
-<body>
-  <main>
+<body class="portal-tool-body">
+  <main class="portal-tool-shell">
     <section class="hero tool-hero">
       <div>
         <h1>Resigned Processor</h1>
@@ -26,11 +42,21 @@
     <fieldset>
       <legend>CSV Source</legend>
       <label class="row"><input type="radio" name="csv_mode" value="upload" checked> Upload CSV</label>
-      <input type="file" name="csv_file" accept=".csv">
+      <div id="upload_wrap">
+        <input type="file" name="csv_file" accept=".csv">
+      </div>
       <div style="height:10px"></div>
       <label class="row"><input type="radio" name="csv_mode" value="server"> Use server path</label>
-      <input type="text" name="csv_path" placeholder="/home/bulk_update/Resigned.csv">
-      <div class="small muted">Tip: “Server path” avoids Cloudflare timeouts for very large files.</div>
+      <div id="server_wrap" style="display:none">
+        <input type="text" name="csv_path" placeholder="/home/bulk_update/Resigned.csv">
+        <div class="small muted">Tip: “Server path” avoids Cloudflare timeouts for very large files.</div>
+      </div>
+      <div style="height:10px"></div>
+      <label class="row"><input type="radio" name="csv_mode" value="manual"> Manual list (up to 10 usernames/emails)</label>
+      <div id="manual_wrap" style="display:none">
+        <textarea name="manual_list" rows="6" placeholder="one per line, e.g. alice@example.com&#10;username123"></textarea>
+        <div class="small muted">We’ll generate a temporary CSV for this run (10 max). Manual mode matches by email or username.</div>
+      </div>
     </fieldset>
 
     <fieldset>

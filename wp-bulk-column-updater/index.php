@@ -5,31 +5,10 @@
 <title>WP Bulk Column Updater — v15.09.0002.0001 (Auto-Map)</title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="../portal-assets/css/portal.css">
-<style>
-  body { margin: 0; }
-  main { padding: 32px 24px; max-width: 1020px; }
-  .tool-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; }
-  fieldset { border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin: 18px 0; background: rgba(15,23,42,.02); }
-  legend { font-weight: 700; padding: 0 8px; }
-  label { display: block; margin: 10px 0; font-weight: 600; }
-  select, input[type=text], input[type=password], input[type=number] { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: white; }
-  input[type=file] { width: 100%; padding: 12px; border: 1px dashed var(--border); border-radius: 12px; background: rgba(15,23,42,.02); cursor: pointer; }
-  button { padding: 12px 20px; border-radius: 999px; border: 1px solid var(--border); background: var(--accent); color: white; font-weight: 600; cursor: pointer; }
-  button[type=button] { background: transparent; color: var(--text); border-color: var(--border); }
-  button[type=button]:hover { background: rgba(15,23,42,.05); }
-  button:hover { background: #1d4ed8; }
-  table { width: 100%; border-collapse: collapse; margin-top: 12px; border-radius: 12px; overflow: hidden; }
-  th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
-  th { background: rgba(15,23,42,.04); font-weight: 600; }
-  .hint { font-size: 13px; color: var(--muted); }
-  .pill { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--border); font-size: 12px; background: rgba(15,23,42,.02); }
-  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-  .token-hint { color: #b91c1c; font-size: 12px; margin-top: 6px; display: block; }
-</style>
   <link rel="stylesheet" href="../portal-assets/css/tool.css">
 </head>
-<body>
-  <main>
+<body class="portal-tool-body">
+  <main class="portal-tool-shell">
     <section class="hero tool-hero">
       <div>
         <h1>WP Bulk Column Updater</h1>
@@ -42,13 +21,7 @@
     <div class="tool-card">
 
   <form method="post" action="launch.php" enctype="multipart/form-data" id="csvForm">
-    <fieldset>
-      <legend>Auth</legend>
-      <label>Launcher Token
-        <input type="password" name="token" required>
-        <span class="token-hint">Launch via the CALM Admin Toolkit portal to auto-fill this value.</span>
-      </label>
-    </fieldset>
+    <input type="hidden" name="token" data-token-input>
 
     <fieldset>
       <legend>CSV Source</legend>
