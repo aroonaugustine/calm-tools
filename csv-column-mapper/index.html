@@ -1,9 +1,10 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>CSV Column Mapper — v15.11.0</title>
   <meta name="robots" content="noindex,nofollow">
+  <link rel="stylesheet" href="/portal-assets/css/portal.css">
 
   <!-- Papa Parse -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -11,7 +12,11 @@
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px; max-width: 1100px; }
+    body { margin: 0; background: var(--page-bg, #f4f6fb); font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif; }
+    main { padding: 32px 24px; max-width: 1220px; }
+    .tool-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; box-shadow: var(--card-shadow, 0 25px 45px rgba(15,23,42,.08)); }
+    .tool-card h2 { margin-bottom: 8px; }
+    .version { color: var(--muted); font-size: 13px; }
     label { display: block; margin-top: 14px; }
     select { width: 420px; max-width: 95vw; }
     table { border-collapse: collapse; margin-top: 20px; width: 100%; }
@@ -105,8 +110,10 @@
   </style>
 </head>
 <body>
-
-  <h2>CSV Column Mapper <span class="version">(v15.11.0)</span></h2>
+  <main>
+    <div class="tool-card">
+      <h2>CSV Column Mapper <span class="version">(v15.11.0)</span></h2>
+      <p class="subtle">Upload your raw CSV, align it to the standard onboarding template, map divisions, and export a ready-to-import ZIP in one pass.</p>
 
   <div class="grid">
     <!-- LEFT COLUMN -->
@@ -186,6 +193,9 @@
   <div id="mappingSection"></div>
   <button id="genBtn" onclick="handleGenerateClick()" disabled>Generate ZIP</button>
   <div id="diag" class="diag"></div>
+
+    </div>
+  </main>
 
   <!-- Modal: Division Mapping -->
   <div id="divisionModalBackdrop">

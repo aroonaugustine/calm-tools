@@ -4,21 +4,30 @@
 <meta charset="utf-8">
 <title>CALM Mailer — Launcher (v2.5.0-web)</title>
 <meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="/portal-assets/css/portal.css">
 <style>
-  body{font-family:system-ui,Arial,sans-serif;margin:40px;max-width:960px}
-  fieldset{border:1px solid #ddd;border-radius:8px;padding:16px;margin-bottom:18px}
-  label{display:block;margin:8px 0}
-  input[type=text],input[type=number],input[type=password]{width:420px;max-width:100%;padding:8px}
-  .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-  .muted{color:#666}
-  button{padding:10px 16px;border:1px solid #333;border-radius:8px;background:#fafafa;cursor:pointer}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-  code{background:#f4f4f4;padding:2px 6px;border-radius:4px}
+  body { margin: 0; }
+  main { padding: 32px 24px; max-width: 960px; }
+  .tool-card { margin-bottom: 24px; }
+  .tool-card h3 { margin-bottom: 16px; }
+  fieldset { border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin: 20px 0; background: var(--card-bg); }
+  legend { font-weight: 700; padding: 0 8px; background: var(--card-bg); border-radius: 8px; }
+  label { display: block; margin: 12px 0; }
+  input[type=text], input[type=number], input[type=password] { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: white; }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .muted { color: var(--muted); }
+  button { padding: 12px 20px; border: 1px solid var(--border); border-radius: 999px; background: var(--accent); color: white; cursor: pointer; font-weight: 600; transition: background .2s ease; }
+  button:hover { background: #1d4ed8; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  code { background: var(--accent-soft); padding: 2px 6px; border-radius: 4px; }
+  .token-hint { color: #dc2626; font-size: 12px; margin-top: 6px; }
 </style>
 </head>
 <body>
-  <h1>CALM Mailer — Launcher <span class="muted">v2.5.0-web</span></h1>
-  <p class="muted">Launch in background (CLI) or do quick web-mode tests. Logs live at <code>/srv/admin-tools/wp-mailer/_mailer-logs/</code>.</p>
+  <main>
+    <div class="tool-card">
+      <h3>CALM Mailer — Launcher <span class="muted">v2.5.0-web</span></h3>
+      <p class="muted">Launch in background (CLI) or do quick web-mode tests. Logs live at <code>/srv/admin-tools/wp-mailer/_mailer-logs/</code>.</p>
 
   <fieldset>
     <legend>Launch a Background Run (CLI mode)</legend>
@@ -71,17 +80,62 @@
 
     <div style="height:10px"></div>
 
-    <form method="get" action="send_never_logged_in-7.php" class="row" style="gap:12px;align-items:center;flex-wrap:wrap">
-      <input type="hidden" name="action" value="send_one">
-      <label>Campaign:
-        <input name="campaign" placeholder="YYYYMMDD">
-      </label>
+  <form method="get" action="send_never_logged_in-7.php" class="row" style="gap:12px;align-items:center;flex-wrap:wrap">
+    <input type="hidden" name="action" value="send_one">
+    <label>Campaign:
+      <input name="campaign" placeholder="YYYYMMDD">
+    </label>
       <label>User (login or ID):
         <input name="user" placeholder="aa or 42">
       </label>
-      <label class="row"><input type="checkbox" name="live" value="1"> Send (untick = preview)</label>
-      <button type="submit">Send / Preview One</button>
-    </form>
-  </fieldset>
+    <label class="row"><input type="checkbox" name="live" value="1"> Send (untick = preview)</label>
+    <button type="submit">Send / Preview One</button>
+  </form>
+</fieldset>
+    </div>
+  </main>
+<script>
+  (function() {
+    var params = new URLSearchParams(window.location.search);
+    var token = params.get('token');
+    var fields = document.querySelectorAll('input[name="token"]');
+
+    if (!fields.length) {
+      return;
+    }
+
+    if (token) {
+      fields.forEach(function(field) {
+        field.value = token;
+        field.type = 'hidden';
+        field.required = false;
+        var section = field.closest('fieldset');
+        if (section) {
+          section.style.display = 'none';
+        } else {
+          var label = field.closest('label');
+          if (label) {
+            label.style.display = 'none';
+          }
+        }
+      });
+      return;
+    }
+
+    fields.forEach(function(field) {
+      var label = field.closest('label');
+      if (!label || label.querySelector('.token-hint')) {
+        return;
+      }
+      var hint = document.createElement('div');
+      hint.className = 'token-hint';
+      hint.textContent = 'Launch this tool from the CALM Admin Toolkit portal to auto-fill the access token.';
+      hint.style.color = '#b91c1c';
+      hint.style.fontSize = '12px';
+      hint.style.marginTop = '6px';
+      label.appendChild(hint);
+    });
+  })();
+</script>
 </body>
 </html>
