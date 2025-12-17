@@ -37,13 +37,7 @@
     <div class="tool-card">
 
   <form method="post" action="launch.php" enctype="multipart/form-data">
-    <fieldset>
-      <legend>Auth</legend>
-      <label>Launcher Auth Token
-        <input type="password" name="token" placeholder="paste AUTH_TOKEN (launcher)" required>
-        <span class="token-hint">Launch via the CALM Admin Toolkit portal to auto-fill the token.</span>
-      </label>
-    </fieldset>
+    <input type="hidden" name="token" data-token-input>
 
     <fieldset>
       <legend>Source</legend>

@@ -21,12 +21,7 @@
 
     <div class="tool-card">
       <form method="post" action="launch.php" enctype="multipart/form-data">
-    <fieldset>
-      <legend>Auth</legend>
-      <label>Launcher Auth Token:
-        <input type="password" name="token" required>
-      </label>
-    </fieldset>
+    <input type="hidden" name="token" data-token-input>
 
     <fieldset>
       <legend>CSV Source</legend>

@@ -17,6 +17,7 @@ body.portal-tool-body {
 
 main.portal-tool-shell {
   max-width: var(--tool-shell-max);
+  width: min(70vw, 1100px);
   margin: 0 auto;
   padding: 32px 24px 48px;
   display: block;
@@ -276,6 +277,7 @@ th {
 @media (max-width: 600px) {
   main.portal-tool-shell {
     padding: 24px 16px 36px;
+    width: 94%;
   }
 
   button,
