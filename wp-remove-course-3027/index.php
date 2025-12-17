@@ -16,28 +16,16 @@ $portal_token = trim((string)($_GET['token'] ?? ''));
 <title>Remove Course 3027 — Launcher</title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="/portal-assets/css/portal.css">
-<style>
-  body { margin: 0; }
-  main { padding: 32px 24px; max-width: 920px; }
-  .tool-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; }
-  .tool-card h1 { margin-bottom: 8px; }
-  .muted { color: var(--muted); }
-  fieldset { border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin: 22px 0; background: rgba(15,23,42,.015); }
-  legend { font-weight: 700; padding: 0 8px; }
-  label { display: block; margin: 12px 0; font-weight: 600; }
-  input[type=text], input[type=number], input[type=password], select, input[type=file] { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: white; }
-  input[type=radio], input[type=checkbox] { margin-right: 8px; }
-  button { padding: 12px 24px; border-radius: 999px; border: 1px solid var(--border); background: var(--accent); color: white; font-weight: 600; cursor: pointer; }
-  button:hover { background: #1d4ed8; }
-  .token-hint { color: #b91c1c; font-size: 12px; margin-top: 6px; }
-</style>
+  <link rel="stylesheet" href="/portal-assets/css/tool.css">
 </head>
 <body>
 
 <main>
   <div class="tool-card">
-    <h1>Remove Course 3027</h1>
-    <p class="muted">Strip LearnDash Course 3027 enrollments via CSV input. Does not alter groups or reset progress.</p>
+    <header class="tool-card__header">
+      <h1>Remove Course 3027</h1>
+      <p class="tool-card__lede">Strip LearnDash Course 3027 enrollments via CSV input. Does not alter groups or reset progress.</p>
+    </header>
 
 <form method="post" action="launcher.php" enctype="multipart/form-data">
 
@@ -128,5 +116,6 @@ $portal_token = trim((string)($_GET['token'] ?? ''));
   </div>
 </main>
 
+  <script src="/portal-assets/js/tool.js" defer></script>
 </body>
 </html>

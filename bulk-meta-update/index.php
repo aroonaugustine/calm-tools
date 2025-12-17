@@ -103,33 +103,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <title>WP Meta Bulk Updater — v2.2.0</title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="/portal-assets/css/portal.css">
-<style>
-  body { margin: 0; }
-  main { padding: 32px 24px; max-width: 960px; }
-  .tool-card { margin-bottom: 24px; }
-  .tool-card h3 { margin-bottom: 16px; }
-  fieldset { border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin: 20px 0; background: var(--card-bg); }
-  legend { font-weight: 700; padding: 0 8px; background: var(--card-bg); border-radius: 8px; }
-  label { display: block; margin: 12px 0; font-weight: 600; }
-  input[type=text], input[type=password], input[type=number], select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: white; font-weight: 400; }
-  input[type=checkbox] { margin-right: 8px; }
-  button { padding: 12px 20px; border: 1px solid var(--border); border-radius: 999px; background: var(--accent); color: white; cursor: pointer; font-weight: 600; transition: background .2s ease; }
-  button:hover { background: #1d4ed8; }
-  .row { display: flex; gap: 12px; flex-wrap: wrap; }
-  .col { flex: 1; min-width: 220px; }
-  .inline { display: flex; align-items: center; gap: 10px; font-weight: 500; }
-  .muted { color: var(--muted); font-weight: 400; }
-  .token-hint { color: #b91c1c; font-size: 12px; margin-top: 6px; }
-  .helper-box { font-size: 13px; background: rgba(15,23,42,.04); border: 1px dashed var(--border); border-radius: 10px; padding: 12px 14px; margin-top: 12px; }
-  .helper-title { font-weight: 700; margin-bottom: 6px; }
-  .button-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
-</style>
+  <link rel="stylesheet" href="/portal-assets/css/tool.css">
 </head>
 <body>
   <main>
     <div class="tool-card">
-      <h3>WP Meta Bulk Updater <span class="muted">v2.2.0</span></h3>
-      <p class="muted">Supports users & posts, meta & core fields, conditional updates, and LearnDash-aware operators. Dry-run or go live once ready.</p>
+      <header class="tool-card__header">
+        <h1>WP Meta Bulk Updater</h1>
+        <span class="tool-card__version">v2.2.0</span>
+        <p class="tool-card__lede">Supports users &amp; posts, meta &amp; core fields, conditional updates, and LearnDash-aware operators. Dry-run or go live once ready.</p>
+      </header>
 
       <form method="post">
         <fieldset>
@@ -283,5 +266,6 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
 </script>
+  <script src="/portal-assets/js/tool.js" defer></script>
 </body>
 </html>

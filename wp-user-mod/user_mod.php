@@ -247,35 +247,16 @@ $edit_user = $edit_uid ? get_user_by('id', $edit_uid) : null;
 <title>User Modification Tool — v2.1.5.001</title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="/portal-assets/css/portal.css">
-<style>
-  body { margin: 0; background: var(--page-bg, #f3f5fb); }
-  main { padding: 32px 24px; max-width: 1140px; }
-  .tool-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; }
-  .muted { color: var(--muted); }
-  fieldset { border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 28px; background: rgba(15,23,42,.02); }
-  legend { font-weight: 700; padding: 0 8px; }
-  label { display: block; margin: 10px 0; font-weight: 600; }
-  input[type=text], input[type=email] { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: white; }
-  button { padding: 12px 22px; border-radius: 999px; border: 1px solid var(--border); background: var(--accent); color: white; font-weight: 600; cursor: pointer; }
-  button[type=button] { background: transparent; color: var(--text); }
-  button:hover { background: #1d4ed8; }
-  button[type=button]:hover { background: rgba(15,23,42,.05); }
-  table { border-collapse: collapse; width: 100%; border-radius: 14px; overflow: hidden; }
-  th, td { border: 1px solid var(--border); padding: 10px; text-align: left; font-size: 14px; }
-  th { background: rgba(15,23,42,.04); font-weight: 600; }
-  .stack { display: flex; gap: 10px; flex-wrap: wrap; align-items: baseline; }
-  .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 3px 8px; border-radius: 999px; background: rgba(59,130,246,.12); color: #1d4ed8; }
-  .ok { color: #0f9d58; margin-bottom: 12px; }
-  .err { color: #b00020; margin-bottom: 12px; }
-  .small { font-size: 12px; }
-  h3 { margin-top: 24px; }
-</style>
+  <link rel="stylesheet" href="/portal-assets/css/tool.css">
 </head>
 <body>
   <main>
     <div class="tool-card">
-      <h2>User Modification Tool <span class="muted">v2.1.5.001</span></h2>
-      <p class="muted">Authenticated as token: <span class="badge"><?=h($who)?></span></p>
+      <header class="tool-card__header">
+        <h1>User Modification Tool</h1>
+        <span class="tool-card__version">v2.1.5.001</span>
+        <p class="tool-card__lede">Authenticated as token: <span class="badge"><?=h($who)?></span></p>
+      </header>
 
       <?php if ($msg): ?><div class="ok"><?=h($msg)?></div><?php endif; ?>
       <?php if ($err): ?><div class="err"><?=h($err)?></div><?php endif; ?>
@@ -371,5 +352,6 @@ $edit_user = $edit_uid ? get_user_by('id', $edit_uid) : null;
 
     </div>
   </main>
+  <script src="/portal-assets/js/tool.js" defer></script>
 </body>
 </html>

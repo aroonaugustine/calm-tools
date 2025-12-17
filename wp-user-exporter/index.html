@@ -5,27 +5,16 @@
 <title>WP User Exporter — v11.5-AL2</title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="/portal-assets/css/portal.css">
-<style>
-  body { margin: 0; }
-  main { padding: 32px 24px; max-width: 880px; }
-  .tool-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 30px; }
-  .muted { color: var(--muted); }
-  fieldset { border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-top: 20px; background: rgba(15,23,42,.02); }
-  legend { font-weight: 700; padding: 0 8px; }
-  label { display: block; margin: 12px 0; font-weight: 600; }
-  input[type=password] { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: white; }
-  select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: white; }
-  input[type=checkbox] { margin-right: 8px; }
-  button { padding: 12px 22px; border-radius: 999px; border: 1px solid var(--border); background: var(--accent); color: white; font-weight: 600; cursor: pointer; margin-top: 16px; }
-  button:hover { background: #1d4ed8; }
-  .token-hint { color: #b91c1c; font-size: 12px; margin-top: 6px; display: block; font-weight: 400; }
-</style>
+  <link rel="stylesheet" href="/portal-assets/css/tool.css">
 </head>
 <body>
   <main>
     <div class="tool-card">
-      <h1>WP User Exporter <span class="muted">v11.5-AL2</span></h1>
-      <p class="muted">Stream a filtered CSV of WordPress users. Supply the same AUTH_TOKEN configured on <code>run-export.php</code>.</p>
+      <header class="tool-card__header">
+        <h1>WP User Exporter</h1>
+        <span class="tool-card__version">v11.5-AL2</span>
+        <p class="tool-card__lede">Stream a filtered CSV of WordPress users. Supply the same AUTH_TOKEN configured on <code>run-export.php</code>.</p>
+      </header>
 
   <fieldset>
     <legend>Run Export</legend>
@@ -63,45 +52,8 @@
   <p class="muted" style="margin-top:16px">
     Note: This page is already protected by your Basic Auth. The token is a second layer.
   </p>
-  <script>
-    (function() {
-      var params = new URLSearchParams(window.location.search);
-      var token = params.get('token');
-      var fields = document.querySelectorAll('input[name="token"]');
-
-      if (!fields.length) {
-        return;
-      }
-
-      if (token) {
-        fields.forEach(function(field) {
-          field.value = token;
-          field.type = 'hidden';
-          field.required = false;
-          var label = field.closest('label');
-          if (label) {
-            label.style.display = 'none';
-          }
-        });
-        return;
-      }
-
-      fields.forEach(function(field) {
-        var label = field.closest('label');
-        if (!label || label.querySelector('.token-hint')) {
-          return;
-        }
-        var hint = document.createElement('div');
-        hint.className = 'token-hint';
-        hint.textContent = 'Launch this tool from the CALM Admin Toolkit portal to auto-fill the access token.';
-        hint.style.color = '#b91c1c';
-        hint.style.fontSize = '12px';
-        hint.style.marginTop = '6px';
-        label.appendChild(hint);
-      });
-    })();
-  </script>
     </div>
   </main>
+  <script src="/portal-assets/js/tool.js" defer></script>
 </body>
 </html>

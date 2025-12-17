@@ -108,12 +108,16 @@
       margin-top: 4px;
     }
   </style>
+  <link rel="stylesheet" href="/portal-assets/css/tool.css">
 </head>
 <body>
   <main>
     <div class="tool-card">
-      <h2>CSV Column Mapper <span class="version">(v15.11.0)</span></h2>
-      <p class="subtle">Upload your raw CSV, align it to the standard onboarding template, map divisions, and export a ready-to-import ZIP in one pass.</p>
+      <header class="tool-card__header">
+        <h1>CSV Column Mapper</h1>
+        <span class="tool-card__version">(v15.11.0)</span>
+        <p class="tool-card__lede">Upload your raw CSV, align it to the standard onboarding template, map divisions, and export a ready-to-import ZIP in one pass.</p>
+      </header>
 
   <div class="grid">
     <!-- LEFT COLUMN -->
@@ -1547,5 +1551,6 @@ function generateOutputInner() {
 }
 </script>
 
+  <script src="/portal-assets/js/tool.js" defer></script>
 </body>
 </html>

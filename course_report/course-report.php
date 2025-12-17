@@ -178,28 +178,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv'])) {
     <title>Identifier → LearnDash Report</title>
     <meta name="robots" content="noindex,nofollow">
     <link rel="stylesheet" href="/portal-assets/css/portal.css">
-    <style>
-        body { margin: 0; }
-        main { padding: 32px 24px; max-width: 820px; }
-        .tool-card { margin-bottom: 24px; }
-        .tool-card h3 { margin-bottom: 12px; }
-        .muted { color: var(--muted); }
-        fieldset { border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-top: 20px; background: var(--card-bg); }
-        legend { font-weight: 700; padding: 0 8px; }
-        label { display: block; margin-bottom: 12px; font-weight: 600; }
-        input[type=file] { width: 100%; padding: 12px; border: 1px dashed var(--border); border-radius: 10px; background: rgba(15,23,42,.02); cursor: pointer; }
-        button { margin-top: 12px; padding: 12px 24px; border-radius: 999px; border: 1px solid var(--border); background: var(--accent); color: white; font-weight: 600; cursor: pointer; }
-        button:hover { background: #1d4ed8; }
-        ul { padding-left: 20px; }
-        ul li { margin-bottom: 6px; }
-        .callout { border-left: 3px solid var(--accent); padding: 12px 16px; border-radius: 10px; background: rgba(15,23,42,.04); margin-top: 16px; }
-    </style>
+  <link rel="stylesheet" href="/portal-assets/css/tool.css">
 </head>
 <body>
     <main>
         <div class="tool-card">
-            <h3>Passport / Username / Email → LearnDash Completion Report</h3>
-            <p class="muted">Upload identifiers plus a target date and download an aggregated LearnDash completion report for the standard compliance courses.</p>
+            <header class="tool-card__header">
+                <h1>Passport / Username / Email → LearnDash Completion Report</h1>
+                <p class="tool-card__lede">Upload identifiers plus a target date and download an aggregated LearnDash completion report for the standard compliance courses.</p>
+            </header>
 
             <div class="callout">
                 <strong>CSV columns supported</strong>
@@ -222,5 +209,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv'])) {
             </form>
         </div>
     </main>
+  <script src="/portal-assets/js/tool.js" defer></script>
 </body>
 </html>

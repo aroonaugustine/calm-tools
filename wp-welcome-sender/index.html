@@ -5,27 +5,6 @@
 <title>Welcome Sender — v2.6.2-web</title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="/portal-assets/css/portal.css">
-<style>
-  body { margin: 0; }
-  main { padding: 32px 24px; max-width: 980px; }
-  .tool-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 30px; }
-  fieldset { border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 22px; background: rgba(15,23,42,.02); }
-  legend { font-weight: 700; padding: 0 8px; }
-  label { display: block; margin: 10px 0; font-weight: 600; }
-  input[type=text], input[type=password], textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: white; }
-  input[type=file] { padding: 10px; border: 1px dashed var(--border); border-radius: 12px; width: 100%; cursor: pointer; background: rgba(15,23,42,.02); }
-  input[type=radio], input[type=checkbox] { margin-right: 8px; }
-  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-  .muted { color: var(--muted); }
-  .small { font-size: 12px; }
-  button { padding: 12px 22px; border-radius: 999px; border: 1px solid var(--border); background: var(--accent); color: white; font-weight: 600; cursor: pointer; }
-  button[type=button] { background: transparent; color: var(--text); }
-  button[type=button]:hover { background: rgba(15,23,42,.05); }
-  button:hover { background: #1d4ed8; }
-  .pill { display: inline-flex; align-items: center; padding: 2px 10px; border: 1px solid var(--border); border-radius: 999px; font-size: 12px; color: var(--muted); }
-  textarea { min-height: 120px; }
-  .token-hint { color: #b91c1c; font-size: 12px; margin-top: 6px; display: block; font-weight: 400; }
-</style>
 <script>
   function onModeChange(val){
     document.getElementById('csv_upload_wrap').style.display = (val==='upload') ? '' : 'none';
@@ -39,14 +18,18 @@
     if (checked) onModeChange(checked.value);
   });
 </script>
+  <link rel="stylesheet" href="/portal-assets/css/tool.css">
 </head>
 <body>
   <main>
     <div class="tool-card">
-      <h1>Welcome Sender <span class="muted">v2.6.2-web</span></h1>
-      <p class="muted">
-        Send the "Welcome to CALM" email to CSV uploads, server-side files, or a quick manual list. Supports username or email inputs plus optional greeting overrides.
-      </p>
+      <header class="tool-card__header">
+        <h1>Welcome Sender</h1>
+        <span class="tool-card__version">v2.6.2-web</span>
+        <p class="tool-card__lede">
+          Send the "Welcome to CALM" email to CSV uploads, server-side files, or a quick manual list. Supports username or email inputs plus optional greeting overrides.
+        </p>
+      </header>
 
   <form method="post" action="launch.php" enctype="multipart/form-data">
     <fieldset>
@@ -116,50 +99,8 @@
   <p class="muted" style="margin-top:16px">
     Results CSV and live stdout are stored under <code>/srv/admin-tools/wp-welcome-sender/_mailer-logs/</code>.
   </p>
-  <script>
-    (function() {
-      var params = new URLSearchParams(window.location.search);
-      var token = params.get('token');
-      var fields = document.querySelectorAll('input[name="token"]');
-
-      if (!fields.length) {
-        return;
-      }
-
-    if (token) {
-      fields.forEach(function(field) {
-        field.value = token;
-        field.type = 'hidden';
-        field.required = false;
-        var section = field.closest('fieldset');
-        if (section) {
-          section.style.display = 'none';
-        } else {
-          var label = field.closest('label');
-          if (label) {
-            label.style.display = 'none';
-          }
-        }
-      });
-        return;
-      }
-
-      fields.forEach(function(field) {
-        var label = field.closest('label');
-        if (!label || label.querySelector('.token-hint')) {
-          return;
-        }
-        var hint = document.createElement('div');
-        hint.className = 'token-hint';
-        hint.textContent = 'Launch this tool from the CALM Admin Toolkit portal to auto-fill the access token.';
-        hint.style.color = '#b91c1c';
-        hint.style.fontSize = '12px';
-        hint.style.marginTop = '6px';
-        label.appendChild(hint);
-      });
-    })();
-  </script>
     </div>
   </main>
+  <script src="/portal-assets/js/tool.js" defer></script>
 </body>
 </html>
