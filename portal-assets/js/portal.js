@@ -10,6 +10,14 @@
   const tokenClear = document.querySelector('[data-token-clear]');
   const launchButtons = Array.from(document.querySelectorAll('[data-launch]'));
   const storageKey = 'portalAccessToken';
+  const runnerSection = document.querySelector('[data-runner]');
+  const runnerToolName = document.querySelector('[data-runner-tool-name]');
+  const runnerFrame = document.querySelector('[data-runner-frame]');
+  const runnerStatusFrame = document.querySelector('[data-runner-status]');
+  const runnerPlaceholder = document.querySelector('[data-runner-placeholder]');
+  const runnerPastRuns = document.querySelector('[data-runner-past-runs]');
+  const runnerRawLogs = document.querySelector('[data-runner-raw-logs]');
+  const defaultLogHint = runnerPlaceholder?.textContent?.trim() ?? '';
 
   function showTokenMessage(message) {
     if (tokenMessage) {
@@ -89,6 +97,26 @@
     showTokenMessage('Required for launching every tool. Stored only in this browser session.');
   });
 
+  function updateRunnerLinks(statusUrl) {
+    const links = [
+      runnerPastRuns,
+      runnerRawLogs,
+    ].filter(Boolean);
+
+    links.forEach((link) => {
+      if (!link) {
+        return;
+      }
+      if (statusUrl) {
+        link.removeAttribute('aria-disabled');
+        link.setAttribute('href', statusUrl);
+      } else {
+        link.setAttribute('aria-disabled', 'true');
+        link.removeAttribute('href');
+      }
+    });
+  }
+
   launchButtons.forEach((button) => {
     button.addEventListener('click', () => {
       const url = button.dataset.launch;
@@ -100,9 +128,44 @@
         showTokenMessage('Please save your access token before launching a tool.');
         return;
       }
+
       const joiner = url.includes('?') ? '&' : '?';
       const destination = `${url}${joiner}token=${encodeURIComponent(token)}`;
-      window.open(destination, '_blank', 'noopener');
+      const toolName = button.dataset.toolName || 'Tool';
+      const statusUrl = button.dataset.status || '';
+
+      if (runnerToolName) {
+        runnerToolName.textContent = toolName;
+      }
+      if (runnerFrame) {
+        runnerFrame.src = destination;
+        runnerFrame.title = `${toolName} workspace`;
+      }
+      if (runnerSection) {
+        runnerSection.classList.add('runner-section--active');
+      }
+
+      if (runnerStatusFrame) {
+        if (statusUrl) {
+          runnerStatusFrame.hidden = false;
+          runnerStatusFrame.src = statusUrl;
+        } else {
+          runnerStatusFrame.hidden = true;
+          runnerStatusFrame.removeAttribute('src');
+        }
+      }
+
+      if (runnerPlaceholder) {
+        if (statusUrl) {
+          runnerPlaceholder.hidden = true;
+          runnerPlaceholder.textContent = defaultLogHint;
+        } else {
+          runnerPlaceholder.hidden = false;
+          runnerPlaceholder.textContent = `${toolName} does not expose an inline status view yet.`;
+        }
+      }
+
+      updateRunnerLinks(statusUrl);
     });
   });
 
