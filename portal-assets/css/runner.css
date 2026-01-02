@@ -86,14 +86,6 @@ main.runner-shell {
   width: 100%;
   border: none;
   border-radius: 14px;
-}
-
-.runner-tool-frame {
-  min-height: 720px;
-  height: auto;
-}
-
-.runner-status-frame {
   min-height: 420px;
 }
 

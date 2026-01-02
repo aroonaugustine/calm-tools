@@ -85,5 +85,47 @@ $statusUrl = $statusPath ? portal_tool_url($statusPath) : null;
       </section>
     </div>
   </main>
+  <script>
+    (function () {
+      const toolFrame = document.querySelector('.runner-tool-frame');
+      const statusFrame = document.querySelector('.runner-status-frame');
+
+      if (!toolFrame) {
+        return;
+      }
+
+      const measure = (frame) => {
+        if (!frame) {
+          return;
+        }
+        try {
+          const doc = frame.contentDocument;
+          if (!doc) {
+            return;
+          }
+          const { scrollHeight: docScroll } = doc.documentElement;
+          const bodyScroll = doc.body ? doc.body.scrollHeight : 0;
+          const targetHeight = Math.max(docScroll, bodyScroll, 420);
+          frame.style.height = `${targetHeight}px`;
+        } catch (error) {
+          console.warn('Resize blocked', error);
+        }
+      };
+
+      const resize = () => {
+        measure(toolFrame);
+        measure(statusFrame);
+      };
+
+      toolFrame.addEventListener('load', resize);
+      statusFrame?.addEventListener('load', resize);
+
+      const interval = window.setInterval(resize, 1000);
+      window.addEventListener('resize', resize);
+      window.addEventListener('beforeunload', () => {
+        window.clearInterval(interval);
+      });
+    })();
+  </script>
 </body>
 </html>
