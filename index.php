@@ -9,23 +9,6 @@ use Portal\Core\ToolRegistry;
 
 $registry = ToolRegistry::fromConfig(__DIR__ . '/config/tools.php');
 $tools = $registry->all();
-function find_tool_status_path(Tool $tool): ?string
-{
-    $entryDir = dirname($tool->entry());
-    if ($entryDir === '.' || $entryDir === '\\') {
-        $entryDir = '';
-    }
-
-    foreach (['status.php', 'status.html'] as $candidate) {
-        $relative = $entryDir === '' ? $candidate : "{$entryDir}/{$candidate}";
-        if (is_file(__DIR__ . '/' . $relative)) {
-            return $relative;
-        }
-    }
-
-    return null;
-}
-
 $webTools = array_values(array_filter($tools, static fn (Tool $tool): bool => !$tool->isCli()));
 
 /**
@@ -34,7 +17,6 @@ $webTools = array_values(array_filter($tools, static fn (Tool $tool): bool => !$
 function render_tool_cards(array $list): void
 {
     foreach ($list as $tool) {
-        $statusUrl = find_tool_status_path($tool);
         $searchBlob = strtolower($tool->name() . ' ' . $tool->description() . ' ' . implode(' ', $tool->tags()));
         ?>
         <article class="tool-card"
@@ -65,9 +47,7 @@ function render_tool_cards(array $list): void
             <?php if ($tool->launchUrl()): ?>
               <button type="button"
                       class="button primary"
-                      data-launch="<?= portal_esc($tool->launchUrl() ?? ''); ?>"
-                      data-tool-name="<?= portal_esc($tool->name()); ?>"
-                      <?php if ($statusUrl): ?>data-status="<?= portal_esc($statusUrl); ?>"<?php endif; ?>>
+                      data-tool-slug="<?= portal_esc($tool->slug()); ?>">
                 Launch
               </button>
             <?php else: ?>
@@ -93,7 +73,7 @@ function render_tool_cards(array $list): void
   <link rel="stylesheet" href="<?= portal_asset('css/portal.css'); ?>">
 </head>
 <body>
-<main>
+<main data-runner-endpoint="<?= portal_base_uri(); ?>tool-runner.php">
   <section class="hero">
     <div>
       <h1>CALM Admin Toolkit</h1>
@@ -133,40 +113,6 @@ function render_tool_cards(array $list): void
     </div>
   </section>
 
-  <section class="runner-section" data-runner>
-    <div class="runner-panel">
-      <header class="runner-panel__header">
-        <div>
-          <p class="muted runner-panel__note">Tool workspace + live status</p>
-          <h2 data-runner-tool-name>Launch a tool to start</h2>
-          <p class="muted runner-panel__hint">
-            Select any tool card above to open the launcher inline and stream live logs without leaving this page.
-          </p>
-        </div>
-      </header>
-      <div class="runner-panel__body">
-        <div class="runner-panel__preview">
-          <iframe data-runner-frame title="Tool workspace" loading="lazy"></iframe>
-        </div>
-        <div class="runner-panel__log">
-          <div class="runner-panel__log-heading">
-            <h3>Status &amp; logs</h3>
-            <p>Live stdout and run metadata appears here as the tool runs.</p>
-          </div>
-          <div class="runner-panel__log-body">
-            <div class="runner-panel__placeholder" data-runner-placeholder>
-              Launch a tool above to stream its status and log output without navigating away.
-            </div>
-            <iframe data-runner-status title="Live status and logs" hidden loading="lazy"></iframe>
-          </div>
-          <div class="runner-panel__actions">
-            <a class="button secondary" data-runner-past-runs target="_blank" rel="noreferrer noopener" aria-disabled="true">View Past Runs</a>
-            <a class="button secondary" data-runner-raw-logs target="_blank" rel="noreferrer noopener" aria-disabled="true">View Logs</a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
 </main>
 <script src="<?= portal_asset('js/portal.js'); ?>" defer></script>
 </body>

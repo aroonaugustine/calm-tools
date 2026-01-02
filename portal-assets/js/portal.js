@@ -8,16 +8,10 @@
   const tokenForm = document.querySelector('[data-token-form]');
   const tokenMessage = document.querySelector('[data-token-msg]');
   const tokenClear = document.querySelector('[data-token-clear]');
-  const launchButtons = Array.from(document.querySelectorAll('[data-launch]'));
+  const launchButtons = Array.from(document.querySelectorAll('[data-tool-slug]'));
+  const main = document.querySelector('main');
+  const runnerEndpoint = main?.dataset.runnerEndpoint || 'tool-runner.php';
   const storageKey = 'portalAccessToken';
-  const runnerSection = document.querySelector('[data-runner]');
-  const runnerToolName = document.querySelector('[data-runner-tool-name]');
-  const runnerFrame = document.querySelector('[data-runner-frame]');
-  const runnerStatusFrame = document.querySelector('[data-runner-status]');
-  const runnerPlaceholder = document.querySelector('[data-runner-placeholder]');
-  const runnerPastRuns = document.querySelector('[data-runner-past-runs]');
-  const runnerRawLogs = document.querySelector('[data-runner-raw-logs]');
-  const defaultLogHint = runnerPlaceholder?.textContent?.trim() ?? '';
 
   function showTokenMessage(message) {
     if (tokenMessage) {
@@ -97,75 +91,29 @@
     showTokenMessage('Required for launching every tool. Stored only in this browser session.');
   });
 
-  function updateRunnerLinks(statusUrl) {
-    const links = [
-      runnerPastRuns,
-      runnerRawLogs,
-    ].filter(Boolean);
+  function openRunner(slug) {
+    if (!slug) {
+      return;
+    }
 
-    links.forEach((link) => {
-      if (!link) {
-        return;
-      }
-      if (statusUrl) {
-        link.removeAttribute('aria-disabled');
-        link.setAttribute('href', statusUrl);
-      } else {
-        link.setAttribute('aria-disabled', 'true');
-        link.removeAttribute('href');
-      }
-    });
+    const token = getToken();
+    if (!token) {
+      tokenInput?.focus();
+      tokenInput?.classList.add('token-error');
+      showTokenMessage('Please save your access token before launching a tool.');
+      return;
+    }
+
+    const base = new URL(runnerEndpoint, window.location.href);
+    base.searchParams.set('tool', slug);
+    base.searchParams.set('token', token);
+    window.open(base.toString(), '_blank', 'noopener');
   }
 
   launchButtons.forEach((button) => {
     button.addEventListener('click', () => {
-      const url = button.dataset.launch;
-      if (!url) return;
-      const token = getToken();
-      if (!token) {
-        tokenInput?.focus();
-        tokenInput?.classList.add('token-error');
-        showTokenMessage('Please save your access token before launching a tool.');
-        return;
-      }
-
-      const joiner = url.includes('?') ? '&' : '?';
-      const destination = `${url}${joiner}token=${encodeURIComponent(token)}`;
-      const toolName = button.dataset.toolName || 'Tool';
-      const statusUrl = button.dataset.status || '';
-
-      if (runnerToolName) {
-        runnerToolName.textContent = toolName;
-      }
-      if (runnerFrame) {
-        runnerFrame.src = destination;
-        runnerFrame.title = `${toolName} workspace`;
-      }
-      if (runnerSection) {
-        runnerSection.classList.add('runner-section--active');
-      }
-
-      if (runnerStatusFrame) {
-        if (statusUrl) {
-          runnerStatusFrame.hidden = false;
-          runnerStatusFrame.src = statusUrl;
-        } else {
-          runnerStatusFrame.hidden = true;
-          runnerStatusFrame.removeAttribute('src');
-        }
-      }
-
-      if (runnerPlaceholder) {
-        if (statusUrl) {
-          runnerPlaceholder.hidden = true;
-          runnerPlaceholder.textContent = defaultLogHint;
-        } else {
-          runnerPlaceholder.hidden = false;
-          runnerPlaceholder.textContent = `${toolName} does not expose an inline status view yet.`;
-        }
-      }
-
-      updateRunnerLinks(statusUrl);
+      const slug = button.dataset.toolSlug;
+      openRunner(slug);
     });
   });
 

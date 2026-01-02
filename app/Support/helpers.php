@@ -37,6 +37,23 @@ function portal_tool_url(string $relativePath): string
     return portal_base_uri() . ltrim($relativePath, '/');
 }
 
+function portal_tool_status_path(string $entry): ?string
+{
+    $entryDir = dirname($entry);
+    if ($entryDir === '.' || $entryDir === '\\') {
+        $entryDir = '';
+    }
+
+    foreach (['status.php', 'status.html'] as $candidate) {
+        $relative = $entryDir === '' ? $candidate : "{$entryDir}/{$candidate}";
+        if (is_file(PORTAL_BASE_PATH . '/' . $relative)) {
+            return $relative;
+        }
+    }
+
+    return null;
+}
+
 function portal_esc(string $value): string
 {
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
