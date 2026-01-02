@@ -18,6 +18,7 @@
   const viewTokenMessage = document.querySelector('[data-view-token-msg]');
   const viewStorageKey = 'portalViewToken';
   const defaultViewHint = viewTokenMessage?.textContent?.trim() ?? '';
+  const viewerHint = viewTokenMessage?.textContent?.trim() ?? 'Viewer token allows browsing without launching tools.';
 
   function showTokenMessage(message) {
     if (tokenMessage) {
@@ -52,6 +53,24 @@
       sessionStorage.setItem(viewStorageKey, value);
     } else {
       sessionStorage.removeItem(viewStorageKey);
+    }
+  }
+
+  function updateLaunchButtons(): void {
+    const fullAccess = Boolean(getToken());
+    const viewerOnly = !fullAccess && Boolean(getViewToken());
+    launchButtons.forEach((button) => {
+      button.disabled = !fullAccess;
+      if (viewerOnly) {
+        button.classList.add('launch-disabled');
+      } else {
+        button.classList.remove('launch-disabled');
+      }
+    });
+    if (viewerOnly) {
+      showTokenMessage('Viewer mode active — save a session token to run tools.');
+    } else if (fullAccess) {
+      showTokenMessage('Token saved for this session.');
     }
   }
 
@@ -115,6 +134,12 @@
     showTokenMessage('Required for launching every tool. Stored only in this browser session.');
   });
 
+  viewTokenInput?.addEventListener('input', () => {
+    viewTokenInput.classList.remove('token-error');
+    showViewTokenMessage(defaultViewHint);
+    updateLaunchButtons();
+  });
+
   viewTokenSave?.addEventListener('click', () => {
     const value = (viewTokenInput?.value || '').trim();
     if (!value) {
@@ -140,6 +165,24 @@
     viewTokenInput.classList.remove('token-error');
     showViewTokenMessage(defaultViewHint);
   });
+
+  function openRunner(slug) {
+    if (!slug) {
+      return;
+    }
+
+    const token = getToken();
+    if (!token) {
+      const viewerToken = getViewToken();
+      if (viewerToken) {
+        showTokenMessage('Viewer token only allows browsing; enter a session token above to launch tools.');
+      } else {
+        tokenInput?.focus();
+        tokenInput?.classList.add('token-error');
+        showTokenMessage('Please save your access token before launching a tool.');
+      }
+      return;
+    }
 
   function openRunner(slug) {
     if (!slug) {
@@ -176,6 +219,8 @@
   if (savedViewToken && viewTokenInput) {
     viewTokenInput.value = savedViewToken;
   }
+
+  updateLaunchButtons();
 
   applyFilters();
 })();
