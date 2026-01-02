@@ -40,8 +40,8 @@ main.runner-shell {
 }
 
 .runner-layout {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 24px;
 }
 
@@ -73,7 +73,7 @@ main.runner-shell {
 .runner-panel iframe {
   width: 100%;
   border: none;
-  min-height: 400px;
+  min-height: 500px;
   border-radius: 14px;
 }
 
@@ -99,7 +99,6 @@ main.runner-shell {
   align-items: center;
   justify-content: center;
 }
-
 .button.primary {
   padding: 10px 18px;
   border-radius: 999px;
