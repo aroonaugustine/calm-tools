@@ -73,7 +73,8 @@ function render_tool_cards(array $list): void
   <link rel="stylesheet" href="<?= portal_asset('css/portal.css'); ?>">
 </head>
 <body>
-<main data-runner-endpoint="<?= portal_base_uri(); ?>tool-runner.php">
+<main data-runner-endpoint="<?= portal_base_uri(); ?>tool-runner.php"
+      data-token-check="<?= portal_base_uri(); ?>token-check.php">
   <section class="hero">
     <div>
       <h1>CALM Admin Toolkit</h1>

@@ -1,4 +1,4 @@
-(function () {
+(() => {
   const searchInput = document.querySelector('[data-filter="search"]');
   const cards = Array.from(document.querySelectorAll('[data-tool-card]'));
   const emptyStates = Array.from(document.querySelectorAll('[data-empty]'));
@@ -11,14 +11,15 @@
   const launchButtons = Array.from(document.querySelectorAll('[data-tool-slug]'));
   const main = document.querySelector('main');
   const runnerEndpoint = main?.dataset.runnerEndpoint || 'tool-runner.php';
+  const tokenCheckEndpoint = main?.dataset.tokenCheck || 'token-check.php';
   const storageKey = 'portalAccessToken';
+  const tokenTypeStorageKey = 'portalAccessTokenType';
   const viewTokenInput = document.querySelector('[data-view-token-input]');
   const viewTokenSave = document.querySelector('[data-view-token-save]');
   const viewTokenClear = document.querySelector('[data-view-token-clear]');
   const viewTokenMessage = document.querySelector('[data-view-token-msg]');
   const viewStorageKey = 'portalViewToken';
   const defaultViewHint = viewTokenMessage?.textContent?.trim() ?? '';
-  const viewerHint = viewTokenMessage?.textContent?.trim() ?? 'Viewer token allows browsing without launching tools.';
 
   function showTokenMessage(message) {
     if (tokenMessage) {
@@ -44,6 +45,18 @@
     }
   }
 
+  function getTokenType() {
+    return sessionStorage.getItem(tokenTypeStorageKey) || '';
+  }
+
+  function setTokenType(value) {
+    if (value) {
+      sessionStorage.setItem(tokenTypeStorageKey, value);
+    } else {
+      sessionStorage.removeItem(tokenTypeStorageKey);
+    }
+  }
+
   function getViewToken() {
     return sessionStorage.getItem(viewStorageKey) || '';
   }
@@ -56,21 +69,40 @@
     }
   }
 
-  function updateLaunchButtons(): void {
-    const fullAccess = Boolean(getToken());
+  async function checkTokenType(value) {
+    const response = await fetch(tokenCheckEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Accept: 'application/json',
+      },
+      body: new URLSearchParams({ token: value }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Token validation failed');
+    }
+
+    const payload = await response.json();
+    return payload.type || '';
+  }
+
+  function updateLaunchButtons() {
+    const tokenType = getTokenType();
+    const fullAccess = tokenType === 'master';
     const viewerOnly = !fullAccess && Boolean(getViewToken());
+
     launchButtons.forEach((button) => {
       button.disabled = !fullAccess;
-      if (viewerOnly) {
-        button.classList.add('launch-disabled');
-      } else {
-        button.classList.remove('launch-disabled');
-      }
+      button.classList.toggle('launch-disabled', viewerOnly);
     });
+
     if (viewerOnly) {
-      showTokenMessage('Viewer mode active — save a session token to run tools.');
+      showTokenMessage('Viewer mode active — enter your session token above to run tools.');
     } else if (fullAccess) {
       showTokenMessage('Token saved for this session.');
+    } else {
+      showTokenMessage('Required for launching every tool. Stored only in this browser session.');
     }
   }
 
@@ -107,7 +139,7 @@
 
   searchInput?.addEventListener('input', applyFilters);
 
-  tokenForm?.addEventListener('submit', (event) => {
+  tokenForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const value = (tokenInput?.value || '').trim();
     if (!value) {
@@ -115,41 +147,59 @@
       showTokenMessage('Token is required to launch every tool.');
       return;
     }
-    setToken(value);
-    tokenInput?.classList.remove('token-error');
-    showTokenMessage('Token saved for this session.');
+    try {
+      const type = await checkTokenType(value);
+      if (type !== 'master') {
+        tokenInput?.classList.add('token-error');
+        showTokenMessage('Enter the master session token to run tools.');
+        return;
+      }
+      setToken(value);
+      setTokenType('master');
+      tokenInput?.classList.remove('token-error');
+      showTokenMessage('Token saved for this session.');
+      updateLaunchButtons();
+    } catch {
+      showTokenMessage('Unable to validate token today.');
+    }
   });
 
   tokenClear?.addEventListener('click', () => {
     setToken('');
+    setTokenType('');
     if (tokenInput) {
       tokenInput.value = '';
       tokenInput.classList.remove('token-error');
     }
     showTokenMessage('Token cleared. Enter a new token to enable launches.');
+    updateLaunchButtons();
   });
 
   tokenInput?.addEventListener('input', () => {
     tokenInput.classList.remove('token-error');
-    showTokenMessage('Required for launching every tool. Stored only in this browser session.');
   });
 
-  viewTokenInput?.addEventListener('input', () => {
-    viewTokenInput.classList.remove('token-error');
-    showViewTokenMessage(defaultViewHint);
-    updateLaunchButtons();
-  });
-
-  viewTokenSave?.addEventListener('click', () => {
+  viewTokenSave?.addEventListener('click', async () => {
     const value = (viewTokenInput?.value || '').trim();
     if (!value) {
       viewTokenInput?.classList.add('token-error');
       showViewTokenMessage('Viewer token is required to save it.');
       return;
     }
-    setViewToken(value);
-    viewTokenInput?.classList.remove('token-error');
-    showViewTokenMessage('Viewer token saved for this session.');
+    try {
+      const type = await checkTokenType(value);
+      if (type !== 'viewer') {
+        viewTokenInput?.classList.add('token-error');
+        showViewTokenMessage('Enter a valid viewer token.');
+        return;
+      }
+      setViewToken(value);
+      viewTokenInput?.classList.remove('token-error');
+      showViewTokenMessage('Viewer token saved for this session.');
+      updateLaunchButtons();
+    } catch {
+      showViewTokenMessage('Unable to validate viewer token today.');
+    }
   });
 
   viewTokenClear?.addEventListener('click', () => {
@@ -159,6 +209,7 @@
       viewTokenInput.classList.remove('token-error');
     }
     showViewTokenMessage(defaultViewHint);
+    updateLaunchButtons();
   });
 
   viewTokenInput?.addEventListener('input', () => {
@@ -171,21 +222,14 @@
       return;
     }
 
-    const token = getToken();
-    if (!token) {
-      const viewerToken = getViewToken();
-      if (viewerToken) {
-        showTokenMessage('Viewer token only allows browsing; enter a session token above to launch tools.');
+    if (getTokenType() !== 'master') {
+      if (getViewToken()) {
+        showTokenMessage('Viewer mode only—save your session token to run tools.');
       } else {
         tokenInput?.focus();
         tokenInput?.classList.add('token-error');
         showTokenMessage('Please save your access token before launching a tool.');
       }
-      return;
-    }
-
-  function openRunner(slug) {
-    if (!slug) {
       return;
     }
 
@@ -220,7 +264,10 @@
     viewTokenInput.value = savedViewToken;
   }
 
-  updateLaunchButtons();
+  if (savedToken && getTokenType() === '') {
+    setTokenType('master');
+  }
 
+  updateLaunchButtons();
   applyFilters();
 })();
