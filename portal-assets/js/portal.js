@@ -194,6 +194,7 @@
         return;
       }
       setViewToken(value);
+      setTokenType('viewer');
       viewTokenInput?.classList.remove('token-error');
       showViewTokenMessage('Viewer token saved for this session.');
       updateLaunchButtons();
@@ -222,28 +223,34 @@
       return;
     }
 
-    if (getTokenType() !== 'master') {
-      if (getViewToken()) {
-        showTokenMessage('Viewer mode only—save your session token to run tools.');
-      } else {
+    const tokenType = getTokenType();
+    const base = new URL(runnerEndpoint, window.location.href);
+    base.searchParams.set('tool', slug);
+
+    if (tokenType === 'master') {
+      const token = getToken();
+      if (!token) {
         tokenInput?.focus();
         tokenInput?.classList.add('token-error');
         showTokenMessage('Please save your access token before launching a tool.');
+        return;
       }
-      return;
-    }
-
-    const token = getToken();
-    if (!token) {
+      base.searchParams.set('token', token);
+    } else if (tokenType === 'viewer') {
+      const viewerToken = getViewToken();
+      if (!viewerToken) {
+        showTokenMessage('Viewer token missing; enter it above to view tools.');
+        return;
+      }
+      base.searchParams.set('token', viewerToken);
+      base.searchParams.set('mode', 'viewer');
+    } else {
       tokenInput?.focus();
       tokenInput?.classList.add('token-error');
       showTokenMessage('Please save your access token before launching a tool.');
       return;
     }
 
-    const base = new URL(runnerEndpoint, window.location.href);
-    base.searchParams.set('tool', slug);
-    base.searchParams.set('token', token);
     window.open(base.toString(), '_blank', 'noopener');
   }
 

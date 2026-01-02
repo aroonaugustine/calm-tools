@@ -65,6 +65,7 @@ main.runner-shell {
 
 .runner-tool-panel {
   flex: 1;
+  position: relative;
 }
 
 .runner-status-panel {
@@ -90,6 +91,21 @@ main.runner-shell {
   border: none;
   border-radius: 14px;
   min-height: 420px;
+}
+
+.runner-viewer-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  pointer-events: auto;
+  color: white;
+  font-size: 1.1rem;
+  text-align: center;
+  padding: 16px;
 }
 
 .runner-panel__actions {
