@@ -1,0 +1,23 @@
+CALM Admin Tools — UI Preview Specs
+===================================
+
+Pages
+-----
+1) ui-previews/portal-launcher-preview.html
+   - Purpose: Static preview of the launcher at /index.php.
+   - Layout: Hero with title/description + token form (disabled), search input (disabled), grid of sample tool cards.
+   - Styles: Uses portal-assets/css/portal.css directly; no JS required.
+   - Interactions: All inputs and buttons are disabled; no navigation. Cards mimic badges, version pills, and action buttons.
+
+2) ui-previews/csv-column-mapper-preview.html
+   - Purpose: Static preview of the CSV Column Mapper UI.
+   - Layout: Hero with version pill; main card with two-column grid (file inputs on left, WP integration mock on right), division mapping fieldset with sample pills/table, and disabled action buttons.
+   - Styles: Uses portal-assets/css/portal.css and portal-assets/css/tool.css; inline preview-only tweaks for layout. No scripts loaded.
+   - Interactions: All inputs/buttons disabled; table shows representative sample mappings; no modals or file handling.
+
+General Notes
+-------------
+- Both pages are HTML-only (no PHP, no token logic, no tool actions).
+- Assets load relative to project root (../portal-assets/...). Keep folder structure when sharing.
+- Add ?cache-bust if CDN/proxy caches CSS too aggressively.
+- Intended for visual review only; remove or relocate if publishing externally (meta robots set to noindex).

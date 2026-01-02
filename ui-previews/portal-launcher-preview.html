@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>CALM Admin Toolkit — UI Preview</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="stylesheet" href="../portal-assets/css/portal.css">
+</head>
+<body>
+<main>
+  <section class="hero">
+    <div>
+      <h1>CALM Admin Toolkit</h1>
+      <p>UI-only preview of the launcher. Tokens and launches are disabled in this mock.</p>
+    </div>
+    <form class="token-form">
+      <label for="access-token">Session access token</label>
+      <div class="token-controls">
+        <input type="password"
+               id="access-token"
+               placeholder="Paste your access token"
+               autocomplete="off"
+               disabled>
+        <button type="button" class="button primary token-save" disabled>Save Token</button>
+        <button type="button" class="button secondary token-clear" disabled>Clear</button>
+      </div>
+      <small class="token-hint">Preview mode — token entry is disabled.</small>
+    </form>
+  </section>
+
+  <div class="filters">
+    <input type="search" placeholder="Search tools, tags or descriptions…" disabled>
+  </div>
+
+  <section class="tool-section">
+    <div class="section-header">
+      <h2>Web Tools</h2>
+      <span class="pill">3</span>
+    </div>
+    <div class="tool-grid">
+      <article class="tool-card">
+        <div class="badges">
+          <span class="badge">Web</span>
+          <span class="badge">Data</span>
+          <span class="badge auth">Access Token</span>
+        </div>
+        <h3>CSV Column Mapper</h3>
+        <span class="badge version">v15.09.0002.0001</span>
+        <p>Upload a CSV, align columns to the onboarding template, and export a ready-to-import ZIP.</p>
+        <div class="badges">
+          <span class="badge">#csv</span>
+          <span class="badge">#onboarding</span>
+          <span class="badge">#mapping</span>
+        </div>
+        <div class="card-actions">
+          <span class="button secondary" aria-disabled="true">Launch (preview only)</span>
+          <a class="button secondary" href="#" aria-disabled="true">Docs</a>
+        </div>
+      </article>
+
+      <article class="tool-card">
+        <div class="badges">
+          <span class="badge">Web</span>
+          <span class="badge">Email</span>
+          <span class="badge auth">Access Token</span>
+        </div>
+        <h3>WP Mailer</h3>
+        <span class="badge version">v15.09.0002.0001</span>
+        <p>Send templated mailers to targeted segments with throttling and logging.</p>
+        <div class="badges">
+          <span class="badge">#email</span>
+          <span class="badge">#templates</span>
+        </div>
+        <div class="card-actions">
+          <span class="button secondary" aria-disabled="true">Launch (preview only)</span>
+          <a class="button secondary" href="#" aria-disabled="true">Docs</a>
+        </div>
+      </article>
+
+      <article class="tool-card">
+        <div class="badges">
+          <span class="badge">Web</span>
+          <span class="badge">Users</span>
+          <span class="badge auth">Access Token</span>
+        </div>
+        <h3>WP User Exporter</h3>
+        <span class="badge version">v15.09.0002.0001</span>
+        <p>Export user data with filters for divisions, roles, completion status, and date ranges.</p>
+        <div class="badges">
+          <span class="badge">#users</span>
+          <span class="badge">#reporting</span>
+        </div>
+        <div class="card-actions">
+          <span class="button secondary" aria-disabled="true">Launch (preview only)</span>
+          <a class="button secondary" href="#" aria-disabled="true">Docs</a>
+        </div>
+      </article>
+    </div>
+  </section>
+</main>
+</body>
+</html>

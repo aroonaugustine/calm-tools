@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CSV Column Mapper — UI Preview</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="stylesheet" href="../portal-assets/css/portal.css">
+  <link rel="stylesheet" href="../portal-assets/css/tool.css">
+  <style>
+    body { margin: 0; background: var(--page-bg, #f4f6fb); font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif; }
+    main { padding: 32px 24px; max-width: 1220px; }
+    .tool-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; box-shadow: var(--card-shadow, 0 25px 45px rgba(15,23,42,.08)); }
+    .tool-card h2 { margin-bottom: 8px; }
+    .status { font-size:12px; color:#555; margin-top:4px; }
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    fieldset { border:1px solid #ddd; border-radius:8px; padding:12px; }
+    .division-tools { margin-top: 24px; }
+    .division-preview { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; padding: 16px; margin-top: 12px; }
+    .map-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    .map-table th, .map-table td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
+    .map-table th { background: #f1f5f9; }
+    .pill { display:inline-block; border:1px solid #ddd; border-radius:999px; padding:2px 8px; margin-right:6px; font-size:11px; color:#555; background:#fafafa; }
+    .note { color:#475569; font-size: 13px; margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero tool-hero">
+      <div>
+        <h1>CSV Column Mapper</h1>
+        <p class="tool-card__lede">Upload your raw CSV, align columns to the onboarding template, and export a ready-to-import ZIP.</p>
+      </div>
+      <div class="tool-hero__meta">
+        <span class="tool-hero__pill">v15.09.0002.0001</span>
+      </div>
+    </section>
+
+    <div class="tool-card">
+      <div class="grid">
+        <div>
+          <label>
+            CSV Source
+            <input type="file" disabled>
+            <div class="status">Preview mode — file picker disabled.</div>
+          </label>
+
+          <label>
+            Template CSV
+            <input type="file" disabled>
+            <div class="status">Upload disabled in preview.</div>
+          </label>
+
+          <fieldset style="margin-top:12px;">
+            <legend>Template Columns</legend>
+            <label style="display:flex; align-items:center; gap:8px;">
+              <input type="checkbox" disabled checked>
+              Use built-in default template
+            </label>
+            <div class="note">Toggle is locked in preview.</div>
+          </fieldset>
+
+          <label style="margin-top:12px">
+            Existing usernames CSV (optional)
+            <input type="file" disabled>
+            <div class="note">Prevents collisions; disabled in preview.</div>
+          </label>
+        </div>
+
+        <div>
+          <fieldset>
+            <legend>WordPress Integration (mock)</legend>
+            <label style="display:flex; align-items:center; gap:8px;">
+              <input type="checkbox" disabled>
+              Enable live checks against WordPress
+            </label>
+            <label>Lookup endpoint URL
+              <input style="width:100%;" placeholder="/admin-tools/csv-column-mapper/wp-lookup.php" disabled>
+            </label>
+            <label>Auth token
+              <input style="width:100%;" placeholder="••••••••" disabled>
+            </label>
+            <button class="secondary" disabled>Fetch existing (WP)</button>
+            <div class="status">WP checks disabled in UI preview.</div>
+          </fieldset>
+        </div>
+      </div>
+
+      <div class="division-tools">
+        <fieldset>
+          <legend>Division Mapping</legend>
+          <p class="note">
+            Raw divisions from your CSV appear here and are matched to official divisions. In preview, sample rows are shown.
+          </p>
+          <div class="division-preview">
+            <div class="pill">KG32 → TKW KG32</div>
+            <div class="pill">Nuwara → Nuwara Eliya</div>
+            <div class="pill">UNK → Needs mapping</div>
+          </div>
+          <table class="map-table">
+            <thead>
+              <tr>
+                <th>Raw Division</th>
+                <th>Match</th>
+                <th>Confidence</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>KG32</td>
+                <td>TKW KG32</td>
+                <td>High</td>
+              </tr>
+              <tr>
+                <td>Nuwara</td>
+                <td>Nuwara Eliya</td>
+                <td>Medium</td>
+              </tr>
+              <tr>
+                <td>UNK</td>
+                <td><em>Pending</em></td>
+                <td>Needs review</td>
+              </tr>
+            </tbody>
+          </table>
+        </fieldset>
+      </div>
+
+      <div style="margin-top:16px; display:flex; gap:12px; flex-wrap:wrap;">
+        <button disabled>Load Headers</button>
+        <button disabled>Auto-Map</button>
+        <button disabled>Generate ZIP</button>
+        <span class="note">Buttons are disabled in this UI-only preview.</span>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
