@@ -25,23 +25,18 @@ if ($tool === null) {
 }
 
 $isFullAccess = portal_is_master_token($token);
-$isViewerMode = portal_is_view_token($token) && trim((string)($_GET['mode'] ?? '')) === 'viewer';
 
-if (!$isFullAccess && !$isViewerMode) {
+if (!$isFullAccess) {
     http_response_code(401);
     echo '<h1>Unauthorized</h1><p>Provide a valid session token to open this tool.</p>';
     exit;
 }
 
-if ($isFullAccess) {
-    $toolToken = portal_tool_default_token($tool->slug());
-    if ($toolToken === null) {
-        http_response_code(500);
-        echo '<h1>Misconfigured tool</h1><p>This tool has no configured token.</p>';
-        exit;
-    }
-} else {
-    $toolToken = null;
+$toolToken = portal_tool_default_token($tool->slug());
+if ($toolToken === null) {
+    http_response_code(500);
+    echo '<h1>Misconfigured tool</h1><p>This tool has no configured token.</p>';
+    exit;
 }
 
 $entryUrl = portal_tool_url($tool->entry());
@@ -78,19 +73,14 @@ $statusUrl = $statusPath ? portal_tool_url($statusPath) : null;
       </div>
     </header>
     <div class="runner-layout">
-      <section class="runner-panel runner-tool-panel<?= $isViewerMode ? ' runner-is-viewer' : ''; ?>">
+      <section class="runner-panel runner-tool-panel">
         <header class="runner-panel__header">
           <h2>Tool workspace</h2>
           <p class="muted">
-            <?= $isViewerMode ? 'Viewer mode — functionality is disabled.' : 'This tab runs the tool with your saved session token.'; ?>
+            This tab runs the tool with your saved session token.
           </p>
         </header>
         <iframe class="runner-tool-frame" src="<?= portal_esc($entryTarget); ?>" title="<?= portal_esc($tool->name()); ?> workspace" loading="lazy" scrolling="no"></iframe>
-        <?php if ($isViewerMode): ?>
-          <div class="runner-viewer-overlay">
-            <p>Viewer access only — actions are blocked.</p>
-          </div>
-        <?php endif; ?>
       </section>
       <section class="runner-panel runner-status-panel">
         <header class="runner-panel__header">

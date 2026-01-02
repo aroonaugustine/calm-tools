@@ -93,17 +93,6 @@ function render_tool_cards(array $list): void
         <button type="button" class="button secondary token-clear" data-token-clear>Clear</button>
       </div>
       <small class="token-hint" data-token-msg>Required for launching every tool. Stored only in this browser session.</small>
-      <label for="view-token">Viewer-only token (optional)</label>
-      <div class="token-controls">
-        <input type="password"
-               id="view-token"
-               placeholder="Paste a read-only token"
-               autocomplete="off"
-               data-view-token-input>
-        <button type="button" class="button secondary view-token-save" data-view-token-save>Save Viewer Token</button>
-        <button type="button" class="button secondary view-token-clear" data-view-token-clear>Clear</button>
-      </div>
-      <small class="token-hint" data-view-token-msg>Use this to allow viewing the tool catalog without letting someone launch runs.</small>
     </form>
   </section>
 

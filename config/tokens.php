@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 return [
     'master' => '6714e52aed21125dd999ff7c31666c1806e033aa2cb8a14073b41ae7026ec0b0',
-    'viewer' => 'd3978c1c1f7744c7a93449d1b3f2230b4e219a5a',
     'tools' => [
         'bulk-meta-update' => [
             'token' => '6714e52aed21125dd999ff7c31666c1806e033aa2cb8a14073b41ae7026ec0b0',

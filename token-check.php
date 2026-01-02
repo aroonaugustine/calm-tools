@@ -19,12 +19,7 @@ if ($token === '') {
     exit;
 }
 
-$type = 'invalid';
-if (portal_is_master_token($token)) {
-    $type = 'master';
-} elseif (portal_is_view_token($token)) {
-    $type = 'viewer';
-}
+$type = portal_is_master_token($token) ? 'master' : 'invalid';
 
 header('Content-Type: application/json; charset=utf-8');
 echo json_encode(['type' => $type], JSON_UNESCAPED_SLASHES);

@@ -21,13 +21,6 @@ function portal_is_master_token(string $value): bool
     return $master !== '' && hash_equals($master, $value);
 }
 
-function portal_is_view_token(string $value): bool
-{
-    $config = portal_load_token_config();
-    $viewer = $config['viewer'] ?? '';
-    return $viewer !== '' && hash_equals($viewer, $value);
-}
-
 function portal_tool_token_set(string $slug): array
 {
     $config = portal_load_token_config();
