@@ -12,10 +12,22 @@
   const main = document.querySelector('main');
   const runnerEndpoint = main?.dataset.runnerEndpoint || 'tool-runner.php';
   const storageKey = 'portalAccessToken';
+  const viewTokenInput = document.querySelector('[data-view-token-input]');
+  const viewTokenSave = document.querySelector('[data-view-token-save]');
+  const viewTokenClear = document.querySelector('[data-view-token-clear]');
+  const viewTokenMessage = document.querySelector('[data-view-token-msg]');
+  const viewStorageKey = 'portalViewToken';
+  const defaultViewHint = viewTokenMessage?.textContent?.trim() ?? '';
 
   function showTokenMessage(message) {
     if (tokenMessage) {
       tokenMessage.textContent = message;
+    }
+  }
+
+  function showViewTokenMessage(message) {
+    if (viewTokenMessage) {
+      viewTokenMessage.textContent = message;
     }
   }
 
@@ -28,6 +40,18 @@
       sessionStorage.setItem(storageKey, value);
     } else {
       sessionStorage.removeItem(storageKey);
+    }
+  }
+
+  function getViewToken() {
+    return sessionStorage.getItem(viewStorageKey) || '';
+  }
+
+  function setViewToken(value) {
+    if (value) {
+      sessionStorage.setItem(viewStorageKey, value);
+    } else {
+      sessionStorage.removeItem(viewStorageKey);
     }
   }
 
@@ -91,6 +115,32 @@
     showTokenMessage('Required for launching every tool. Stored only in this browser session.');
   });
 
+  viewTokenSave?.addEventListener('click', () => {
+    const value = (viewTokenInput?.value || '').trim();
+    if (!value) {
+      viewTokenInput?.classList.add('token-error');
+      showViewTokenMessage('Viewer token is required to save it.');
+      return;
+    }
+    setViewToken(value);
+    viewTokenInput?.classList.remove('token-error');
+    showViewTokenMessage('Viewer token saved for this session.');
+  });
+
+  viewTokenClear?.addEventListener('click', () => {
+    setViewToken('');
+    if (viewTokenInput) {
+      viewTokenInput.value = '';
+      viewTokenInput.classList.remove('token-error');
+    }
+    showViewTokenMessage(defaultViewHint);
+  });
+
+  viewTokenInput?.addEventListener('input', () => {
+    viewTokenInput.classList.remove('token-error');
+    showViewTokenMessage(defaultViewHint);
+  });
+
   function openRunner(slug) {
     if (!slug) {
       return;
@@ -120,6 +170,11 @@
   const savedToken = getToken();
   if (savedToken && tokenInput) {
     tokenInput.value = savedToken;
+  }
+
+  const savedViewToken = getViewToken();
+  if (savedViewToken && viewTokenInput) {
+    viewTokenInput.value = savedViewToken;
   }
 
   applyFilters();
