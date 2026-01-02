@@ -62,17 +62,6 @@ return [
         'notes' => 'Run from shell: php division_update/batch-groups.php',
     ],
     [
-        'slug' => 'port-pulse-builder',
-        'name' => 'Port Pulse Builder',
-        'description' => 'React + Tailwind app for composing Port Pulse newsletters with live preview.',
-        'entry' => 'port-pulse-builder/index.html',
-        'category' => 'Communications',
-        'tags' => ['react', 'newsletter'],
-        'type' => 'web',
-        'status' => 'beta',
-        'version' => 'v2.0.0',
-    ],
-    [
         'slug' => 'wp-bulk-column-updater',
         'name' => 'WP Bulk Column Updater',
         'description' => 'Launcher + worker for updating LearnDash enrollment columns in bulk.',
