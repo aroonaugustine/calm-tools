@@ -14,9 +14,10 @@ body {
 }
 
 main.runner-shell {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 36px 24px 56px;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 24px 15px 56px;
   display: flex;
   flex-direction: column;
   gap: 24px;
