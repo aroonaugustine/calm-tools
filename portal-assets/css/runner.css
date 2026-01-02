@@ -134,19 +134,3 @@ main.runner-shell {
     min-height: 320px;
   }
 }
-.button.primary {
-  padding: 10px 18px;
-  border-radius: 999px;
-  text-align: center;
-  font-weight: 600;
-}
-
-@media (max-width: 768px) {
-  main.runner-shell {
-    padding: 24px 16px 40px;
-  }
-
-  .runner-panel iframe {
-    min-height: 320px;
-  }
-}
