@@ -57,27 +57,29 @@ $statusUrl = $statusPath ? portal_tool_url($statusPath) : null;
       </div>
     </header>
     <div class="runner-layout">
-      <section class="runner-panel">
+      <section class="runner-panel runner-tool-panel">
         <header class="runner-panel__header">
           <h2>Tool workspace</h2>
           <p class="muted">This tab runs the tool with your saved session token.</p>
         </header>
-        <iframe src="<?= portal_esc($entryTarget); ?>" title="<?= portal_esc($tool->name()); ?> workspace" loading="lazy"></iframe>
+        <iframe class="runner-tool-frame" src="<?= portal_esc($entryTarget); ?>" title="<?= portal_esc($tool->name()); ?> workspace" loading="lazy"></iframe>
       </section>
-      <section class="runner-panel">
+      <section class="runner-panel runner-status-panel">
         <header class="runner-panel__header">
           <h2>Status &amp; logs</h2>
           <p class="muted">Live stdout, run metadata, and summaries appear here.</p>
         </header>
         <?php if ($statusUrl): ?>
-          <iframe src="<?= portal_esc($statusUrl); ?>" title="Live status and logs" loading="lazy"></iframe>
+          <iframe class="runner-status-frame" src="<?= portal_esc($statusUrl); ?>" title="Live status and logs" loading="lazy"></iframe>
           <div class="runner-panel__actions">
-            <a class="button secondary" href="<?= portal_esc($statusUrl); ?>" target="_blank" rel="noreferrer noopener">View Past Runs</a>
-            <a class="button secondary" href="<?= portal_esc($statusUrl); ?>" target="_blank" rel="noreferrer noopener">View Logs</a>
+            <a class="button secondary" href="<?= portal_esc($statusUrl); ?>" target="_blank" rel="noreferrer noopener">View previous runs &amp; logs</a>
           </div>
         <?php else: ?>
           <div class="runner-panel__empty">
             No inline status page detected for this tool, but logs are still saved under its logging directory.
+          </div>
+          <div class="runner-panel__actions">
+            <span class="button secondary" aria-disabled="true">View previous runs &amp; logs</span>
           </div>
         <?php endif; ?>
       </section>
