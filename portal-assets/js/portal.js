@@ -89,17 +89,17 @@
 
   function updateLaunchButtons() {
     const tokenType = getTokenType();
-    const fullAccess = tokenType === 'master';
-    const viewerOnly = !fullAccess && Boolean(getViewToken());
+    const hasMaster = tokenType === 'master' && Boolean(getToken());
+    const hasViewer = tokenType === 'viewer' && Boolean(getViewToken());
 
     launchButtons.forEach((button) => {
-      button.disabled = !fullAccess;
-      button.classList.toggle('launch-disabled', viewerOnly);
+      button.disabled = !(hasMaster || hasViewer);
+      button.classList.toggle('launch-disabled', hasViewer && !hasMaster);
     });
 
-    if (viewerOnly) {
+    if (hasViewer && !hasMaster) {
       showTokenMessage('Viewer mode active — enter your session token above to run tools.');
-    } else if (fullAccess) {
+    } else if (hasMaster) {
       showTokenMessage('Token saved for this session.');
     } else {
       showTokenMessage('Required for launching every tool. Stored only in this browser session.');
@@ -271,8 +271,12 @@
     viewTokenInput.value = savedViewToken;
   }
 
-  if (savedToken && getTokenType() === '') {
-    setTokenType('master');
+  if (getTokenType() === '') {
+    if (savedToken) {
+      setTokenType('master');
+    } else if (savedViewToken) {
+      setTokenType('viewer');
+    }
   }
 
   updateLaunchButtons();
