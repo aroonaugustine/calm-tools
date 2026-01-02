@@ -53,7 +53,7 @@ main.runner-shell {
   background: white;
   border: 1px solid var(--runner-border);
   border-radius: 22px;
-  padding: 20px;
+  padding: 12px 15px;
   box-shadow: var(--runner-shadow);
   display: flex;
   flex-direction: column;
