@@ -1,0 +1,101 @@
+/* CALM Admin Tools — UI Reference CSS
+ *
+ * This file pulls in the shared styling used by the launcher and CSV Column Mapper
+ * previews and adds the small preview-specific tweaks that were inline.
+ *
+ * Contents:
+ * - portal.css (global layout, hero, cards, badges, buttons)
+ * - tool.css (form, inputs, grids, file upload buttons)
+ * - CSV Column Mapper preview overrides
+ */
+
+@import url("../portal-assets/css/portal.css");
+@import url("../portal-assets/css/tool.css");
+
+/* CSV Column Mapper preview-only styles */
+body {
+  margin: 0;
+  background: var(--page-bg, #f4f6fb);
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+}
+
+main {
+  padding: 32px 24px;
+  max-width: 1220px;
+}
+
+.tool-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  box-shadow: var(--card-shadow, 0 25px 45px rgba(15,23,42,.08));
+}
+
+.tool-card h2 {
+  margin-bottom: 8px;
+}
+
+.status {
+  font-size: 12px;
+  color: #555;
+  margin-top: 4px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+fieldset {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.division-tools {
+  margin-top: 24px;
+}
+
+.division-preview {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 12px;
+}
+
+.map-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+.map-table th,
+.map-table td {
+  border: 1px solid #e5e7eb;
+  padding: 8px;
+  text-align: left;
+}
+
+.map-table th {
+  background: #f1f5f9;
+}
+
+.pill {
+  display: inline-block;
+  border: 1px solid #ddd;
+  border-radius: 999px;
+  padding: 2px 8px;
+  margin-right: 6px;
+  font-size: 11px;
+  color: #555;
+  background: #fafafa;
+}
+
+.note {
+  color: #475569;
+  font-size: 13px;
+  margin-top: 6px;
+}
