@@ -15,15 +15,12 @@ ini_set('display_errors', 1);
    CONFIG
    ========================= */
 const WP_LOAD   = '/var/www/html/wp-load.php'; // adjust if needed
-const TOKENS    = [
-  'owner' => '6714e52aed21125dd999ff7c31666c1806e033aa2cb8a14073b41ae7026ec0b0',
-  'ops'   => 'e546ffe239d986aeaa4f8f936acdcf2d0af40de4d547c43de784a02d63843211',
-];
 const MIN_LEN   = 4;
 
 /* =========================
    LOAD WORDPRESS
    ========================= */
+require_once __DIR__ . '/../app/bootstrap.php';
 require WP_LOAD;
 
 /* =========================
@@ -31,11 +28,18 @@ require WP_LOAD;
    ========================= */
 function token_ok(?string $supplied): array {
   $candidate = $supplied ?: (string)($_SERVER['HTTP_X_USERMOD_TOKEN'] ?? '');
-  if ($candidate === '') return [false,''];
-  foreach (TOKENS as $label => $secret) {
-    if (hash_equals($secret, $candidate)) return [true,(string)$label];
+  if ($candidate === '') {
+    return [false, ''];
   }
-  return [false,''];
+
+  $tokens = portal_tool_tokens('wp-user-mod');
+  foreach ($tokens as $label => $secret) {
+    if (hash_equals((string)$secret, $candidate)) {
+      return [true, (string)$label];
+    }
+  }
+
+  return [false, ''];
 }
 
 /* =========================

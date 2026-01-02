@@ -3,7 +3,10 @@
  * CALM Mailer — Launcher v15.09.0002.0001
  * Spawns send_never_logged_in-7.php in background, writes a run folder with live stdout + JSON.
  */
-const AUTH_TOKEN = '6714e52aed21125dd999ff7c31666c1806e033aa2cb8a14073b41ae7026ec0b0';
+declare(strict_types=1);
+
+require_once __DIR__ . '/../app/bootstrap.php';
+
 const TOOL_DIR   = '/srv/admin-tools/wp-mailer';
 const LOG_DIR    = '/srv/admin-tools/wp-mailer/_mailer-logs';
 const PHP_CLI    = '/usr/bin/php';
@@ -11,7 +14,7 @@ const SCRIPT     = TOOL_DIR . '/send_never_logged_in-7.php';
 const WP_LOAD    = '/var/www/html/wp-load.php'; // existence check only
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') { http_response_code(405); echo "Method Not Allowed"; exit; }
-if (!hash_equals(AUTH_TOKEN, (string)($_POST['token'] ?? ''))) { http_response_code(401); echo "Unauthorized"; exit; }
+if (!portal_tool_token_valid('wp-mailer', (string)($_POST['token'] ?? ''))) { http_response_code(401); echo "Unauthorized"; exit; }
 
 if (!is_file(SCRIPT))  { http_response_code(500); echo "Script missing"; exit; }
 if (!is_file(WP_LOAD)) { http_response_code(500); echo "wp-load.php missing"; exit; }

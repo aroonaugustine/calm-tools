@@ -24,12 +24,29 @@ if ($tool === null) {
     exit;
 }
 
+$isFullAccess = portal_is_master_token($token);
+$isViewer = !$isFullAccess && portal_is_view_token($token);
+
+if (!$isFullAccess && !$isViewer) {
+    http_response_code(401);
+    echo '<h1>Unauthorized</h1><p>Provide a valid session token to open this tool.</p>';
+    exit;
+}
+
+$toolToken = $isFullAccess ? portal_tool_default_token($tool->slug()) : null;
+if ($isFullAccess && $toolToken === null) {
+    http_response_code(500);
+    echo '<h1>Misconfigured tool</h1><p>This tool has no configured token.</p>';
+    exit;
+}
+
 $entryUrl = portal_tool_url($tool->entry());
 $entryTarget = $entryUrl;
-if ($token !== '') {
+if ($toolToken !== null) {
     $separator = str_contains($entryUrl, '?') ? '&' : '?';
-    $entryTarget = $entryUrl . "{$separator}token=" . rawurlencode($token);
+    $entryTarget = $entryUrl . "{$separator}token=" . rawurlencode($toolToken);
 }
+
 
 $statusPath = portal_tool_status_path($tool->entry());
 $statusUrl = $statusPath ? portal_tool_url($statusPath) : null;

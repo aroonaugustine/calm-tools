@@ -6,15 +6,7 @@
 
 declare(strict_types=1);
 
-/* =========================
-   AUTH (multiple tokens)
-   - Add as many tokens as you need.
-   ========================= */
-const LAUNCHER_AUTH_TOKENS = [
-  // label            => token string (keep these secret)
-  'owner' => '6714e52aed21125dd999ff7c31666c1806e033aa2cb8a14073b41ae7026ec0b0',
-  'ops'   => 'e546ffe239d986aeaa4f8f936acdcf2d0af40de4d547c43de784a02d63843211',
-];
+require_once __DIR__ . '/../app/bootstrap.php';
 
 /* =========================
    Paths
@@ -31,10 +23,17 @@ const WP_LOAD  = '/var/www/html/wp-load.php';
 function auth_ok_and_label(string $provided): array {
   // Accept via POST "token" or HTTP header "X-Launcher-Token"
   $candidate = $provided !== '' ? $provided : (string)($_SERVER['HTTP_X_LAUNCHER_TOKEN'] ?? '');
-  if ($candidate === '') return [false, ''];
-  foreach (LAUNCHER_AUTH_TOKENS as $label => $secret) {
-    if (hash_equals($secret, $candidate)) return [true, (string)$label];
+  if ($candidate === '') {
+    return [false, ''];
   }
+
+  $tokens = portal_tool_tokens('wp-welcome-sender');
+  foreach ($tokens as $label => $secret) {
+    if (hash_equals((string)$secret, $candidate)) {
+      return [true, (string)$label];
+    }
+  }
+
   return [false, ''];
 }
 

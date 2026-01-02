@@ -5,7 +5,9 @@
  * - Same behaviour as resigned processor launcher
  */
 
-const LAUNCHER_AUTH_TOKEN = '6714e52aed21125dd999ff7c31666c1806e033aa2cb8a14073b41ae7026ec0b0';
+declare(strict_types=1);
+
+require_once __DIR__ . '/../app/bootstrap.php';
 
 const TOOL_DIR = '/srv/admin-tools/wp-remove-course-3027';
 const LOG_DIR  = '/srv/admin-tools/_mailer-logs';
@@ -37,7 +39,9 @@ function bail($code, $msg){
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') bail(405,'Method Not Allowed');
 
 $token = trim((string)($_POST['token'] ?? ''));
-if (!hash_equals(LAUNCHER_AUTH_TOKEN, $token)) bail(401,'Unauthorized');
+if (!portal_tool_token_valid('wp-remove-course-3027', $token)) {
+  bail(401,'Unauthorized');
+}
 
 /* Check files */
 foreach ([WORKER => 'Worker', BATCHER => 'Batch runner', WP_LOAD => 'wp-load.php'] as $p => $label) {

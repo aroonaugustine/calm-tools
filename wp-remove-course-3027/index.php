@@ -6,7 +6,6 @@
  * - Same layout as resigned processor
  */
 
-const AUTH_TOKEN = '6714e52aed21125dd999ff7c31666c1806e033aa2cb8a14073b41ae7026ec0b0';
 $portal_token = trim((string)($_GET['token'] ?? ''));
 ?>
 <!doctype html>

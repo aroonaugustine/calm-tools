@@ -5,7 +5,10 @@
  * - Works with batching (batch_runner.php) or single worker
  */
 
-const LAUNCHER_AUTH_TOKEN = '6714e52aed21125dd999ff7c31666c1806e033aa2cb8a14073b41ae7026ec0b0';
+declare(strict_types=1);
+
+require_once __DIR__ . '/../app/bootstrap.php';
+
 const TOOL_DIR = '/srv/admin-tools/wp-resigned-processor';
 const LOG_DIR  = '/srv/admin-tools/_mailer-logs';
 const PHP_CLI  = '/usr/bin/php';
@@ -35,7 +38,9 @@ function bail($code, $msg){
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') bail(405, 'Method Not Allowed');
 
 $token = trim((string)($_POST['token'] ?? ''));
-if (!hash_equals(LAUNCHER_AUTH_TOKEN, $token)) bail(401, 'Unauthorized');
+if (!portal_tool_token_valid('wp-resigned-processor', $token)) {
+  bail(401, 'Unauthorized');
+}
 
 foreach ([WORKER => 'Worker', BATCHER => 'Batch runner', WP_LOAD => 'wp-load.php'] as $p=>$label) {
   if (!is_file($p)) bail(500, "$label missing: $p");

@@ -13,9 +13,10 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/../app/bootstrap.php';
+
 // ====== CONFIG ======
-const AUTH_TOKEN = '6714e52aed21125dd999ff7c31666c1806e033aa2cb8a14073b41ae7026ec0b0'; // change if needed
-const WP_ROOT    = '/var/www/html'; // path that contains wp-load.php
+const WP_ROOT = '/var/www/html'; // path that contains wp-load.php
 // ====================
 
 header('Content-Type: application/json; charset=utf-8');
@@ -42,8 +43,9 @@ if (!is_array($data)) {
 }
 
 // Auth
+//$token = (string)($data['token'] ?? ''); // replaced
 $token = (string)($data['token'] ?? '');
-if (!hash_equals(AUTH_TOKEN, $token)) {
+if (!portal_tool_token_valid('csv-column-mapper', $token)) {
     http_response_code(401);
     echo json_encode(['error' => 'Unauthorized. Invalid token.']);
     exit;

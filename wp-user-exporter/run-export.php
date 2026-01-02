@@ -12,9 +12,10 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/../app/bootstrap.php';
+
 // ====== EDIT THESE TWO CONSTANTS ======
-const AUTH_TOKEN = '6714e52aed21125dd999ff7c31666c1806e033aa2cb8a14073b41ae7026ec0b0';
-const WP_ROOT    = '/var/www/html';
+const WP_ROOT = '/var/www/html';
 // ======================================
 
 // Basic configuration
@@ -30,8 +31,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
 }
 
 // Token check
-$token = (string)($_POST['token'] ?? '');
-if (!hash_equals(AUTH_TOKEN, $token)) {
+  // Token check
+  $token = (string)($_POST['token'] ?? '');
+  if (!portal_tool_token_valid('wp-user-exporter', $token)) {
   http_response_code(401);
   header('Content-Type: application/json; charset=utf-8');
   echo json_encode(['error'=>'Unauthorized (bad token)'], JSON_UNESCAPED_SLASHES);
