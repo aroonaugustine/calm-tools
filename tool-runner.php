@@ -62,7 +62,7 @@ $statusUrl = $statusPath ? portal_tool_url($statusPath) : null;
           <h2>Tool workspace</h2>
           <p class="muted">This tab runs the tool with your saved session token.</p>
         </header>
-        <iframe class="runner-tool-frame" src="<?= portal_esc($entryTarget); ?>" title="<?= portal_esc($tool->name()); ?> workspace" loading="lazy"></iframe>
+        <iframe class="runner-tool-frame" src="<?= portal_esc($entryTarget); ?>" title="<?= portal_esc($tool->name()); ?> workspace" loading="lazy" scrolling="no"></iframe>
       </section>
       <section class="runner-panel runner-status-panel">
         <header class="runner-panel__header">
